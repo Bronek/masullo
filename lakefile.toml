@@ -6,6 +6,13 @@ autoImplicit = false
 relaxedAutoImplicit = false
 
 [[require]]
+name = "Zeta23"
+git = "https://github.com/anthropics/formal-math"
+subDir = "zeta23"
+rev = "16a5ce41304fcdaea4e0be7c132e1c361dc26da5"
+
+# Listed last so that Mathlib's revision and dependencies take precedence over Zeta23's.
+[[require]]
 name = "mathlib"
 git = "https://github.com/leanprover-community/mathlib4"
 rev = "0df444a360eaa60ab8c11dca51a86af692955474"

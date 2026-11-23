@@ -1,10 +1,11 @@
-import Masullo.Strength
+import Masullo.ExplicitFormula
 
 /-!
-# Negative controls
+# Controls
 
-Each statement weakens one hypothesis of the argument behind
-`Masullo.zeroSumVanishes_iff` and exhibits a counterexample.
+The negative controls weaken one hypothesis of the argument behind
+`Masullo.zeroSumVanishes_iff` and exhibit a counterexample. The positive control shows that the
+inner expansion is satisfiable.
 -/
 
 open Complex Set Filter Topology MeasureTheory
@@ -107,5 +108,12 @@ theorem discrete_translates_fail :
     simp only [Fin.sum_univ_two, TestFunction.hat_translate, Matrix.cons_val_zero,
       Matrix.cons_val_one, mul_zero, Complex.exp_zero, e]
     ring
+
+/-- The inner expansion holds at widths above `1/2`, where it carries no information. -/
+theorem innerExpansion_of_half_lt {a : ℝ} (ha : 1 / 2 < a) : InnerExpansion a := by
+  rw [innerExpansion_iff]
+  rintro ⟨ρ, -, h0, h1, h⟩
+  have : |ρ.re - 1 / 2| ≤ 1 / 2 := abs_le.2 ⟨by linarith, by linarith⟩
+  linarith
 
 end Masullo.Controls
