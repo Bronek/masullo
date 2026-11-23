@@ -19,7 +19,7 @@ section ExpSum
 
 variable {ι : Type*} {l c : ι → ℂ}
 
-/-- The range of an isolated family is closed. -/
+/-- The range of a family with no finite accumulation point is closed. -/
 lemma isOpen_compl_range (hd : ∀ z, ∃ r > 0, ∀ i, l i ≠ z → r ≤ ‖z - l i‖) :
     IsOpen (range l)ᶜ := by
   rw [Metric.isOpen_iff]
@@ -95,8 +95,8 @@ lemma cauchySum_eq_zero [Countable ι] {B : ℝ} (hB : ∀ i, (l i).re ≤ B)
   simp_rw [hval] at hsum
   exact hsum.tsum_eq
 
-/-- An absolutely convergent exponential sum with isolated exponents and bounded real parts
-that vanishes on `[0, ∞)` has only zero coefficients. -/
+/-- An absolutely convergent exponential sum that vanishes on `[0, ∞)`, and whose exponents have
+no finite accumulation point and bounded real parts, has only zero coefficients. -/
 theorem eq_zero_of_hasSum_exp [Countable ι] (hl : Function.Injective l) {B : ℝ}
     (hB : ∀ i, (l i).re ≤ B) (hd : ∀ z, ∃ r > 0, ∀ i, l i ≠ z → r ≤ ‖z - l i‖)
     (h : ∀ x : ℝ, 0 ≤ x → HasSum (fun i => c i * exp (x * l i)) 0) (j : ι) : c j = 0 := by

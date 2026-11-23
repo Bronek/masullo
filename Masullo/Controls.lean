@@ -7,7 +7,7 @@ Each statement weakens one hypothesis of the argument behind
 `Masullo.zeroSumVanishes_iff` and exhibits a counterexample.
 -/
 
-open Complex Set
+open Complex Set Filter Topology MeasureTheory
 
 namespace Masullo.Controls
 
@@ -53,27 +53,55 @@ theorem tsum_variant_fails :
     simp only [h2, norm_zero] at h1
     exact zero_ne_one (tendsto_nhds_unique h1 tendsto_const_nhds)
 
-/-- The translates of one test function by multiples of `2π` do not separate the points `0` and
-`i`: a nonzero weighting of these points annihilates all of them. -/
+/-- The Mellin transform of a test function is continuous. -/
+lemma continuous_hat (φ : TestFunction) : Continuous φ.hat := by
+  have hloc : LocallyIntegrableOn φ.toFun (Ioi 0) :=
+    φ.contDiff.continuous.locallyIntegrable.locallyIntegrableOn _
+  have htop : φ.toFun =ᶠ[atTop] fun _ => 0 := by
+    obtain ⟨R, hR⟩ := φ.hasCompactSupport.isCompact.bddAbove
+    filter_upwards [eventually_gt_atTop R] with t ht
+    exact image_eq_zero_of_notMem_tsupport fun h => absurd (hR h) (not_le.2 ht)
+  have hbot : φ.toFun =ᶠ[𝓝[>] 0] fun _ => 0 := by
+    filter_upwards [mem_nhdsWithin_of_mem_nhds (Iio_mem_nhds (zero_lt_one (α := ℝ)))] with t ht
+    exact image_eq_zero_of_notMem_tsupport fun h =>
+      lt_asymm (mem_Iio.1 ht) (mem_Ioi.1 (φ.tsupport_subset h))
+  refine continuous_iff_continuousAt.2 fun z => ?_
+  exact (mellin_differentiableAt_of_isBigO_rpow hloc
+    (htop.trans_isBigO (Asymptotics.isBigO_zero _ _)) (lt_add_one z.re)
+    (hbot.trans_isBigO (Asymptotics.isBigO_zero _ _)) (sub_one_lt z.re)).continuousAt
+
+/-- The translates of one test function by multiples of a fixed step do not separate all points:
+a nonzero weighting of two points, at neither of which the Mellin transform vanishes, annihilates
+all of them. -/
 theorem discrete_translates_fail :
-    ∃ (φ : TestFunction) (l w : Fin 2 → ℂ), Function.Injective l ∧ w ≠ 0 ∧
-      ∀ k : ℕ, HasSum
-        (fun i => w i * (φ.translate (2 * Real.pi * k) (by positivity)).hat (l i)) 0 := by
+    ∃ (φ : TestFunction) (x : ℝ) (hx : 0 < x) (l w : Fin 2 → ℂ), Function.Injective l ∧
+      (∀ i, w i ≠ 0) ∧ (∀ i, φ.hat (l i) ≠ 0) ∧
+      ∀ k : ℕ, HasSum (fun i => w i * (φ.translate (k * x) (by positivity)).hat (l i)) 0 := by
   obtain ⟨φ, hφ⟩ := TestFunction.exists_hat_ne_zero 0
-  refine ⟨φ, ![0, I], ![φ.hat I, -φ.hat 0], ?_, ?_, ?_⟩
+  have hlim : Tendsto (fun x : ℝ => ((2 * Real.pi / x : ℝ) : ℂ) * I) atTop (𝓝 0) := by
+    have h := (tendsto_const_nhds (x := 2 * Real.pi)).div_atTop (tendsto_id (α := ℝ))
+    simpa using ((continuous_ofReal.tendsto 0).comp h).mul_const I
+  have hev := hlim.eventually ((continuous_hat φ).continuousAt.eventually_ne hφ)
+  obtain ⟨x, hx1, hx⟩ := (hev.and (eventually_gt_atTop 0)).exists
+  have hq : ((2 * Real.pi / x : ℝ) : ℂ) * I ≠ 0 :=
+    mul_ne_zero (ofReal_ne_zero.2 (by positivity)) I_ne_zero
+  set q : ℂ := ((2 * Real.pi / x : ℝ) : ℂ) * I with hqdef
+  refine ⟨φ, x, hx, ![0, q], ![φ.hat q, -φ.hat 0], ?_, ?_, ?_, ?_⟩
   · intro i j
-    fin_cases i <;> fin_cases j <;> simp [I_ne_zero, I_ne_zero.symm]
-  · intro h
-    exact hφ (by simpa using congrFun h 1)
+    fin_cases i <;> fin_cases j <;> simp [hq, hq.symm]
+  · intro i
+    fin_cases i <;> simp [hφ, hx1]
+  · intro i
+    fin_cases i <;> simp [hφ, hx1]
   · intro k
-    have e : exp ((2 * Real.pi * k : ℝ) * I) = 1 := by
-      rw [← exp_nat_mul_two_pi_mul_I k]
+    have e : exp (((k * x : ℝ) : ℂ) * q) = 1 := by
+      rw [← exp_nat_mul_two_pi_mul_I k, hqdef]
       congr 1
+      have : (x : ℂ) ≠ 0 := ofReal_ne_zero.2 hx.ne'
       push_cast
-      ring
-    have hs := hasSum_fintype
-      fun i => (![φ.hat I, -φ.hat 0] : Fin 2 → ℂ) i *
-        (φ.translate (2 * Real.pi * k) (by positivity)).hat ((![0, I] : Fin 2 → ℂ) i)
+      field_simp
+    have hs := hasSum_fintype fun i => (![φ.hat q, -φ.hat 0] : Fin 2 → ℂ) i *
+      (φ.translate (k * x) (by positivity)).hat ((![0, q] : Fin 2 → ℂ) i)
     convert hs using 1
     symm
     simp only [Fin.sum_univ_two, TestFunction.hat_translate, Matrix.cons_val_zero,
