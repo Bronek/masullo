@@ -1,11 +1,12 @@
 import Masullo.ExplicitFormula
+import Masullo.Synthesis.Duality
 
 /-!
 # Controls
 
-The negative controls weaken one hypothesis of the argument behind
-`Masullo.zeroSumVanishes_iff` and exhibit a counterexample. The positive control shows that the
-inner expansion is satisfiable.
+Each negative control drops or weakens one hypothesis and exhibits a counterexample. Two concern the
+argument behind `Masullo.zeroSumVanishes_iff`, one the duality theorem behind spectral synthesis.
+The positive control shows that the inner expansion is satisfiable.
 -/
 
 open Complex Set Filter Topology MeasureTheory
@@ -115,5 +116,105 @@ theorem innerExpansion_of_half_lt {a : ℝ} (ha : 1 / 2 < a) : InnerExpansion a 
   rintro ⟨ρ, -, h0, h1, h⟩
   have : |ρ.re - 1 / 2| ≤ 1 / 2 := abs_le.2 ⟨by linarith, by linarith⟩
   linarith
+
+/-- Transform of a modulated indicator of `(0, 1]`. -/
+lemma jet_window (c z : ℂ) (h : z ≠ c) :
+    Synthesis.jet ((Ioc (0 : ℝ) 1).indicator fun x => exp (-c * x)) 0 z =
+      (exp (z - c) - 1) / (z - c) := by
+  have e : ∀ x : ℝ, (Ioc (0 : ℝ) 1).indicator (fun x : ℝ => exp (-c * x)) x * exp (z * x) =
+      (Ioc (0 : ℝ) 1).indicator (fun x : ℝ => exp ((z - c) * x)) x := fun x => by
+    by_cases hx : x ∈ Ioc (0 : ℝ) 1
+    · rw [indicator_of_mem hx, indicator_of_mem hx, ← Complex.exp_add]
+      ring_nf
+    · simp [indicator_of_notMem hx]
+  simp only [Synthesis.jet_zero, e]
+  rw [integral_indicator measurableSet_Ioc, ← intervalIntegral.integral_of_le zero_le_one,
+    integral_exp_mul_complex (sub_ne_zero.2 h)]
+  simp
+
+/-- `Synthesis.integral_eq_zero_of_order_le` fails without its hypothesis on orders: for every real
+`c` in the strip there is a counterexample at an exponent with real part `c`. -/
+theorem order_hypothesis_needed {a c : ℝ} (hc : |c| < a) : ∃ (z₀ : ℂ) (h u : ℝ → ℂ), z₀.re = c ∧
+    Synthesis.Rapid h ∧ Synthesis.Dual a (fun x => exp (z₀ * x)) u ∧
+    (∃ b > a, ∀ ε > 0, ∀ R : ℝ, ∃ T ≥ R, ∀ z : ℂ, |z.im| = T → |z.re| ≤ b →
+      Real.exp (-ε * T ^ 2) ≤ ‖Synthesis.jet h 0 z‖) ∧
+    (∀ t, Synthesis.cross (fun x => exp (z₀ * x)) h t = 0) ∧
+    Synthesis.jet h 0 z₀ = 0 ∧ ∫ x : ℝ, exp (z₀ * x) * u x ≠ 0 := by
+  have ha := (abs_nonneg c).trans_lt hc
+  set z₀ : ℂ := c + 2 * Real.pi * I
+  have hre : z₀.re = c := by simp [z₀]
+  have hne : z₀ ≠ c := by simp [z₀, Real.pi_ne_zero]
+  have hm : ∀ w : ℂ, AEStronglyMeasurable ((Ioc (0 : ℝ) 1).indicator fun x => exp (-w * x)) :=
+    fun w => (by fun_prop : Continuous fun x : ℝ => exp (-w * x)).aestronglyMeasurable.indicator
+      measurableSet_Ioc
+  have hX : Synthesis.jet ((Ioc (0 : ℝ) 1).indicator fun x => exp (-(c : ℂ) * x)) 0 z₀ = 0 := by
+    rw [jet_window _ _ hne, add_sub_cancel_left, exp_two_pi_mul_I, sub_self, zero_div]
+  refine ⟨z₀, _, (Ioc (0 : ℝ) 1).indicator fun x => exp (-z₀ * x), hre, ⟨hm c, fun b => ?_⟩,
+    ⟨?_, ?_⟩, ⟨a + 1, by linarith, fun ε hε R => ?_⟩, fun t => ?_, hX, ?_⟩
+  · refine ⟨Real.exp (|c| + |b|), fun x => ?_⟩
+    by_cases hx : x ∈ Ioc (0 : ℝ) 1
+    · rw [indicator_of_mem hx, norm_exp, ← Real.exp_add, Real.exp_le_exp, abs_of_pos hx.1]
+      simp only [neg_mul, neg_re, re_ofReal_mul, ofReal_re]
+      nlinarith [neg_abs_le c, le_abs_self b, abs_nonneg b, abs_nonneg c, hx.1, hx.2]
+    · rw [indicator_of_notMem hx, norm_zero]
+      positivity
+  · have hcont : Continuous fun x : ℝ => (Real.exp (-a * |x|) : ℂ) * exp (z₀ * x) := by fun_prop
+    refine (memLp_two_iff_integrable_sq_norm hcont.aestronglyMeasurable).2
+      ((Synthesis.integrable_exp_neg_mul_abs (sub_pos.2 hc)).mono' (by fun_prop)
+        (Eventually.of_forall fun x => ?_))
+    rw [Real.norm_of_nonneg (by positivity), norm_mul, norm_real, norm_exp,
+      Real.norm_of_nonneg (Real.exp_pos _).le, re_mul_ofReal, hre, ← Real.exp_add,
+      ← Real.exp_nat_mul, Real.exp_le_exp]
+    have h1 : c * x ≤ |c| * |x| := (le_abs_self _).trans (abs_mul c x).le
+    push_cast
+    nlinarith [mul_nonneg (sub_pos.2 hc).le (abs_nonneg x)]
+  · have e : (fun x : ℝ => (Real.exp (a * |x|) : ℂ) *
+        (Ioc (0 : ℝ) 1).indicator (fun x : ℝ => exp (-z₀ * x)) x) =
+        (Ioc (0 : ℝ) 1).indicator fun x : ℝ => (Real.exp (a * |x|) : ℂ) * exp (-z₀ * x) :=
+      funext fun x =>
+        (indicator_mul_right _ (fun x : ℝ => (Real.exp (a * |x|) : ℂ)) _).symm
+    rw [e, memLp_indicator_iff_restrict measurableSet_Ioc]
+    have hcont : Continuous fun x : ℝ => (Real.exp (a * |x|) : ℂ) * exp (-z₀ * x) := by fun_prop
+    exact (memLp_two_iff_integrable_sq_norm hcont.aestronglyMeasurable).2
+      ((hcont.norm.pow 2).integrableOn_Ioc)
+  · obtain ⟨n, hn⟩ := exists_nat_ge (max R ((2 * a + 2) / ε))
+    have hT : (n : ℝ) ≤ n * (2 * Real.pi) + Real.pi := by
+      nlinarith [Real.pi_gt_three, (Nat.cast_nonneg n : (0 : ℝ) ≤ n)]
+    refine ⟨n * (2 * Real.pi) + Real.pi, (le_max_left _ _).trans (hn.trans hT), fun z hi hr => ?_⟩
+    have hcos : Real.cos z.im = -1 := by
+      rw [← Real.cos_abs, hi, Real.cos_nat_mul_two_pi_add_pi]
+    have hT1 : 1 ≤ n * (2 * Real.pi) + Real.pi := by
+      nlinarith [Real.pi_gt_three, (Nat.cast_nonneg n : (0 : ℝ) ≤ n)]
+    generalize n * (2 * Real.pi) + Real.pi = T at hi hT hT1
+    have hne : z ≠ c := by
+      rintro rfl
+      simp at hi
+      linarith
+    have h1 : 1 ≤ ‖exp (z - c) - 1‖ := by
+      refine le_trans ?_ (abs_re_le_norm _)
+      rw [sub_re, exp_re, sub_im, ofReal_im, sub_zero, hcos, one_re, abs_of_neg] <;>
+        linarith [Real.exp_pos (z - c).re]
+    have h2 : ‖z - c‖ ≤ 2 * a + 1 + T := by
+      have := norm_le_abs_re_add_abs_im (z - c)
+      have h3 := abs_sub z.re c
+      simp only [sub_re, ofReal_re, sub_im, ofReal_im, sub_zero, hi] at this
+      linarith
+    have h3 : 2 * a + 1 + T ≤ Real.exp (ε * T ^ 2) := by
+      have h4 := (div_le_iff₀ hε).1 (((le_max_right _ _).trans hn).trans hT)
+      nlinarith [Real.add_one_le_exp (ε * T ^ 2)]
+    rw [jet_window _ _ hne, norm_div, neg_mul, Real.exp_neg, ← one_div]
+    have := norm_pos_iff.2 (sub_ne_zero.2 hne)
+    gcongr
+    linarith
+  · rw [Synthesis.cross_exp, hX, mul_zero]
+  · have e : ∀ x : ℝ, exp (z₀ * x) * (Ioc (0 : ℝ) 1).indicator (fun x => exp (-z₀ * x)) x =
+        (Ioc (0 : ℝ) 1).indicator (fun _ => 1) x := fun x => by
+      by_cases hx : x ∈ Ioc (0 : ℝ) 1
+      · rw [indicator_of_mem hx, indicator_of_mem hx, ← Complex.exp_add]
+        simp
+      · simp [indicator_of_notMem hx]
+    simp only [e]
+    rw [integral_indicator measurableSet_Ioc]
+    simp
 
 end Masullo.Controls

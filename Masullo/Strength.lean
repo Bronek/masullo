@@ -243,7 +243,8 @@ lemma exists_hat_ne_zero (z : ℂ) : ∃ φ : TestFunction, φ.hat z ≠ 0 := by
       exact h1.mul (contDiffAt_const.mul h2).cexp
     · have : f =ᶠ[𝓝 t] fun _ => 0 := notMem_tsupport_iff_eventuallyEq.1 ht
       exact contDiffAt_const.congr_of_eventuallyEq this
-  refine ⟨⟨f, hf, b.hasCompactSupport.of_isClosed_subset (isClosed_tsupport f) hsub, hsub.trans hbs⟩, ?_⟩
+  refine ⟨⟨f, hf, b.hasCompactSupport.of_isClosed_subset (isClosed_tsupport f) hsub,
+    hsub.trans hbs⟩, ?_⟩
   have e : mellin f z = ∫ t in Ioi (0 : ℝ), ((b t / t : ℝ) : ℂ) := by
     refine setIntegral_congr_fun measurableSet_Ioi fun t ht => ?_
     have ht' : (t : ℂ) ≠ 0 := ofReal_ne_zero.2 (ne_of_gt ht)
