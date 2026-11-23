@@ -16,3 +16,7 @@ The licence in `LICENSE.md` covers this repository only.
 `Masullo/Spectrum.lean` follows the spectral realisation of zeta zeros on a quotient by theta
 functions, due to Alain Connes (1999) and Ralf Meyer (2005), in the weighted setting of Masullo.
 The attribution is from memory; the sources were not consulted.
+
+`Masullo/Synthesis.lean` uses the Carleman transform (recalled; sources not consulted) and Zeta23's
+good heights for zeta. The duality argument replaces a ∂̄ argument by OpenAI Codex; the Lean proof
+was written by Claude.
