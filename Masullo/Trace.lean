@@ -1120,6 +1120,16 @@ theorem hasTrace_induced_half (φ : TestFunction) :
   rw [e] at h2
   exact h2.unique φ.hasSum_full ▸ h1
 
+/-- The trace at width `a` is the explicit formula functional for every test function iff there are
+no zeros in the critical strip at distance at least `a` from the critical line. -/
+theorem trace_eq_efFunctional_iff (ha : 0 < a) :
+    (∀ φ : TestFunction, HasTrace (induced ha φ) φ.efFunctional) ↔
+      ¬ ∃ ρ : ℂ, riemannZeta ρ = 0 ∧ 0 < ρ.re ∧ ρ.re < 1 ∧ a ≤ |ρ.re - 1 / 2| := by
+  rw [← innerExpansion_iff]
+  refine forall_congr' fun φ => ?_
+  obtain ⟨t, h1, h2⟩ := exists_hasTrace_induced ha φ
+  exact ⟨fun h => h1.unique h ▸ h2, fun h => h2.unique h ▸ h1⟩
+
 /-! ### Negative control -/
 
 /-- The traces determine the multiplicities: a zero expansion with any other weight at any zero, in
