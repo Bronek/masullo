@@ -10,3 +10,9 @@ PrimeNumberTheoremAnd (<https://github.com/AlexKontorovich/PrimeNumberTheoremAnd
 Apache License 2.0. Lake fetches it as a dependency; this repository contains none of its code.
 
 The licence in `LICENSE.md` covers this repository only.
+
+## Spectral realisation
+
+`Masullo/Spectrum.lean` follows the spectral realisation of zeta zeros on a quotient by theta
+functions, due to Alain Connes (1999) and Ralf Meyer (2005), in the weighted setting of Masullo.
+The attribution is from memory; the sources were not consulted.
