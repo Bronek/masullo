@@ -1,4 +1,5 @@
 import Mathlib
+import WeilExplicit.Zeros
 
 /-!
 # Strength of the vanishing of the off-critical zero sum
@@ -286,10 +287,12 @@ lemma exists_hat_ne_zero (z : ℂ) : ∃ φ : TestFunction, φ.hat z ≠ 0 := by
 
 end TestFunction
 
-/-! ### Zeros of zeta -/
+/-! ### Zeros of zeta
 
-/-- Zeros of `ζ` in the open critical strip. -/
-def stripZeros : Set ℂ := {ρ | riemannZeta ρ = 0 ∧ 0 < ρ.re ∧ ρ.re < 1}
+`stripZeros` (the zeros in the open critical strip) and `zeroMult` (the analytic multiplicity of a
+zero) are defined in `WeilExplicit.Zeros` and exported here. -/
+
+export WeilExplicit (stripZeros zeroMult)
 
 /-- Zeros in the critical strip at distance at least `a` from the critical line. -/
 def outerZeros (a : ℝ) : Set ℂ :=
@@ -298,9 +301,6 @@ def outerZeros (a : ℝ) : Set ℂ :=
 /-- Zeros in the critical strip at distance less than `a` from the critical line. -/
 def innerZeros (a : ℝ) : Set ℂ :=
   {ρ | riemannZeta ρ = 0 ∧ 0 < ρ.re ∧ ρ.re < 1 ∧ |ρ.re - 1 / 2| < a}
-
-/-- The multiplicity of `ρ` as a zero of `ζ`: its analytic order. -/
-noncomputable def zeroMult (ρ : ℂ) : ℕ := analyticOrderNatAt riemannZeta ρ
 
 /-- The sum over zeros at distance at least `a` from the critical line converges to `0` on every
 test function. -/
@@ -328,22 +328,9 @@ lemma countable_zeros : riemannZetaZeros.Countable := by
 /-- Multiplicities are positive at zeros. -/
 theorem zeroMult_pos {ρ : ℂ} (h : riemannZeta ρ = 0) : 0 < zeroMult ρ := by
   have h1 : ρ ≠ 1 := fun e => riemannZeta_one_ne_zero (e ▸ h)
-  have hA : AnalyticAt ℂ riemannZeta ρ :=
-    analyticOn_riemannZeta ρ h1
   have hne0 : analyticOrderAt riemannZeta ρ ≠ 0 := by
-    rw [Ne, hA.analyticOrderAt_eq_zero, not_not]; exact h
-  have hnetop : analyticOrderAt riemannZeta ρ ≠ ⊤ := by
-    rw [Ne, analyticOrderAt_eq_top]
-    intro hev
-    obtain ⟨r, hr, hiso⟩ := exists_isolating_radius ρ
-    have hev2 : ∀ᶠ z in 𝓝[≠] ρ, False := by
-      filter_upwards [nhdsWithin_le_nhds hev, self_mem_nhdsWithin,
-        nhdsWithin_le_nhds (Metric.ball_mem_nhds ρ hr)] with z hz hzne hzb
-      have := hiso z hz hzne
-      rw [Metric.mem_ball, dist_comm, dist_eq_norm] at hzb
-      linarith
-    exact (Filter.eventually_false_iff_eq_bot.1 hev2 ▸ (inferInstance : (𝓝[≠] ρ).NeBot)).ne rfl
-  rw [← Nat.cast_analyticOrderNatAt hnetop] at hne0
+    rw [Ne, (analyticOn_riemannZeta ρ h1).analyticOrderAt_eq_zero, not_not]; exact h
+  rw [← Nat.cast_analyticOrderNatAt (WeilExplicit.zeta_order_ne_top h1)] at hne0
   exact Nat.pos_of_ne_zero (by exact_mod_cast hne0)
 
 /-! ### The equivalences -/

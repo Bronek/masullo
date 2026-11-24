@@ -1,5 +1,6 @@
 import Masullo.Synthesis
 import Masullo.ExplicitFormula
+import WeilExplicit.ZeroSum
 import Masullo.Trace.Operator
 
 /-!
@@ -16,11 +17,12 @@ off the critical line, and the operator argument accepts any exponents in the st
 increasing order, and takes the Gram-Schmidt basis of `(V a)ᗮ`. In its proof the operators are
 triangular; its statement is about the diagonal only. The trace class property is
 `hasTrace_conv_of_diagonal` of `Masullo.Trace.Operator`, for `C²` kernels with compact support, with
-the diagonal of the resolvent summed by Zeta23's unconditional inverse-square zero sum.
+the diagonal of the resolvent summed by the inverse-square zero sum
+`WeilExplicit.summable_zeroMult_div_one_add_normSq`.
 
 The realisation of the zeros on a theta quotient and the trace of scaling on it follow Connes (1999)
 and Meyer (2005) (recalled; sources not consulted), in the weighted setting of Masullo. Weil's
-explicit formula and the zero count are Zeta23's.
+explicit formula and the zero count are in `WeilExplicit`.
 -/
 
 open MeasureTheory Complex Set Filter Topology
@@ -359,17 +361,14 @@ theorem exists_basis_diagonal (ha : 0 < a) : ∃ b : HilbertBasis (Index a) ℂ 
 `c > a`. They are nonnegative; the values themselves need not be absolutely summable. -/
 lemma summable_index (ha : 0 < a) {c : ℝ} (hc : a < c) :
     Summable fun i : Index a => (1 / ((c : ℂ) - ((i.1 : ℂ) - 1 / 2))).re := by
-  have hS := Zeta23.WeilEF.zero_sum_inv_sq Zeta23.zetaSeam
   have h1 : Summable fun ρ : innerZeros a =>
       (zeroMult ρ : ℝ) / (1 + Complex.normSq (((ρ : ℂ) - 1 / 2) / I)) := by
-    have hi : ∀ ρ : innerZeros a, (ρ : ℂ) ∈ (Zeta23.zetaZeros Zeta23.zetaSeam).carrier :=
-      fun ρ => ⟨ρ.2.1, ρ.2.2.1, ρ.2.2.2.1⟩
     have hinj : Function.Injective fun ρ : innerZeros a =>
-        (⟨ρ, hi ρ⟩ : (Zeta23.zetaZeros Zeta23.zetaSeam).carrier) := fun x y h =>
+        (⟨ρ, ρ.2.1, ρ.2.2.1, ρ.2.2.2.1⟩ : stripZeros) := fun x y h =>
       Subtype.ext (Subtype.mk.inj h)
-    refine (hS.comp_injective hinj).congr fun ρ => ?_
-    have e1 : zeroMult (ρ : ℂ) = Zeta23.zeroMult ρ := rfl
-    simp only [Function.comp_apply, e1, Zeta23.gammaOf]
+    refine (WeilExplicit.summable_zeroMult_div_one_add_normSq.comp_injective hinj).congr
+      fun ρ => ?_
+    simp only [Function.comp_apply]
   have h2 : Summable fun i : Index a =>
       1 / (1 + Complex.normSq (((i.1 : ℂ) - 1 / 2) / I)) := by
     refine (summable_sigma_of_nonneg fun i =>
@@ -426,7 +425,7 @@ section TestFunctions
 variable {a : ℝ} {φ : TestFunction}
 
 lemma jet_pull (φ : TestFunction) (z : ℂ) : jet φ.pull 0 z = φ.hat z := by
-  rw [← TestFunction.paperFT_pull, jet_zero, Zeta23.paperFT]
+  rw [← TestFunction.transform_pull, jet_zero, WeilExplicit.transform]
   refine integral_congr_ae (Eventually.of_forall fun u => ?_)
   simp only
   rw [mul_div_cancel₀ _ I_ne_zero]

@@ -1,5 +1,6 @@
 import Masullo.Spectrum
-import Zeta23.WeilEF.GoodHeights
+import WeilExplicit.GoodHeights
+import WeilExplicit.LowerBound
 
 /-!
 # Spectral synthesis for the theta span
@@ -20,9 +21,9 @@ the seed. The heights come from a bound for `ζ'/ζ` and an elementary lower bou
 function. For `a > 0` the theorem gives the orthogonal complement of `V a` as the closed span of the
 Riesz vectors of the moments; it gives no basis and no expansion.
 
-The bound for `ζ'/ζ` at good heights is Zeta23's. The theta span follows the spectral realisations
-of Connes (1999) and Meyer (2005) (recalled; sources not consulted). The Carleman transform and the
-duality method are credited in `Masullo.Synthesis.Duality`.
+The bound for `ζ'/ζ` at good heights is `WeilExplicit.good_heights`. The theta span follows the
+spectral realisations of Connes (1999) and Meyer (2005) (recalled; sources not consulted). The
+Carleman transform and the duality method are credited in `Masullo.Synthesis.Duality`.
 -/
 
 open MeasureTheory Complex Set Filter Topology
@@ -127,18 +128,13 @@ lemma log_sq_le {x : ℝ} (hx : 1 ≤ x) : Real.log x ^ 2 ≤ 4 * x := by
 /-- A lower bound for zeta along a sequence of heights, from a bound for `ζ'/ζ`. -/
 lemma exists_le_norm_zeta : ∃ C > 0, ∀ j : ℕ, 7 ≤ j → ∃ T : ℝ, j ≤ T ∧ T ≤ j + 1 ∧
     ∀ s : ℂ, |s.im| = T → 1 / 2 ≤ s.re → Real.exp (-C * (T + 3)) / 3 ≤ ‖riemannZeta s‖ := by
-  obtain ⟨C, hC, H⟩ := Zeta23.WeilEF.good_heights_at
+  obtain ⟨C, hC, H⟩ := WeilExplicit.good_heights
   refine ⟨8 * C, by positivity, fun j hj => ?_⟩
   obtain ⟨T, hjT, hT, HT⟩ := H j hj
   have hj7 : (7 : ℝ) ≤ j := by exact_mod_cast hj
   refine ⟨T, hjT, hT, fun s him hs => ?_⟩
-  have him' : s.im = T ∨ s.im = -T := by
-    rcases abs_choice s.im with h | h
-    · exact .inl (h ▸ him)
-    · exact .inr (by linarith)
-  have hfar : ∀ w : ℂ, 2 ≤ w.re → 1 / 3 ≤ ‖riemannZeta w‖ := fun w hw => by
-    exact Zeta23.RvM.one_third_lt_two_sub_pi_sq_div_six.le.trans
-      (Zeta23.RvM.norm_riemannZeta_ge_of_two_le_re hw)
+  have hfar : ∀ w : ℂ, 2 ≤ w.re → 1 / 3 ≤ ‖riemannZeta w‖ := fun w hw =>
+    WeilExplicit.one_third_le_norm_riemannZeta hw
   have hexp : Real.exp (-(8 * C) * (T + 3)) ≤ 1 := by
     rw [Real.exp_le_one_iff]; nlinarith
   rcases le_total 2 s.re with h2 | h2

@@ -1,4 +1,6 @@
-import Zeta23.WeilEF.Main
+import WeilExplicit.ExplicitFormula
+import WeilExplicit.Convergence
+import WeilExplicit.PrimeSupport
 import Masullo.Strength
 
 /-!
@@ -34,8 +36,8 @@ lemma pull_hasCompactSupport (φ : TestFunction) : HasCompactSupport φ.pull := 
   refine hu ⟨le_of_not_gt fun h0 => h (φ.pull_zero h0.le), ?_⟩
   linarith [Real.add_one_le_exp u]
 
-lemma paperFT_pull (φ : TestFunction) (z : ℂ) :
-    Zeta23.paperFT φ.pull (z / I) = φ.hat z := by
+lemma transform_pull (φ : TestFunction) (z : ℂ) :
+    WeilExplicit.transform φ.pull (z / I) = φ.hat z := by
   rw [hat, mellin_eq_fourier, Real.fourier_eq', ← integral_neg_eq_self]
   refine integral_congr_ae (Filter.Eventually.of_forall fun u => ?_)
   have hin : inner ℝ (-u) (z.im / (2 * Real.pi)) = z.im / (2 * Real.pi) * -u := rfl
@@ -50,45 +52,65 @@ lemma paperFT_pull (φ : TestFunction) (z : ℂ) :
   ring
 
 /-- The functional of Weil's explicit formula: two pole terms, the prime powers weighted by the
-von Mangoldt function, and the archimedean term as an integral over the critical line. -/
+von Mangoldt function, and the archimedean term as an integral over the critical line, with the
+real part of the digamma function at `1/4 + i r / 2` and `log π`. -/
 noncomputable def efFunctional (φ : TestFunction) : ℂ :=
   φ.hat (-1 / 2) + φ.hat (1 / 2)
   - ∑' n : ℕ, ((ArithmeticFunction.vonMangoldt n / Real.sqrt n : ℝ) : ℂ) * φ.toFun n
-  + (1 / (2 * Real.pi) : ℂ) * ∫ r : ℝ, φ.hat (I * r) * (Zeta23.EF.gammaBracket r : ℂ)
+  + (1 / (2 * Real.pi) : ℂ) * ∫ r : ℝ,
+      φ.hat (I * r) * (((digamma (1 / 4 + I * r / 2)).re - Real.log Real.pi : ℝ) : ℂ)
 
-lemma literatureRHS_pull (φ : TestFunction) :
-    Zeta23.EF.literatureRHS φ.pull = φ.efFunctional := by
-  unfold Zeta23.EF.literatureRHS efFunctional
+lemma pull_prime_term (φ : TestFunction) (n : ℕ) :
+    ((ArithmeticFunction.vonMangoldt n / Real.sqrt n : ℝ) : ℂ) *
+        (φ.pull (Real.log n) + φ.pull (-Real.log n)) =
+      ((ArithmeticFunction.vonMangoldt n / Real.sqrt n : ℝ) : ℂ) * φ.toFun n := by
+  rcases Nat.eq_zero_or_pos n with rfl | hn
+  · simp
+  · have h1 : (0 : ℝ) < n := by exact_mod_cast hn
+    have h2 : φ.pull (-Real.log n) = 0 :=
+      φ.pull_zero (neg_nonpos.2 (Real.log_nonneg (by exact_mod_cast hn)))
+    rw [h2, add_zero, pull, Real.exp_log h1]
+
+lemma pull_archimedean (φ : TestFunction) (r : ℝ) :
+    WeilExplicit.transform φ.pull r = φ.hat (I * r) := by
+  rw [← transform_pull, mul_div_cancel_left₀ _ I_ne_zero]
+
+/-- The prime terms of `efFunctional` have finite support. -/
+lemma efFunctional_primeTerm_hasFiniteSupport (φ : TestFunction) :
+    (fun n : ℕ => ((ArithmeticFunction.vonMangoldt n / Real.sqrt n : ℝ) : ℂ) * φ.toFun n)
+      |>.HasFiniteSupport := by
+  have h := WeilExplicit.prime_sum_finite_support φ.pull_hasCompactSupport
+  simpa only [pull_prime_term] using h
+
+/-- The archimedean integrand of `efFunctional` is integrable. -/
+lemma efFunctional_integrable (φ : TestFunction) :
+    Integrable fun r : ℝ =>
+      φ.hat (I * r) * (((digamma (1 / 4 + I * r / 2)).re - Real.log Real.pi : ℝ) : ℂ) := by
+  simpa only [pull_archimedean] using
+    WeilExplicit.integrable_archimedean φ.pull_contDiff φ.pull_hasCompactSupport
+
+lemma explicit_rhs_pull (φ : TestFunction) :
+    WeilExplicit.transform φ.pull (I / 2) + WeilExplicit.transform φ.pull (-I / 2) -
+      (∑' n : ℕ, ((ArithmeticFunction.vonMangoldt n / Real.sqrt n : ℝ) : ℂ) *
+        (φ.pull (Real.log n) + φ.pull (-Real.log n))) +
+      (1 / (2 * (Real.pi : ℂ))) * ∫ t : ℝ, WeilExplicit.transform φ.pull t *
+        (((digamma (1 / 4 + I * t / 2)).re - Real.log Real.pi : ℝ) : ℂ) = φ.efFunctional := by
   have e1 : I / 2 = (-1 / 2 : ℂ) / I := by
     rw [eq_div_iff I_ne_zero, div_mul_eq_mul_div, I_mul_I]
   have e2 : -I / 2 = (1 / 2 : ℂ) / I := by
     rw [eq_div_iff I_ne_zero, div_mul_eq_mul_div, neg_mul, I_mul_I, neg_neg]
-  rw [e1, e2, paperFT_pull, paperFT_pull]
-  congr 2
-  · refine tsum_congr fun n => ?_
-    rcases Nat.eq_zero_or_pos n with rfl | hn
-    · simp
-    · have h1 : (0 : ℝ) < n := by exact_mod_cast hn
-      have h2 : φ.pull (-Real.log n) = 0 :=
-        φ.pull_zero (neg_nonpos.2 (Real.log_nonneg (by exact_mod_cast hn)))
-      rw [h2, add_zero, pull, Real.exp_log h1]
-  · congr 1
-    funext r
-    rw [← paperFT_pull, mul_div_cancel_left₀ _ I_ne_zero]
+  rw [e1, e2, transform_pull, transform_pull, efFunctional]
+  simp only [pull_prime_term, pull_archimedean]
 
 /-- **Weil's explicit formula.** The sum over all zeros in the critical strip, with multiplicity,
-converges absolutely to `efFunctional φ`. The analytic input is `EF_lit_zetaZeroConfig` from the
-`Zeta23` package. -/
+converges absolutely to `efFunctional φ`. The analytic input is `WeilExplicit.explicit_formula`. -/
 theorem hasSum_full (φ : TestFunction) :
     HasSum (fun ρ : stripZeros => (zeroMult ρ : ℂ) * φ.hat ((ρ : ℂ) - 1 / 2))
       φ.efFunctional := by
-  obtain ⟨hs, he⟩ := Zeta23.WeilEF.EF_lit_zetaZeroConfig φ.pull φ.pull_contDiff
-    φ.pull_hasCompactSupport
-  have h := hs.hasSum
-  rw [he, literatureRHS_pull] at h
+  have h := WeilExplicit.explicit_formula φ.pull_contDiff φ.pull_hasCompactSupport
+  rw [explicit_rhs_pull] at h
   refine h.congr_fun fun ρ => ?_
-  rw [← paperFT_pull]
-  rfl
+  rw [transform_pull]
 
 end TestFunction
 
