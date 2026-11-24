@@ -1,0 +1,66 @@
+# Masullo in Lean
+
+A Lean 4 formalisation of some analysis around the trace-formula approach to the Riemann hypothesis
+in Masullo, "The Music Of The Primes", which builds on work of Connes and Meyer.
+
+**This is not a proof of the Riemann hypothesis**, and nothing here restricts the location of any
+zero of zeta. The project set out to build such a proof along these lines. What it has is the
+spectral side, in the simplest case (the Riemann zeta function, no logarithmic factor in the
+weight), and a precise statement of what is missing. It is independent of Masullo and is not endorsed by the
+author of that work.
+
+## What is proved
+
+`W a` is the space of functions on the line, in the logarithmic variable, that are square integrable
+with weight `2 cosh(2au)`, and `V a` is the closed span in it of theta functions built from even
+Schwartz functions `f` with `f(0) = 0` and `∫ f = 0`. Test functions are smooth with compact support
+in `(1, ∞)`. Zeros are those of zeta in the open critical strip, counted with multiplicity, and their
+distance is measured from the critical line. For every `a > 0`:
+
+| Result | Declaration |
+|---|---|
+| `V a` is the space cut out by the zeros at distance less than `a` from the critical line | `V_eq_J` in `Masullo/Synthesis.lean` |
+| Scaling by a test function is trace class on `W a / V a`, with trace the sum over those zeros | `exists_hasTrace_induced` in `Masullo/Trace.lean` |
+| That trace is Weil's functional for every test function iff no zero has distance at least `a` | `trace_eq_efFunctional_iff` in `Masullo/Trace.lean` |
+
+At `a = 1/2` the trace is Weil's functional unconditionally (`hasTrace_induced_half`).
+
+The second library, `WeilExplicit`, proves Weil's explicit formula for twice continuously
+differentiable test functions of compact support (`explicit_formula`), and on the way a zero count,
+the inverse-square sum over zeros and heights at which `ζ'/ζ` is `O(log²)` (`good_heights`). It does
+not depend on `Masullo` and can be used separately.
+
+## What is missing
+
+An argument that the trace at some width `a < 1/2` is Weil's functional. By the third result this is
+equivalent to excluding the zeros at distance at least `a`, so it cannot come from rearranging what
+is here. The operator theory used accepts any exponents in the strip and therefore cannot supply it;
+an arithmetic input is needed, and none was found.
+
+## Status
+
+- All results are proved without `sorry` or added axioms; the two libraries depend on `propext`,
+  `Classical.choice` and `Quot.sound` only.
+- The Lean code was written by AI models (Claude and Codex) under human direction. Models also
+  reviewed the source at several stages; not every later change was reviewed again. No human expert
+  has reviewed it, and no independent kernel checker has been run.
+- Attributions to the literature are mostly from memory. See [CREDITS.md](CREDITS.md).
+- No claim of novelty is made.
+
+Corrections, above all from readers who know the work of Connes and Meyer, are welcome.
+
+## Building
+
+Install [elan](https://github.com/leanprover/elan), then run in this directory:
+
+```sh
+lake exe cache get
+lake build
+```
+
+The only direct dependency is Mathlib, pinned in `lake-manifest.json`. The first command downloads
+its compiled files.
+
+## Licence
+
+CC0 1.0; see [LICENSE.md](LICENSE.md).
