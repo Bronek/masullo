@@ -55,6 +55,10 @@ those notes, and the Lean was written by Claude, with a version of the argument 
 poles of negative residue. No text or Lean code of these sources was copied. OpenAI Codex reviewed
 the plan and the Lean, and supplied the proofs of `abs_windowSum_le` and of the sign-change control.
 
+For `Masullo/Dyadic.lean`, Codex proposed the two-scale difference and the tent weight and computed
+its multiplier and the residue signs for both bounds. Claude wrote the Lean; the proof that zeta has
+no zeros in `(0, 1)`, several shortenings and the control on windows of length zero are Codex's.
+
 ## Pair of widths
 
 Hassana Labs reviewed Masullo's manuscript (<https://hassana.io/music-of-the-primes/>) and published

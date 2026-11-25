@@ -376,6 +376,14 @@ lemma continues {C θ : ℝ} (hθ : 0 < θ) (hθ1 : θ < 1) :
     exact div_ne_zero (by exact_mod_cast hm.ne') (mul_ne_zero h0 (sub_ne_zero.2 h1))
   pole ρ h := continuation_pole h.1.ne (fun e => by have := h.1; simp [e] at this; linarith) h.2
 
+/-- The residue at a real zero is negative. -/
+lemma residue_re_neg {ρ : ℂ} (hr : 0 < ρ.re) (hz : riemannZeta ρ = 0) (hi : ρ.im = 0) :
+    ((zeroMult ρ : ℂ) / (ρ * (ρ - 1))).re < 0 := by
+  lift ρ to ℝ using hi
+  rw [← ofReal_natCast, ← ofReal_one, ← ofReal_sub, ← ofReal_mul, ← ofReal_div, ofReal_re]
+  refine div_neg_of_pos_of_neg (by exact_mod_cast zeroMult_pos hz) (mul_neg_of_pos_of_neg hr ?_)
+  exact sub_neg.2 (lt_of_not_ge fun h => riemannZeta_ne_zero_of_one_le_re h hz)
+
 /-- **Window criterion.** A one-sided power bound with exponent `θ` on arbitrarily late windows
 `[Y, Y ^ (1 + δ)]` rules out zeros of zeta to the right of `θ`. The converse is not asserted. -/
 theorem riemannZeta_ne_zero_of_window {θ δ C : ℝ} (hθ : 0 < θ) (hδ : 0 < δ)
@@ -385,16 +393,7 @@ theorem riemannZeta_ne_zero_of_window {θ δ C : ℝ} (hθ : 0 < θ) (hδ : 0 < 
   · exact riemannZeta_ne_zero_of_one_le_re (by linarith)
   have hZ := (continues (C := C) hθ hθ1).eq_empty_of_window hθ.le ?_ hδ ?_
   · exact fun h0 => (hZ ▸ ⟨hρ, h0⟩ : ρ ∈ (∅ : Set ℂ)).elim
-  · rintro ρ ⟨h1, h2⟩ him
-    have hlt : ρ.re < 1 := not_le.1 fun hle => riemannZeta_ne_zero_of_one_le_re hle h2
-    have hm : (0 : ℝ) < zeroMult ρ := by exact_mod_cast zeroMult_pos h2
-    obtain ⟨b, rfl⟩ : ∃ b : ℝ, ρ = b := ⟨ρ.re, Complex.ext rfl (by simpa using him)⟩
-    rw [ofReal_re] at h1 hlt
-    have : (zeroMult b : ℂ) / (b * (b - 1)) = ((zeroMult b / (b * (b - 1)) : ℝ) : ℂ) := by
-      push_cast
-      rfl
-    rw [this, ofReal_re]
-    exact div_neg_of_pos_of_neg hm (mul_neg_of_pos_of_neg (hθ.trans h1) (by linarith))
+  · exact fun ρ hρ hi => residue_re_neg (hθ.trans hρ.1) hρ.2 hi
   · intro X
     obtain ⟨Y, hY, hY1, hw⟩ := h (Real.exp X)
     have hY0 : 0 < Y := by linarith
@@ -405,19 +404,25 @@ theorem riemannZeta_ne_zero_of_window {θ δ C : ℝ} (hθ : 0 < θ) (hδ : 0 < 
     rw [← Real.exp_mul, mul_comm u] at this
     linarith
 
+/-- Absence of zeros of zeta in `Re s > θ` gives the trace identity of `trace_eq_efFunctional_iff`
+at every positive width `a > θ - 1 / 2`. -/
+theorem trace_eq_efFunctional_of_ne_zero {θ a : ℝ} (ha : 0 < a) (hθa : θ - 1 / 2 < a)
+    (h : ∀ z : ℂ, θ < z.re → riemannZeta z ≠ 0) (φ : TestFunction) :
+    Trace.HasTrace (Trace.induced ha φ) φ.efFunctional := by
+  refine (Trace.trace_eq_efFunctional_iff ha).2 ?_ φ
+  rintro ⟨ρ, h0, h1, h2, h3⟩
+  rcases le_abs'.1 h3 with h4 | h4
+  · refine h (1 - ρ) (by simp; linarith) ?_
+    have h5 : 0 < zeroMult (1 - ρ) := zeroMult_one_sub h1 h2 ▸ zeroMult_pos h0
+    exact apply_eq_zero_of_analyticOrderNatAt_ne_zero h5.ne'
+  · exact h ρ (by linarith) h0
+
 /-- The window bound with `θ < 1 / 2 + a` gives the trace identity of `trace_eq_efFunctional_iff` at
 width `a`. The converse is not asserted. -/
 theorem trace_eq_efFunctional_of_window {θ δ C a : ℝ} (hθ : 0 < θ) (hδ : 0 < δ) (ha : 0 < a)
     (hθa : θ - 1 / 2 < a)
     (h : ∀ X, ∃ Y ≥ X, 1 < Y ∧ ∀ x ∈ Icc Y (Y ^ (1 + δ)), windowSum x ≤ C * x ^ θ)
-    (φ : TestFunction) : Trace.HasTrace (Trace.induced ha φ) φ.efFunctional := by
-  refine (Trace.trace_eq_efFunctional_iff ha).2 ?_ φ
-  rintro ⟨ρ, h0, h1, h2, h3⟩
-  have hne {z : ℂ} (hz : θ < z.re) := riemannZeta_ne_zero_of_window hθ hδ h hz
-  rcases le_abs'.1 h3 with h4 | h4
-  · refine hne (z := 1 - ρ) (by simp; linarith) ?_
-    have h5 : 0 < zeroMult (1 - ρ) := zeroMult_one_sub h1 h2 ▸ zeroMult_pos h0
-    exact apply_eq_zero_of_analyticOrderNatAt_ne_zero h5.ne'
-  · exact hne (by linarith) h0
+    (φ : TestFunction) : Trace.HasTrace (Trace.induced ha φ) φ.efFunctional :=
+  trace_eq_efFunctional_of_ne_zero ha hθa (fun _ => riemannZeta_ne_zero_of_window hθ hδ h) φ
 
 end Masullo.Window

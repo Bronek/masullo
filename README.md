@@ -32,7 +32,13 @@ than `θ` (`riemannZeta_ne_zero_of_window` in `Masullo/Window.lean`), and the tr
 for every test function at every positive width `a > θ - 1/2` (`trace_eq_efFunctional_of_window`).
 No such bound with `θ < 1` is proved here.
 
-A second condition is equivalent rather than sufficient. For a test function `φ` let `L_φ(t)` be
+A variant needs no main term. Let `R(y) = max(1/y - 1, 0)`, `w(y) = R(y) - 3R(2y) + 2R(4y)`, which
+is nonnegative, `P(X) = ∑_{n ≤ X} Λ(n) w(n/X)` and `D(X) = P(2X) - 2P(X)`. If `D(x) ≤ C x^θ` on such
+windows, or if `D(x) ≥ -C x^θ` on them, the same conclusions hold
+(`trace_eq_efFunctional_of_dyadicDiff_le` and `trace_eq_efFunctional_of_le_dyadicDiff` in
+`Masullo/Dyadic.lean`). Both bounds hold at `θ = 1`; neither is proved for any `θ < 1`.
+
+A further condition is equivalent rather than sufficient. For a test function `φ` let `L_φ(t)` be
 Weil's functional at the translate of `φ` by `t` in the logarithmic variable. Fix `a ≥ 0` and
 `δ > 0`. Consider the condition that every nonnegative `φ` has a constant `C` such that for
 arbitrarily large `U`, `L_φ(t) ≤ C e^(at)` for all `t ≥ 0` in `[U, (1+δ)U]`. It holds iff the
