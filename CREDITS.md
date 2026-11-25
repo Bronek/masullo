@@ -54,3 +54,12 @@ kind on power intervals are due to Kaczorowski and Pintz (1986), in the line of 
 those notes, and the Lean was written by Claude, with a version of the argument that allows real
 poles of negative residue. No text or Lean code of these sources was copied. OpenAI Codex reviewed
 the plan and the Lean, and supplied the proofs of `abs_windowSum_le` and of the sign-change control.
+
+## Pair of widths
+
+Hassana Labs reviewed Masullo's manuscript (<https://hassana.io/music-of-the-primes/>) and published
+Lean code (<https://github.com/leochlon/music-of-the-primes-lean>, Apache License 2.0) that does not
+claim the Riemann hypothesis. It shows that equality of strip limits at one pair of widths excludes
+the zeros between them. `trace_eq_trace_half_iff` in `Masullo/Trace.lean` is the analogue here for
+the pair `a`, `1/2`; it was proved from the results of this repository, and no Hassana code was
+copied.

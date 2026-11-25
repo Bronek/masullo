@@ -492,6 +492,17 @@ theorem trace_eq_efFunctional_iff (ha : 0 < a) :
   obtain ⟨t, h1, h2⟩ := exists_hasTrace_induced ha φ
   exact ⟨fun h => h1.unique h ▸ h2, fun h => h2.unique h ▸ h1⟩
 
+/-- Equality of the traces at the one pair of widths `a` and `1 / 2`, for every test function, is
+equivalent to there being no zeros in the critical strip at distance at least `a` from the critical
+line. Neither side is asserted. -/
+theorem trace_eq_trace_half_iff (ha : 0 < a) :
+    (∀ (φ : TestFunction) (t : ℂ), HasTrace (induced (a := 1 / 2) (by norm_num) φ) t →
+      HasTrace (induced ha φ) t) ↔
+      ¬ ∃ ρ : ℂ, riemannZeta ρ = 0 ∧ 0 < ρ.re ∧ ρ.re < 1 ∧ a ≤ |ρ.re - 1 / 2| := by
+  rw [← trace_eq_efFunctional_iff ha]
+  exact ⟨fun h φ => h φ _ (hasTrace_induced_half φ),
+    fun h φ t ht => ht.unique (hasTrace_induced_half φ) ▸ h φ⟩
+
 /-! ### Negative control -/
 
 /-- The traces determine the multiplicities of the zeros at distance less than `a` from the critical
