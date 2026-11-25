@@ -25,6 +25,13 @@ distance is measured from the critical line. For every `a > 0`:
 
 At `a = 1/2` the trace is Weil's functional unconditionally (`hasTrace_induced_half`).
 
+One sufficient condition is arithmetic. Let `G(x) = ∑_{n ≤ x} Λ(n)(x/n - 1) - x log x + (1 + γ)x`,
+and fix real numbers `θ > 0`, `δ > 0` and `C`. Suppose there are arbitrarily large `Y > 1` for which
+`G(x) ≤ C x^θ` for every real `x` in `[Y, Y^(1+δ)]`. Then zeta has no zero with real part greater
+than `θ` (`riemannZeta_ne_zero_of_window` in `Masullo/Window.lean`), and the trace identity holds
+for every test function at every positive width `a > θ - 1/2` (`trace_eq_efFunctional_of_window`).
+No such bound with `θ < 1` is proved here.
+
 The second library, `WeilExplicit`, proves Weil's explicit formula for twice continuously
 differentiable test functions of compact support (`explicit_formula`), and on the way a zero count,
 the inverse-square sum over zeros and heights at which `ζ'/ζ` is `O(log²)` (`good_heights`). It does

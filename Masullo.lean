@@ -9,5 +9,8 @@ import Masullo.Spectrum
 import Masullo.Synthesis
 import Masullo.Trace.Operator
 import Masullo.Trace
+import Masullo.Landau
+import Masullo.Window
+import Masullo.WindowControls
 
 #print RiemannHypothesis

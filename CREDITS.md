@@ -41,3 +41,16 @@ The trace of scaling on the theta quotient follows Connes (1999) and Meyer (2005
 `Masullo/Trace/Operator.lean` uses standard theory of Hilbert–Schmidt and trace class operators,
 Gram–Schmidt triangularisation and dissipative resolvents. The Connes, Meyer and operator theory
 attributions are recalled; sources were not consulted. The Lean proofs were written by Claude.
+
+## Window criterion
+
+The criterion for zeta, with the same prime sum, and its argument by high derivatives and a nearest
+pole appear in notes of 2026 by Claude, Codex and Gemini, prepared at Michael Rubinstein's request:
+<https://www.math.uwaterloo.ca/~mrubinst/alpoge_claude_grh/>. The archive of Alpöge's proof has a
+related theorem for character families, `zeroFree_of_rpow_window`. Earlier results of this
+kind on power intervals are due to Kaczorowski and Pintz (1986), in the line of Landau's theorem.
+
+`Masullo/Landau.lean` and `Masullo/Window.lean` were planned by Claude after reading parts of
+those notes, and the Lean was written by Claude, with a version of the argument that allows real
+poles of negative residue. No text or Lean code of these sources was copied. OpenAI Codex reviewed
+the plan and the Lean, and supplied the proofs of `abs_windowSum_le` and of the sign-change control.
