@@ -32,6 +32,14 @@ than `θ` (`riemannZeta_ne_zero_of_window` in `Masullo/Window.lean`), and the tr
 for every test function at every positive width `a > θ - 1/2` (`trace_eq_efFunctional_of_window`).
 No such bound with `θ < 1` is proved here.
 
+A second condition is equivalent rather than sufficient. For a test function `φ` let `L_φ(t)` be
+Weil's functional at the translate of `φ` by `t` in the logarithmic variable. Fix `a ≥ 0` and
+`δ > 0`. Consider the condition that every nonnegative `φ` has a constant `C` such that for
+arbitrarily large `U`, `L_φ(t) ≤ C e^(at)` for all `t ≥ 0` in `[U, (1+δ)U]`. It holds iff the
+trace identity holds for every test function at every width `a' > a` (`trace_eq_efFunctional_iff_probeBound` in
+`Masullo/Probe.lean`), and for `a = 0` iff the Riemann hypothesis holds. At `a = 1/2` it holds
+unconditionally; it is not proved for any smaller `a`.
+
 The second library, `WeilExplicit`, proves Weil's explicit formula for twice continuously
 differentiable test functions of compact support (`explicit_formula`), and on the way a zero count,
 the inverse-square sum over zeros and heights at which `ζ'/ζ` is `O(log²)` (`good_heights`). It does

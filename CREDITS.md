@@ -59,7 +59,16 @@ the plan and the Lean, and supplied the proofs of `abs_windowSum_le` and of the 
 
 Hassana Labs reviewed Masullo's manuscript (<https://hassana.io/music-of-the-primes/>) and published
 Lean code (<https://github.com/leochlon/music-of-the-primes-lean>, Apache License 2.0) that does not
-claim the Riemann hypothesis. It shows that equality of strip limits at one pair of widths excludes
-the zeros between them. `trace_eq_trace_half_iff` in `Masullo/Trace.lean` is the analogue here for
+claim the Riemann hypothesis. It shows that for one pair of widths, equality of the strip limits for
+its family of tests, under its counting and transform hypotheses, makes every coefficient in the
+half-open band between them vanish. `trace_eq_trace_half_iff` in `Masullo/Trace.lean` is the analogue here for
 the pair `a`, `1/2`; it was proved from the results of this repository, and no Hassana code was
 copied.
+
+## Nonnegative probes
+
+`Masullo/Probe.lean` applies the window form of Landau's theorem to the translated functional of
+Weil's explicit formula. OpenAI Codex proposed translating nonnegative tests, the window argument
+and a bump adapted to each zero, in a form with constants tending to zero; Claude chose the form with
+one constant per test and wrote the Lean. Codex reviewed it. The power-series precedent for the role
+of positivity is the Vivanti–Pringsheim theorem.

@@ -12,5 +12,7 @@ import Masullo.Trace
 import Masullo.Landau
 import Masullo.Window
 import Masullo.WindowControls
+import Masullo.Probe
+import Masullo.ProbeControls
 
 #print RiemannHypothesis

@@ -57,11 +57,11 @@ lemma differentiableOn_cauchySum (hd : ∀ z, ∃ r > 0, ∀ i, l i ≠ z → r 
   exact ((hD z (Metric.mem_ball_self (by positivity))).differentiableAt
     (Metric.ball_mem_nhds z (by positivity))).differentiableWithinAt
 
-/-- The Laplace transform of a vanishing exponential sum vanishes. -/
-lemma cauchySum_eq_zero [Countable ι] {B : ℝ} (hB : ∀ i, (l i).re ≤ B)
-    (hc : Summable fun i => ‖c i‖)
-    (h : ∀ x : ℝ, 0 ≤ x → HasSum (fun i => c i * exp (x * l i)) 0) {s : ℂ} (hs : B < s.re) :
-    ∑' i, c i / (s - l i) = 0 := by
+/-- The Laplace transform of an absolutely convergent exponential sum, term by term. -/
+lemma hasSum_cauchySum [Countable ι] {B : ℝ} (hB : ∀ i, (l i).re ≤ B)
+    (hc : Summable fun i => ‖c i‖) {F : ℝ → ℂ}
+    (h : ∀ x : ℝ, 0 ≤ x → HasSum (fun i => c i * exp (x * l i)) (F x)) {s : ℂ} (hs : B < s.re) :
+    HasSum (fun i => c i / (s - l i)) (∫ x in Ioi (0 : ℝ), F x * exp (-(s * x))) := by
   have hre : ∀ i, (l i - s).re < 0 := fun i => by rw [sub_re]; linarith [hB i]
   have hint : ∀ i, IntegrableOn (fun x : ℝ => c i * exp ((l i - s) * x)) (Ioi 0) := fun i =>
     (integrableOn_exp_mul_complex_Ioi (hre i) 0).const_mul _
@@ -84,17 +84,19 @@ lemma cauchySum_eq_zero [Countable ι] {B : ℝ} (hB : ∀ i, (l i).re ≤ B)
     (F := fun i x => c i * exp ((l i - s) * x)) hint
     (Summable.of_nonneg_of_le (fun i => integral_nonneg fun x => norm_nonneg _) hn
       (hc.div_const _))
-  have hz : ∫ x in Ioi (0 : ℝ), ∑' i, c i * exp ((l i - s) * x) = 0 := by
-    rw [setIntegral_congr_fun (g := fun _ => 0) measurableSet_Ioi, integral_zero]
-    intro x hx
-    have h2 := (h x (le_of_lt hx)).mul_right (exp (-s * x))
-    rw [zero_mul] at h2
-    refine (h2.congr_fun fun i => ?_).tsum_eq
-    rw [mul_assoc, ← Complex.exp_add]
-    ring_nf
-  rw [hz] at hsum
   simp_rw [hval] at hsum
-  exact hsum.tsum_eq
+  rwa [setIntegral_congr_fun (g := fun x : ℝ => ∑' i, c i * exp ((l i - s) * x))
+    measurableSet_Ioi fun x hx => ?_]
+  refine (((h x (le_of_lt hx)).mul_right (exp (-(s * x)))).congr_fun fun i => ?_).tsum_eq.symm
+  rw [mul_assoc, ← Complex.exp_add]
+  ring_nf
+
+/-- The Laplace transform of a vanishing exponential sum vanishes. -/
+lemma cauchySum_eq_zero [Countable ι] {B : ℝ} (hB : ∀ i, (l i).re ≤ B)
+    (hc : Summable fun i => ‖c i‖)
+    (h : ∀ x : ℝ, 0 ≤ x → HasSum (fun i => c i * exp (x * l i)) 0) {s : ℂ} (hs : B < s.re) :
+    ∑' i, c i / (s - l i) = 0 := by
+  simpa using (hasSum_cauchySum (F := 0) hB hc h hs).tsum_eq
 
 /-- An absolutely convergent exponential sum that vanishes on `[0, ∞)`, and whose exponents have
 no finite accumulation point and bounded real parts, has only zero coefficients. -/
