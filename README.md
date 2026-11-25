@@ -24,6 +24,10 @@ distance is measured from the critical line. For every `a > 0`:
 | That trace is Weil's functional for every test function iff no zero has distance at least `a` | `trace_eq_efFunctional_iff` in `Masullo/Trace.lean` |
 
 At `a = 1/2` the trace is Weil's functional unconditionally (`hasTrace_induced_half`).
+At any width, the difference between Weil's functional at the translate of `φ` by `t` and the trace
+is the sum over the finitely many zeros in the strip at distance at least `a` and height at most
+`T`, up to an error of at most `C e^(t/2) / (1 + T²)`, where `t, T ≥ 0` and `C` depends on `φ` only
+(`exists_bound` in `Masullo/Tail.lean`).
 
 One sufficient condition is arithmetic. Let `G(x) = ∑_{n ≤ x} Λ(n)(x/n - 1) - x log x + (1 + γ)x`,
 and fix real numbers `θ > 0`, `δ > 0` and `C`. Suppose there are arbitrarily large `Y > 1` for which

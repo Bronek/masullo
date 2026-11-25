@@ -42,6 +42,10 @@ The trace of scaling on the theta quotient follows Connes (1999) and Meyer (2005
 Gram–Schmidt triangularisation and dissipative resolvents. The Connes, Meyer and operator theory
 attributions are recalled; sources were not consulted. The Lean proofs were written by Claude.
 
+For `Masullo/Tail.lean`, OpenAI Codex proposed the estimate up to a finite height and its proof by
+subtracting the trace sum and using quartic decay of the transform. Claude wrote the Lean and its
+controls; Codex shortened the proofs and supplied the control on single coefficients.
+
 ## Window criterion
 
 The criterion for zeta, with the same prime sum, and its argument by high derivatives and a nearest
