@@ -430,14 +430,6 @@ theorem trace_eq_of_integral_small {a : ℝ} (ha : 0 < a) (φ : TestFunction) (s
   rw [intervalIntegral.integral_const, smul_eq_mul] at h2
   nlinarith
 
-/-- At `τ = 0` the sharpness statement is about `φ` itself. -/
-theorem trace_eq_of_integral_small_zero {a : ℝ} (ha : 0 < a) (φ : TestFunction) (s : ℝ → ℂ)
-    (hs : ∀ τ, HasTrace (induced ha (φ.modulate τ)) (s τ))
-    (h : ∀ ε : ℝ, 0 < ε → ∀ T₀ : ℝ, ∃ T, T₀ ≤ T ∧
-      ∫ τ in -T..T, ‖(φ.modulate τ).efFunctional - s τ‖ ≤ ε) :
-    s 0 = φ.efFunctional := by
-  simpa [TestFunction.modulate_zero] using trace_eq_of_integral_small ha φ s hs h 0
-
 /-- **Markov's inequality.** With `C` and `κ` as in `mean_modulate_le`, the set of `τ ∈ (-T, T]`
 where the difference has absolute value at least `ε` has measure at most
 `2 C T^(1-κ) log² (2T) / ε`. -/

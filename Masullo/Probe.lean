@@ -364,13 +364,8 @@ theorem windowBound_iff (ha : 0 ≤ a) (hδ : 0 < δ) {φ : TestFunction} (hφ :
   · have right {ρ₀ : ℂ} (hρ₀ : ρ₀ ∈ stripZeros) : ρ₀.re - 1 / 2 ≤ a :=
       re_sub_half_le_of_windowBound ha hδ hφ h hρ₀ (hne ρ₀ hρ₀)
     rintro ⟨ρ, h0, h1, h2, h3⟩
-    rcases lt_abs.1 h3 with h4 | h4
-    · exact h4.not_ge (right ⟨h0, h1, h2⟩)
-    · have h5 : 0 < zeroMult (1 - ρ) := WeilExplicit.zeroMult_one_sub h1 h2 ▸ zeroMult_pos h0
-      have h6 := right (ρ₀ := 1 - ρ) ⟨apply_eq_zero_of_analyticOrderNatAt_ne_zero h5.ne',
-        by simpa using h2, by simpa using h1⟩
-      simp only [sub_re, one_re] at h6
-      linarith
+    obtain ⟨ρ', h0', h1', h2', h4⟩ := Window.exists_zero_gt_half_add_of_abs h0 h1 h2 h3
+    exact h4.not_ge (right ⟨h0', h1', h2'⟩)
   · rintro ⟨ρ, h0, h1, h2, h3⟩
     exact h ⟨ρ, h0, h1, h2, ha'.trans_le h3⟩
 

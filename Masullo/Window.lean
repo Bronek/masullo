@@ -373,6 +373,17 @@ theorem riemannZeta_ne_zero_of_window {θ δ C : ℝ} (hθ : 0 ≤ θ) (hδ : 0 
   ((continues hθ).eq_empty_of_window hθ (fun _ hρ hi => residue_re_neg (hθ.trans_lt hρ.1) hρ.2 hi)
     hδ (window_exp h) ▸ ⟨hρ, h0⟩ : ρ ∈ (∅ : Set ℂ)).elim
 
+/-- A zero in the critical strip at distance more than `a` from the critical line yields a zero
+`ρ'` in the strip with `a < ρ'.re - 1 / 2`, by the reflection `ρ ↦ 1 - ρ`. -/
+lemma exists_zero_gt_half_add_of_abs {a : ℝ} {ρ : ℂ} (h0 : riemannZeta ρ = 0) (h1 : 0 < ρ.re)
+    (h2 : ρ.re < 1) (h3 : a < |ρ.re - 1 / 2|) :
+    ∃ ρ' : ℂ, riemannZeta ρ' = 0 ∧ 0 < ρ'.re ∧ ρ'.re < 1 ∧ a < ρ'.re - 1 / 2 := by
+  rcases lt_abs.1 h3 with h4 | h4
+  · exact ⟨ρ, h0, h1, h2, h4⟩
+  · have h5 : 0 < zeroMult (1 - ρ) := zeroMult_one_sub h1 h2 ▸ zeroMult_pos h0
+    exact ⟨1 - ρ, apply_eq_zero_of_analyticOrderNatAt_ne_zero h5.ne', by simpa using h2,
+      by simpa using h1, by simp; linarith⟩
+
 /-- Absence of zeros of zeta in `Re s > θ` gives the trace identity of `trace_eq_efFunctional_iff`
 at every positive width `a > θ - 1 / 2`. -/
 theorem trace_eq_efFunctional_of_ne_zero {θ a : ℝ} (ha : 0 < a) (hθa : θ - 1 / 2 < a)
@@ -380,10 +391,7 @@ theorem trace_eq_efFunctional_of_ne_zero {θ a : ℝ} (ha : 0 < a) (hθa : θ - 
     Trace.HasTrace (Trace.induced ha φ) φ.efFunctional := by
   refine (Trace.trace_eq_efFunctional_iff ha).2 ?_ φ
   rintro ⟨ρ, h0, h1, h2, h3⟩
-  rcases le_abs'.1 h3 with h4 | h4
-  · refine h (1 - ρ) (by simp; linarith) ?_
-    have h5 : 0 < zeroMult (1 - ρ) := zeroMult_one_sub h1 h2 ▸ zeroMult_pos h0
-    exact apply_eq_zero_of_analyticOrderNatAt_ne_zero h5.ne'
-  · exact h ρ (by linarith) h0
+  obtain ⟨ρ', h0', -, -, h4⟩ := exists_zero_gt_half_add_of_abs h0 h1 h2 (hθa.trans_le h3)
+  exact h ρ' (by linarith) h0'
 
 end Masullo.Window

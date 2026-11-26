@@ -716,6 +716,26 @@ lemma im_ne_zero_of_mem {ρ : ℂ} (h : ρ ∈ stripZeros) : ρ.im ≠ 0 := by
 /-- Zeros of positive ordinate strictly to the right of `σ`. -/
 def upper (σ : ℝ) : Set ℂ := {ρ | ρ ∈ stripZeros ∧ σ < ρ.re ∧ 0 < ρ.im}
 
+/-- A zero in the strip to the right of `σ` yields one of positive ordinate, by conjugation. -/
+lemma upper_nonempty {σ : ℝ} {ρ : ℂ} (hρ : ρ ∈ stripZeros) (hl : σ < ρ.re) :
+    (upper σ).Nonempty := by
+  rcases lt_or_gt_of_ne (im_ne_zero_of_mem hρ) with hi | hi
+  · exact ⟨starRingEnd ℂ ρ, conj_mem_stripZeros hρ, by simpa using hl, by simpa using hi⟩
+  · exact ⟨ρ, hρ, hl, hi⟩
+
+/-- A nonempty `upper σ` with summable reciprocal ordinates has an element of least ordinate. -/
+lemma exists_min_im {σ : ℝ} (hne : (upper σ).Nonempty)
+    (hsum : Summable fun z : upper σ => 1 / (z : ℂ).im) :
+    ∃ ρ₀ ∈ upper σ, ∀ ρ ∈ upper σ, ρ₀.im ≤ ρ.im := by
+  have hpos : Tendsto (fun z : upper σ => 1 / (z : ℂ).im) cofinite (𝓝[>] (0 : ℝ)) :=
+    tendsto_nhdsWithin_iff.2 ⟨hsum.tendsto_cofinite_zero,
+      .of_forall fun z => one_div_pos.2 z.2.2.2⟩
+  have him : Tendsto (fun z : upper σ => (z : ℂ).im) cofinite atTop := by
+    simpa [Function.comp_def, one_div] using tendsto_inv_nhdsGT_zero.comp hpos
+  let : Nonempty (upper σ) := hne.to_subtype
+  obtain ⟨ρ₀, hmin⟩ := him.exists_forall_le
+  exact ⟨ρ₀, ρ₀.2, fun ρ hρ => hmin ⟨ρ, hρ⟩⟩
+
 /-- Let `ρ₀` have least ordinate among the zeros of positive ordinate to the right of
 `σ ≥ 1/2`, and let the reciprocal ordinates of these zeros have sum `S` with `3πS < log R`.
 Let `0 ≤ C` and `0 ≤ θ ≤ σ`. Then from some height on, every window `[Y, RY]` contains points
@@ -981,21 +1001,11 @@ theorem exists_rightmost_of_bound {R θ C : ℝ} (hR : 1 < R)
   have hle := tsum_comp_le_tsum_of_inj hv (fun j => (one_div_pos.2 j.1.2.2.2).le) hi
   have hW := (lt_div_iff₀' (by positivity : (0 : ℝ) < 3 * π)).1 (hle.trans_lt hF)
   set σ := p.re
-  obtain ⟨ρ₃, h₃⟩ : (upper σ).Nonempty := by
-    obtain ⟨ρ, hρ, hl⟩ := hcon p hpZ
-    rcases lt_or_gt_of_ne (im_ne_zero_of_mem hρ) with hi | hi
-    · exact ⟨starRingEnd ℂ ρ, conj_mem_stripZeros hρ, by simpa using hl, by simpa using hi⟩
-    · exact ⟨ρ, hρ, hl, hi⟩
-  have hpos : Tendsto (fun z : upper σ => 1 / (z : ℂ).im) cofinite (𝓝[>] (0 : ℝ)) :=
-    tendsto_nhdsWithin_iff.2 ⟨hsum.tendsto_cofinite_zero,
-      .of_forall fun z => one_div_pos.2 z.2.2.2⟩
-  have him : Tendsto (fun z : upper σ => (z : ℂ).im) cofinite atTop := by
-    simpa [Function.comp_def, one_div] using tendsto_inv_nhdsGT_zero.comp hpos
-  let : Nonempty (upper σ) := ⟨⟨ρ₃, h₃⟩⟩
-  obtain ⟨ρ₀, hmin⟩ := him.exists_forall_le
+  obtain ⟨ρ, hρ, hl⟩ := hcon p hpZ
+  obtain ⟨ρ₀, h₀, hmin⟩ := exists_min_im (upper_nonempty hρ hl) hsum
   obtain ⟨Y₀, hY₀⟩ := both_signs hσ2.le (by linarith) (le_max_right θ 0)
-    ((max_le_max le_rfl (by norm_num)).trans hθp.le) (le_max_right C 0) ρ₀.2
-    (fun ρ hρ => hmin ⟨ρ, hρ⟩) hsum hW
+    ((max_le_max le_rfl (by norm_num)).trans hθp.le) (le_max_right C 0) h₀
+    hmin hsum hW
   obtain ⟨Y, hY, hrun⟩ := h (max Y₀ 1)
   have hle (x : ℝ) (hx : x ∈ Icc Y (R * Y)) : C * x ^ θ ≤ max C 0 * x ^ max θ 0 := by
     have hx1 := (le_of_max_le_right hY).trans hx.1
@@ -1039,27 +1049,17 @@ theorem ne_zero_of_dyadic_window {θ δ C : ℝ} (hθ : 1 / 2 ≤ θ) (hδ : 0 <
   set σ := (θ + ρ.re) / 2 with hσdef
   have hσ : 1 / 2 < σ := by linarith
   have hσρ : σ < ρ.re := by linarith
-  obtain ⟨ρ₃, h₃⟩ : (upper σ).Nonempty := by
-    rcases lt_or_gt_of_ne (im_ne_zero_of_mem hs) with hi | hi
-    · exact ⟨starRingEnd ℂ ρ, conj_mem_stripZeros hs, by simpa using hσρ, by simpa using hi⟩
-    · exact ⟨ρ, hs, hσρ, hi⟩
   have hsum : Summable fun z : upper σ => 1 / (z : ℂ).im :=
     (summable_inv_im_of_half_lt hσ).comp_injective
       (i := fun z : upper σ => (⟨z, z.2.1, z.2.2.1.le, z.2.2.2⟩ :
         {ρ : ℂ | ρ ∈ stripZeros ∧ σ ≤ ρ.re ∧ 0 < ρ.im}))
       (fun _ _ e => Subtype.ext (Subtype.mk.inj e))
-  have hpos : Tendsto (fun z : upper σ => 1 / (z : ℂ).im) cofinite (𝓝[>] (0 : ℝ)) :=
-    tendsto_nhdsWithin_iff.2 ⟨hsum.tendsto_cofinite_zero,
-      .of_forall fun z => one_div_pos.2 z.2.2.2⟩
-  have him : Tendsto (fun z : upper σ => (z : ℂ).im) cofinite atTop := by
-    simpa [Function.comp_def, one_div] using tendsto_inv_nhdsGT_zero.comp hpos
-  let : Nonempty (upper σ) := ⟨⟨ρ₃, h₃⟩⟩
-  obtain ⟨ρ₀, hmin⟩ := him.exists_forall_le
+  obtain ⟨ρ₀, h₀, hmin⟩ := exists_min_im (upper_nonempty hs hσρ) hsum
   obtain ⟨R, hR, hW⟩ : ∃ R : ℝ, 0 < R ∧
       3 * π * ∑' z : upper σ, 1 / (z : ℂ).im < Real.log R :=
     ⟨Real.exp (3 * π * ∑' z : upper σ, 1 / (z : ℂ).im + 1), Real.exp_pos _, by simp⟩
   obtain ⟨Y₀, hY₀⟩ := both_signs hσ.le hR (by linarith : (0 : ℝ) ≤ θ) (by linarith : θ ≤ σ)
-    (le_max_right C 0) ρ₀.2 (fun z hz => hmin ⟨z, hz⟩) hsum hW
+    (le_max_right C 0) h₀ hmin hsum hW
   obtain ⟨Y, hY, ε, hε, hw⟩ := h (max (max Y₀ 1) (R ^ (1 / δ)))
   have hY1 : 1 ≤ Y := (le_max_right _ _).trans ((le_max_left _ _).trans hY)
   have hRY : R * Y ≤ Y ^ (1 + δ) := by

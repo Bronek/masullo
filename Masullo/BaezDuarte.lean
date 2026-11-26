@@ -265,17 +265,6 @@ lemma integrableOn_abs_approx {σ : ℝ} (hσ : 0 < σ) (N : ℕ) :
 def MellinBound (σ C : ℝ) : Prop :=
   ∀ M : ℕ, ∃ N ≥ M, ∫ x in Ioc (0 : ℝ) 1, |approx N x| * x ^ (σ - 1) ≤ C
 
-/-- `MellinBound` is monotone in `σ` on `σ > 0`: `x ^ (σ' - 1) ≤ x ^ (σ - 1)` on `(0, 1]`. -/
-theorem MellinBound.mono {σ σ' C : ℝ} (hσ : 0 < σ) (h : σ ≤ σ') (hb : MellinBound σ C) :
-    MellinBound σ' C := by
-  intro M
-  obtain ⟨N, hN, hI⟩ := hb M
-  refine ⟨N, hN, le_trans ?_ hI⟩
-  refine setIntegral_mono_on (integrableOn_abs_approx (hσ.trans_le h) N)
-    (integrableOn_abs_approx hσ N) measurableSet_Ioc fun x hx => ?_
-  exact mul_le_mul_of_nonneg_left
-    (Real.rpow_le_rpow_of_exponent_ge hx.1 hx.2 (by linarith)) (abs_nonneg _)
-
 /-- `MellinBound σ C` with `σ > 0` rules out zeros of zeta to the right of `σ`. The converse is
 not asserted. -/
 theorem riemannZeta_ne_zero_of_mellinBound {σ C : ℝ} (hσ : 0 < σ) (h : MellinBound σ C)
