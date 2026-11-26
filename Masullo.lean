@@ -18,5 +18,6 @@ import Masullo.DyadicControls
 import Masullo.Probe
 import Masullo.ProbeControls
 import Masullo.RunsControls
+import Masullo.Mean
 
 #print RiemannHypothesis

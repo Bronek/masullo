@@ -54,6 +54,9 @@ which is stronger.
 The analytic input, that the zeros right of each line `re s = σ > 1/2` have summable reciprocal
 ordinates, is proved in `WeilExplicit/Density.lean`. The bound holds at `θ = 1`
 (`Controls.bound_at_exponent_one`); neither it for any `θ < 1` nor such runs is proved here.
+A mean over `[Y, 2Y]` of one sign of `Q(x) = ψ(2x) - 5ψ(x) + 8ψ(x/2) - 4ψ(x/4)`, with `ψ`
+Chebyshev's function, also suffices: a bound `C Y^θ` with `θ < 1` for arbitrarily large `Y`
+gives the bound above on windows of ratio `√2` (`trace_width_of_mean` in `Masullo/Mean.lean`).
 
 A further condition is equivalent rather than sufficient. For a test function `φ` let `L_φ(t)` be
 Weil's functional at the translate of `φ` by `t` in the logarithmic variable. Fix `a ≥ 0` and

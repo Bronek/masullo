@@ -71,6 +71,8 @@ arguments are due to Kaczorowski and to Montgomery and Vorhauer. Claude formalis
 from sign runs to a rightmost zero and its trace corollary. Codex reviewed the Lean and shortened
 several proofs. A Claude Fable subagent proposed replacing sign runs by a one-sided power bound
 on the same windows, which has exactly the strength of the trace gap; Claude formalised it.
+For `Masullo/Mean.lean`, Codex proposed the passage from a one-sided mean of the second
+difference of `ψ` to such a window bound, and Claude formalised it.
 
 For `WeilExplicit/Density*.lean`, Codex supplied the Carlson-type mollified mean-square argument
 for the summability of reciprocal ordinates of the zeros to the right of `re s = σ > 1/2`. Claude
