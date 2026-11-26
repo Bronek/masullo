@@ -57,6 +57,11 @@ ordinates, is proved in `WeilExplicit/Density.lean`. The bound holds at `θ = 1`
 A mean over `[Y, 2Y]` of one sign of `Q(x) = ψ(2x) - 5ψ(x) + 8ψ(x/2) - 4ψ(x/4)`, with `ψ`
 Chebyshev's function, also suffices: a bound `C Y^θ` with `θ < 1` for arbitrarily large `Y`
 gives the bound above on windows of ratio `√2` (`trace_width_of_mean` in `Masullo/Mean.lean`).
+The primes can be removed altogether. Let `L(x) = ∑_{n ≤ x} λ(n)` with `λ(n) = (-1)^Ω(n)` the
+Liouville function. For `θ ≥ 1/2`, a one-sided bound `L(x) ≤ C x^θ`, or `L(x) ≥ -C x^θ`, on
+`[Y, Y^(1+δ)]` for arbitrarily large `Y` rules out zeros with real part greater than `θ`
+(`riemannZeta_ne_zero_of_window` in `Masullo/Liouville.lean`), and so does a one-sided bound on
+the short-interval increments of `L` (`riemannZeta_ne_zero_of_mean`). Both hold at `θ = 1`.
 
 A further condition is equivalent rather than sufficient. For a test function `φ` let `L_φ(t)` be
 Weil's functional at the translate of `φ` by `t` in the logarithmic variable. Fix `a ≥ 0` and

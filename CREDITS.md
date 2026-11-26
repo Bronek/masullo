@@ -73,6 +73,10 @@ several proofs. A Claude Fable subagent proposed replacing sign runs by a one-si
 on the same windows, which has exactly the strength of the trace gap; Claude formalised it.
 For `Masullo/Mean.lean`, Codex proposed the passage from a one-sided mean of the second
 difference of `ψ` to such a window bound, and Claude formalised it.
+For `Masullo/Liouville.lean`, Codex proposed restating the gap through one-sided bounds on the
+summatory Liouville function and its short-interval increments; a Claude Fable subagent proposed
+proving it with Landau's argument extended to poles of finite order (`Landau.ContinuesMero`);
+Claude formalised both.
 
 For `WeilExplicit/Density*.lean`, Codex supplied the Carlson-type mollified mean-square argument
 for the summability of reciprocal ordinates of the zeros to the right of `re s = σ > 1/2`. Claude
