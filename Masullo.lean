@@ -21,5 +21,7 @@ import Masullo.RunsControls
 import Masullo.Mean
 import Masullo.Liouville
 import Masullo.LiouvilleControls
+import Masullo.BaezDuarte
+import Masullo.BaezDuarteControls
 
 #print RiemannHypothesis

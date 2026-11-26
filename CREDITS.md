@@ -77,6 +77,8 @@ For `Masullo/Liouville.lean`, Codex proposed restating the gap through one-sided
 summatory Liouville function and its short-interval increments; a Claude Fable subagent proposed
 proving it with Landau's argument extended to poles of finite order (`Landau.ContinuesMero`);
 Claude formalised both.
+For `Masullo/BaezDuarte.lean`, Codex proposed the zero-exclusion test through Báez-Duarte's
+natural approximant, a Claude Fable subagent reviewed it, and Claude formalised it.
 
 For `WeilExplicit/Density*.lean`, Codex supplied the Carlson-type mollified mean-square argument
 for the summability of reciprocal ordinates of the zeros to the right of `re s = σ > 1/2`. Claude

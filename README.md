@@ -66,6 +66,15 @@ by a bound `C x^θ` on the integral from `Y` to each `x` in the window of the po
 sign of the increments `(L(t+h) - L(t))/h`, with `h ≤ Y^θ` and the sign fixed per window
 (`riemannZeta_ne_zero_of_meanBound`). Its exponent is not faithful: the bound is expected only
 for `θ` above about `2/3`, so it is a quasi-Riemann-hypothesis criterion. Both hold at `θ = 1`.
+Möbius sums give another criterion, through Báez-Duarte's natural approximant. With `μ` the
+Möbius function, `g_N = ∑_{k ≤ N} μ(k)/k` and
+`E_N(x) = 1 + ∑_{k ≤ N} μ(k){1/(kx)} - N g_N {1/(Nx)}` for `0 < x ≤ 1`, `E_N` vanishes on
+`(1/N, 1]` and its Mellin transform at each zero `ρ` with `re ρ > 0` is `1/ρ` for every `N ≥ 1`.
+So for `σ > 0`, a bound `∫_0^1 |E_N(x)| x^(σ-1) dx ≤ C` for arbitrarily large `N` rules out zeros
+with real part greater than `σ` (`riemannZeta_ne_zero_of_mellinBound` in `Masullo/BaezDuarte.lean`)
+and gives the trace identity at every positive width `a > σ - 1/2`
+(`trace_eq_efFunctional_of_mellinBound`). The bound holds at `σ = 1`; it is not proved here for
+any `σ < 1`, and no converse is formalised.
 
 A further condition is equivalent rather than sufficient. For a test function `φ` let `L_φ(t)` be
 Weil's functional at the translate of `φ` by `t` in the logarithmic variable. Fix `a ≥ 0` and
