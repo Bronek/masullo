@@ -73,8 +73,9 @@ Möbius function, `g_N = ∑_{k ≤ N} μ(k)/k` and
 So for `σ > 0`, a bound `∫_0^1 |E_N(x)| x^(σ-1) dx ≤ C` for arbitrarily large `N` rules out zeros
 with real part greater than `σ` (`riemannZeta_ne_zero_of_mellinBound` in `Masullo/BaezDuarte.lean`)
 and gives the trace identity at every positive width `a > σ - 1/2`
-(`trace_eq_efFunctional_of_mellinBound`). The bound holds at `σ = 1`; it is not proved here for
-any `σ < 1`, and no converse is formalised.
+(`trace_eq_efFunctional_of_mellinBound`). The bound holds at `σ = 1`
+(`Controls.mellinBound_one`, constant 3); it is not proved here for any `σ < 1`, and no converse
+is formalised.
 
 A further condition is equivalent rather than sufficient. For a test function `φ` let `L_φ(t)` be
 Weil's functional at the translate of `φ` by `t` in the logarithmic variable. Fix `a ≥ 0` and

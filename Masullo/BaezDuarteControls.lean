@@ -22,8 +22,7 @@ lemma abs_mobiusSum_le {N : ℕ} (hN : 0 < N) : |mobiusSum N| ≤ 1 := by
       Int.cast_natCast]
     ring
   have h1 : ∑ k ∈ Finset.Ioc 0 N, (μ k : ℝ) * ((N / k : ℕ) : ℝ) = 1 := by
-    have := congrArg (Int.cast : ℤ → ℝ) (sum_moebius_mul_div hN)
-    simpa only [Int.cast_sum, Int.cast_mul, Int.cast_natCast, Int.cast_one] using this
+    exact sum_moebius_mul_div_real hN
   have hmem : 1 ∈ Finset.Ioc 0 N := Finset.mem_Ioc.2 ⟨one_pos, hN⟩
   have h2 : |∑ k ∈ Finset.Ioc 0 N, (μ k : ℝ) * Int.fract ((N : ℝ) / k)| ≤ N - 1 := by
     rw [← Finset.add_sum_erase _ _ hmem]
@@ -45,7 +44,7 @@ lemma abs_mobiusSum_le {N : ℕ} (hN : 0 < N) : |mobiusSum N| ≤ 1 := by
   exact le_of_mul_le_mul_left (by linarith) hN'
 
 /-- `MellinBound` holds at `σ = 1` with `C = 3`: `E_N` vanishes on `(1 / N, 1]` and is at most
-`1 + 2 N ≤ 3 N` in absolute value. -/
+`1 + 2 N ≤ 3 N` in absolute value for `N ≥ 1`. -/
 theorem mellinBound_one : MellinBound 1 3 := by
   intro M
   refine ⟨max M 1, le_max_left _ _, ?_⟩
@@ -73,5 +72,20 @@ theorem mellinBound_one : MellinBound 1 3 := by
           min_eq_right ((div_le_one hN').2 hN1), setIntegral_const, Measure.real,
           Real.volume_Ioc, sub_zero, ENNReal.toReal_ofReal (by positivity), smul_eq_mul]
         field_simp
+
+/-- No negative constant works, for any `σ`, junk values of the integral included: the integral
+is nonnegative. -/
+theorem not_mellinBound_of_neg {σ C : ℝ} (hC : C < 0) : ¬ MellinBound σ C := by
+  intro h
+  obtain ⟨N, -, hN⟩ := h 0
+  have : 0 ≤ ∫ x in Ioc (0 : ℝ) 1, |approx N x| * x ^ (σ - 1) :=
+    setIntegral_nonneg measurableSet_Ioc fun x hx =>
+      mul_nonneg (abs_nonneg _) (Real.rpow_nonneg hx.1.le _)
+  linarith
+
+/-- A hypothetical zero of zeta to the right of `σ > 0` refutes `MellinBound σ C` for every `C`. -/
+theorem not_mellinBound_of_zero {σ C : ℝ} (hσ : 0 < σ) {ρ : ℂ} (hρ : σ < ρ.re)
+    (h0 : riemannZeta ρ = 0) : ¬ MellinBound σ C :=
+  fun h => riemannZeta_ne_zero_of_mellinBound hσ h hρ h0
 
 end Masullo.BaezDuarte.Controls
