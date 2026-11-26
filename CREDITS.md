@@ -63,6 +63,14 @@ For `Masullo/Dyadic.lean`, Codex proposed the two-scale difference and the tent 
 its multiplier and the residue signs for both bounds. Claude wrote the Lean; the proof that zeta has
 no zeros in `(0, 1)`, several shortenings and the control on windows of length zero are Codex's.
 
+## Reciprocal ordinates
+
+For `WeilExplicit/Density*.lean`, Codex supplied the Carlson-type mollified mean-square argument
+for the summability of reciprocal ordinates of the zeros to the right of `re s = σ > 1/2`. Claude
+wrote the Lean proof; Codex replaced its Gaussian Fourier estimates by Plancherel
+(`WeilExplicit/DensityFourier.lean`) and shortened the divisor, shell and integral arguments.
+The method of Carlson (1920) is recalled; the source was not consulted.
+
 ## Pair of widths
 
 Hassana Labs reviewed Masullo's manuscript (<https://hassana.io/music-of-the-primes/>) and published

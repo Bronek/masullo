@@ -26,3 +26,5 @@ import WeilExplicit.LineBounds
 import WeilExplicit.GammaIntegral
 import WeilExplicit.Contour
 import WeilExplicit.ExplicitFormula
+import WeilExplicit.Density
+import WeilExplicit.DensityControls
