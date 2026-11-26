@@ -4,14 +4,18 @@ import Mathlib
 # Landau's theorem on windows
 
 Let `f` be real with at most exponential growth and `θ ≥ 0`. Let its Laplace transform continue
-meromorphically to `Re s > θ` with simple poles, finitely many in each disc of the plane, and let
-every real pole there have a residue with negative real part. If, for a fixed `δ > 0`, `f ≥ 0` on
-windows `[U, (1 + δ) U]` with `U` arbitrarily large, then there are no poles in `Re s > θ`. This is
-a one-way implication; it asserts nothing about the sign of `f` outside the windows.
+meromorphically to `Re s > θ` with poles of finite order, finitely many in each disc of the plane,
+and let every real pole there have a leading Laurent coefficient with negative real part. If, for a
+fixed `δ > 0`, `f ≥ 0` on windows `[U, (1 + δ) U]` with `U` arbitrarily large, then there are no
+poles in `Re s > θ`. This is a one-way implication; it asserts nothing about the sign of `f` outside
+the windows. `Continues` records the case of simple poles with given residues and
+`ContinuesMero` the general one; the theorem is `ContinuesMero.eq_empty_of_window`.
 
 The Taylor coefficients of the transform at `σ + i t` are integrals of `f` against the kernels
 `u ^ k e ^ (-σ u) / k!`, which concentrate at `u = k / σ`. When `k / σ` is inside a window, the
 coefficient at `σ` bounds those at every `σ + i t`, up to an error below the scale set by the poles.
+A pole of order `m + 1` at `ρ` contributes Taylor coefficients of size `k ^ m / |σ - ρ| ^ k`,
+dominated by the term of its leading Laurent coefficient.
 
 See `CREDITS.md` for the sources of the idea.
 -/
@@ -250,6 +254,19 @@ structure Continues (f : ℝ → ℝ) (H : ℂ → ℂ) (Z : Set ℂ) (κ : ℂ 
   residue_ne_zero : ∀ ρ ∈ Z, κ ρ ≠ 0
   pole : ∀ ρ ∈ Z, ∃ g, AnalyticAt ℂ g ρ ∧ ∀ᶠ s in 𝓝[≠] ρ, H s = κ ρ / (s - ρ) + g s
 
+/-- `H` continues the Laplace transform of `f` from `Re s > c` to `Re s > θ`, and its poles there
+have finite order and form the locally finite set `Z`. At `ρ ∈ Z` the transform is
+`g s / (s - ρ) ^ (m + 1)` with `g` analytic at `ρ` and `g ρ ≠ 0`. -/
+structure ContinuesMero (f : ℝ → ℝ) (H : ℂ → ℂ) (Z : Set ℂ) (A c θ : ℝ) : Prop where
+  measurable : Measurable f
+  growth : ∀ u, 0 ≤ u → |f u| ≤ A * Real.exp (c * u)
+  laplace : ∀ s : ℂ, c < s.re → H s = ∫ u in Ioi (0 : ℝ), (f u : ℂ) * cexp (-(s * u))
+  analytic : ∀ s : ℂ, θ < s.re → s ∉ Z → AnalyticAt ℂ H s
+  finite : ∀ (s : ℂ) (r : ℝ), (Z ∩ closedBall s r).Finite
+  re_mem : ∀ ρ ∈ Z, ρ.re ∈ Ioc θ c
+  pole : ∀ ρ ∈ Z, ∃ (m : ℕ) (g : ℂ → ℂ), AnalyticAt ℂ g ρ ∧ g ρ ≠ 0 ∧
+    ∀ᶠ s in 𝓝[≠] ρ, H s = g s / (s - ρ) ^ (m + 1)
+
 lemma exists_nearest {Z : Set ℂ} (hZ : ∀ (s : ℂ) (r : ℝ), (Z ∩ closedBall s r).Finite)
     (hne : Z.Nonempty) (s : ℂ) : ∃ ρ ∈ Z, ∀ z ∈ Z, dist ρ s ≤ dist z s := by
   obtain ⟨ρ0, h0⟩ := hne
@@ -260,52 +277,219 @@ lemma exists_nearest {Z : Set ℂ} (hZ : ∀ (s : ℂ) (r : ℝ), (Z ∩ closedB
   · exact h2 z ⟨hz, h⟩
   · exact (mem_closedBall.1 h1.2).trans (not_le.1 h).le
 
-namespace Continues
+/-- A simple pole with residue `κ ρ` is `g s / (s - ρ)` with `g ρ = κ ρ`. -/
+lemma Continues.exists_pole {H κ : ℂ → ℂ} {Z : Set ℂ} {θ : ℝ} (h : Continues f H Z κ A c θ)
+    {ρ : ℂ} (hρ : ρ ∈ Z) : ∃ g : ℂ → ℂ, AnalyticAt ℂ g ρ ∧ g ρ = κ ρ ∧
+      ∀ᶠ s in 𝓝[≠] ρ, H s = g s / (s - ρ) ^ (0 + 1) := by
+  obtain ⟨g, hg, hH⟩ := h.pole ρ hρ
+  refine ⟨fun s => κ ρ + (s - ρ) * g s, by fun_prop, by simp, ?_⟩
+  filter_upwards [hH, self_mem_nhdsWithin] with s hs hne
+  rw [hs, zero_add, pow_one]
+  field_simp [sub_ne_zero.2 hne]
 
-variable {H κ : ℂ → ℂ} {Z : Set ℂ} {θ : ℝ}
+lemma Continues.toMero {H κ : ℂ → ℂ} {Z : Set ℂ} {θ : ℝ} (h : Continues f H Z κ A c θ) :
+    ContinuesMero f H Z A c θ where
+  measurable := h.measurable
+  growth := h.growth
+  laplace := h.laplace
+  analytic := h.analytic
+  finite := h.finite
+  re_mem := h.re_mem
+  pole ρ hρ := by
+    obtain ⟨g, hg, hgρ, hH⟩ := h.exists_pole hρ
+    exact ⟨0, g, hg, hgρ ▸ h.residue_ne_zero ρ hρ, hH⟩
 
-lemma exists_coeff_sub_le (h : Continues f H Z κ A c θ) {s ρ a : ℂ} {K : ℂ → ℂ} {R r : ℝ}
-    (hs : c < s.re) (hρ : ρ ≠ s) (hr : 0 < r) (hrR : r < R) (hK : DifferentiableOn ℂ K (ball s R))
-    (hKH : ∀ᶠ z in 𝓝 s, K z = H z - a / (z - ρ)) :
-    ∃ M, ∀ k, ‖coeff f k s - a / (s - ρ) ^ (k + 1)‖ ≤ M / r ^ k := by
-  have hρ' : s - ρ ≠ 0 := sub_ne_zero.2 hρ.symm
+/-! ### Principal parts -/
+
+lemma analyticAt_dslope_self {p : ℂ → ℂ} {a : ℂ} (h : AnalyticAt ℂ p a) :
+    AnalyticAt ℂ (dslope p a) a := by
+  have hs := h.eventually_analyticAt
+  exact ((differentiableOn_dslope hs).2 fun z hz =>
+    hz.differentiableAt.differentiableWithinAt).analyticAt hs
+
+/-- `g z / (z - ρ) ^ (m + 1)` is a principal part with leading coefficient `g ρ` plus a function
+analytic at `ρ`. -/
+lemma exists_principal {g : ℂ → ℂ} {ρ : ℂ} (hg : AnalyticAt ℂ g ρ) (m : ℕ) :
+    ∃ a : ℕ → ℂ, a m = g ρ ∧ ∃ g₂ : ℂ → ℂ, AnalyticAt ℂ g₂ ρ ∧ ∀ z, z ≠ ρ →
+      g z / (z - ρ) ^ (m + 1) = ∑ j ∈ Finset.range (m + 1), a j / (z - ρ) ^ (j + 1) + g₂ z := by
+  induction m generalizing g with
+  | zero =>
+    refine ⟨fun _ => g ρ, rfl, dslope g ρ, analyticAt_dslope_self hg, fun z hz => ?_⟩
+    rw [dslope_of_ne _ hz, slope_def_field]
+    simp only [zero_add, pow_one, Finset.range_one, Finset.sum_singleton]
+    field_simp [sub_ne_zero.2 hz]
+    ring
+  | succ m ih =>
+    obtain ⟨a, -, g₂, hg₂, he⟩ := ih (analyticAt_dslope_self hg)
+    refine ⟨Function.update a (m + 1) (g ρ), by simp, g₂, hg₂, fun z hz => ?_⟩
+    have hs : ∑ j ∈ Finset.range (m + 1), Function.update a (m + 1) (g ρ) j / (z - ρ) ^ (j + 1) =
+        ∑ j ∈ Finset.range (m + 1), a j / (z - ρ) ^ (j + 1) :=
+      Finset.sum_congr rfl fun j hj => by
+        rw [Function.update_of_ne (by simp at hj; omega)]
+    have hd : g z = g ρ + (z - ρ) * dslope g ρ z := by
+      rw [dslope_of_ne _ hz, slope_def_field]
+      field_simp [sub_ne_zero.2 hz]
+      ring
+    rw [Finset.sum_range_succ, hs, Function.update_self,
+      show ∀ x y w : ℂ, x + y + w = x + w + y from fun _ _ _ => by ring, ← he z hz, hd]
+    field_simp [sub_ne_zero.2 hz]
+    ring
+
+/-- The `k`-th Taylor coefficient at `ρ + e` of `∑_{j ≤ m} a j / (z - ρ) ^ (j + 1)`. -/
+noncomputable def principal (a : ℕ → ℂ) (m : ℕ) (e : ℂ) (k : ℕ) : ℂ :=
+  ∑ j ∈ Finset.range (m + 1), a j * (k + j).choose j / e ^ (k + j + 1)
+
+lemma hasSum_principal (a : ℕ → ℂ) (m : ℕ) {e w : ℂ} (hw : ‖w‖ < ‖e‖) :
+    HasSum (fun k => principal a m e k * w ^ k)
+      (∑ j ∈ Finset.range (m + 1), a j / (e - w) ^ (j + 1)) := by
+  have he : e ≠ 0 := norm_pos_iff.1 ((norm_nonneg w).trans_lt hw)
+  have hew : e - w ≠ 0 := sub_ne_zero.2 fun h => by rw [h] at hw; exact lt_irrefl _ hw
+  have hr : ‖w / e‖ < 1 := by rwa [norm_div, div_lt_one (norm_pos_iff.2 he)]
+  simp_rw [principal, Finset.sum_mul]
+  refine hasSum_sum fun j _ => ?_
+  have e1 : a j / (e - w) ^ (j + 1) = a j / e ^ (j + 1) * (1 / (1 - w / e) ^ (j + 1)) := by
+    rw [one_sub_div he, div_pow]
+    field_simp
+  rw [e1]
+  refine ((hasSum_choose_mul_geometric_of_norm_lt_one j hr).mul_left _).congr_fun fun k => ?_
+  rw [div_pow]
+  field_simp
+  ring
+
+lemma choose_mul_le {k j m : ℕ} (hj : j < m) :
+    (k + j).choose j * (k + 1) ≤ (k + m).choose m * m := by
+  have h1 := Nat.add_one_mul_choose_eq (k + j) j
+  have h2 : (k + j + 1).choose (j + 1) ≤ (k + m).choose m := by
+    rw [show k + j + 1 = k + (j + 1) by omega, ← Nat.choose_symm_add, ← Nat.choose_symm_add]
+    exact Nat.choose_le_choose k (by omega)
+  calc (k + j).choose j * (k + 1) ≤ (k + j).choose j * (k + j + 1) := by gcongr; omega
+    _ = (k + j + 1).choose (j + 1) * (j + 1) := by rw [mul_comm, h1]
+    _ ≤ _ := Nat.mul_le_mul h2 hj
+
+/-- The terms below the leading one are smaller by a factor of order `1 / k`. -/
+lemma norm_principal_sub_le (a : ℕ → ℂ) (m k : ℕ) {e : ℂ} (he : e ≠ 0) :
+    ‖principal a m e k - a m * (k + m).choose m / e ^ (k + m + 1)‖ ≤
+      (k + m).choose m / ‖e‖ ^ (k + 1) *
+        (m / (k + 1) * ∑ j ∈ Finset.range m, ‖a j‖ / ‖e‖ ^ j) := by
+  have hd : 0 < ‖e‖ := norm_pos_iff.2 he
+  rw [principal, Finset.sum_range_succ, add_sub_cancel_right, Finset.mul_sum, Finset.mul_sum]
+  refine (norm_sum_le _ _).trans (Finset.sum_le_sum fun j hj => ?_)
+  have hc : ((k + j).choose j : ℝ) * (k + 1) ≤ (k + m).choose m * m := by
+    exact_mod_cast choose_mul_le (Finset.mem_range.1 hj)
+  have e1 : ‖a j * (k + j).choose j / e ^ (k + j + 1)‖ =
+      ‖a j‖ / ‖e‖ ^ j / ‖e‖ ^ (k + 1) * (k + j).choose j := by
+    rw [norm_div, norm_mul, norm_pow, Complex.norm_natCast]
+    ring
+  have e2 : (k + m).choose m / ‖e‖ ^ (k + 1) * (m / (k + 1) * (‖a j‖ / ‖e‖ ^ j)) =
+      ‖a j‖ / ‖e‖ ^ j / ‖e‖ ^ (k + 1) * ((k + m).choose m * m / (k + 1)) := by
+    ring
+  rw [e1, e2]
+  gcongr
+  rw [le_div_iff₀ (by positivity)]
+  exact hc
+
+lemma eventually_le_norm_principal (a : ℕ → ℂ) (m : ℕ) {e : ℂ} (he : e ≠ 0) (ha : a m ≠ 0) :
+    ∀ᶠ k : ℕ in atTop, ‖a m‖ / (2 * ‖e‖ ^ m) / ‖e‖ ^ (k + 1) ≤ ‖principal a m e k‖ := by
+  have hd : 0 < ‖e‖ := norm_pos_iff.2 he
+  have ha' : 0 < ‖a m‖ := norm_pos_iff.2 ha
+  set B := ∑ j ∈ Finset.range m, ‖a j‖ / ‖e‖ ^ j
+  have hB : 0 ≤ B := Finset.sum_nonneg fun j _ => by positivity
+  have hpos : 0 < ‖a m‖ / (2 * ‖e‖ ^ m) := by positivity
+  filter_upwards [(tendsto_const_div_atTop_nhds_zero_nat ((m : ℝ) * B)).eventually
+    (gt_mem_nhds hpos), eventually_ge_atTop 1] with k hk hk1
+  have hk0 : (0 : ℝ) < k := by exact_mod_cast hk1
+  have hk' : (m : ℝ) / (k + 1) * B ≤ ‖a m‖ / (2 * ‖e‖ ^ m) := by
+    refine le_trans ?_ hk.le
+    rw [div_mul_eq_mul_div]
+    gcongr
+    linarith
+  have h1 := norm_principal_sub_le a m k he
+  have h2 := norm_sub_norm_le (a m * (k + m).choose m / e ^ (k + m + 1)) (principal a m e k)
+  rw [norm_sub_rev] at h2
+  have s3 : ‖a m‖ / ‖e‖ ^ m = 2 * (‖a m‖ / (2 * ‖e‖ ^ m)) := by field_simp
+  have e3 : ‖a m * (k + m).choose m / e ^ (k + m + 1)‖ =
+      (k + m).choose m / ‖e‖ ^ (k + 1) * (2 * (‖a m‖ / (2 * ‖e‖ ^ m))) := by
+    rw [← s3, norm_div, norm_mul, norm_pow, Complex.norm_natCast]
+    ring
+  have hC : (1 : ℝ) ≤ (k + m).choose m := by exact_mod_cast Nat.choose_pos (by omega)
+  have s1 : ‖a m‖ / (2 * ‖e‖ ^ m) / ‖e‖ ^ (k + 1) ≤
+      (k + m).choose m / ‖e‖ ^ (k + 1) * (‖a m‖ / (2 * ‖e‖ ^ m)) := by
+    calc _ = 1 / ‖e‖ ^ (k + 1) * (‖a m‖ / (2 * ‖e‖ ^ m)) := by ring
+      _ ≤ _ := by gcongr
+  have s2 : (k + m).choose m / ‖e‖ ^ (k + 1) * (m / (k + 1) * B) ≤
+      (k + m).choose m / ‖e‖ ^ (k + 1) * (‖a m‖ / (2 * ‖e‖ ^ m)) := by gcongr
+  rw [e3] at h2
+  linarith
+
+lemma eventually_re_principal_nonpos (a : ℕ → ℂ) (m : ℕ) {d : ℝ} (hd : 0 < d)
+    (ha : (a m).re < 0) : ∀ᶠ k : ℕ in atTop, (principal a m d k).re ≤ 0 := by
+  have hn : ‖(d : ℂ)‖ = d := by simp [abs_of_pos hd]
+  set B := ∑ j ∈ Finset.range m, ‖a j‖ / d ^ j
+  have hB : 0 ≤ B := Finset.sum_nonneg fun j _ => by positivity
+  have hpos : 0 < -(a m).re / d ^ m := div_pos (by linarith) (by positivity)
+  filter_upwards [(tendsto_const_div_atTop_nhds_zero_nat ((m : ℝ) * B)).eventually
+    (gt_mem_nhds hpos), eventually_ge_atTop 1] with k hk hk1
+  have hk0 : (0 : ℝ) < k := by exact_mod_cast hk1
+  have hk' : (m : ℝ) / (k + 1) * B ≤ -(a m).re / d ^ m := by
+    refine le_trans ?_ hk.le
+    rw [div_mul_eq_mul_div]
+    gcongr
+    linarith
+  have h1 := norm_principal_sub_le a m k (e := d) (by exact_mod_cast hd.ne')
+  rw [hn] at h1
+  have h2 := re_le_norm (principal a m d k - a m * (k + m).choose m / (d : ℂ) ^ (k + m + 1))
+  rw [sub_re] at h2
+  have e3 : (a m * (k + m).choose m / (d : ℂ) ^ (k + m + 1)).re =
+      (k + m).choose m / d ^ (k + 1) * ((a m).re / d ^ m) := by
+    rw [← ofReal_natCast, ← ofReal_pow, mul_div_assoc, ← ofReal_div, re_mul_ofReal]
+    ring
+  have s2 : (k + m).choose m / d ^ (k + 1) * (m / (k + 1) * B) ≤
+      (k + m).choose m / d ^ (k + 1) * (-(a m).re / d ^ m) := by gcongr
+  have s3 : (k + m).choose m / d ^ (k + 1) * (-(a m).re / d ^ m) =
+      -((k + m).choose m / d ^ (k + 1) * ((a m).re / d ^ m)) := by ring
+  linarith
+
+namespace ContinuesMero
+
+variable {H : ℂ → ℂ} {Z : Set ℂ} {θ : ℝ}
+
+lemma exists_coeff_sub_le (h : ContinuesMero f H Z A c θ) {s : ℂ} {p K : ℂ → ℂ} {P : ℕ → ℂ}
+    {R r : ℝ} (hs : c < s.re) (hr : 0 < r) (hrR : r < R) (hK : DifferentiableOn ℂ K (ball s R))
+    (hKH : ∀ᶠ z in 𝓝 s, K z = H z - p z)
+    (hp : ∀ᶠ w in 𝓝 0, HasSum (fun k => P k * w ^ k) (p (s - w))) :
+    ∃ M, ∀ k, ‖coeff f k s - P k‖ ≤ M / r ^ k := by
   have hcont : Tendsto (fun w : ℂ => s - w) (𝓝 0) (𝓝 s) := by
     simpa using Continuous.tendsto (f := fun w : ℂ => s - w) (by fun_prop) 0
-  obtain ⟨M, hM⟩ := exists_coeff_le (D := fun k => coeff f k s - a / (s - ρ) ^ (k + 1))
+  obtain ⟨M, hM⟩ := exists_coeff_le (D := fun k => coeff f k s - P k)
     (h := fun w => K (s - w)) hr hrR
     (hK.comp (by fun_prop) fun w hw => by simpa [dist_eq_norm] using hw) (by
-      filter_upwards [hcont.eventually hKH, ball_mem_nhds (0 : ℂ) (sub_pos.2 hs),
-        ball_mem_nhds (0 : ℂ) (norm_pos_iff.2 hρ')] with w h1 h2 h3
-      rw [mem_ball_zero_iff] at h2 h3
+      filter_upwards [hcont.eventually hKH, ball_mem_nhds (0 : ℂ) (sub_pos.2 hs), hp]
+        with w h1 h2 h3
+      rw [mem_ball_zero_iff] at h2
       have e1 := hasSum_coeff h.measurable h.growth h2
       rw [← h.laplace _ (by have := (abs_le.1 (abs_re_le_norm w)).2; simp; linarith)] at e1
-      have h4 : ‖w / (s - ρ)‖ < 1 := by rwa [norm_div, div_lt_one (norm_pos_iff.2 hρ')]
-      have e2 := (hasSum_geometric_of_norm_lt_one h4).mul_left (a / (s - ρ))
-      have h5 : s - ρ - w ≠ 0 := sub_ne_zero.2 fun e => by simp [e] at h3
       rw [h1]
-      have e : a / (s - w - ρ) = a / (s - ρ) * (1 - w / (s - ρ))⁻¹ := by
-        rw [one_sub_div hρ', sub_right_comm s w]
-        field_simp
-      rw [e]
-      refine (e1.sub e2).congr_fun fun k => ?_
-      rw [div_pow, pow_succ]
-      field_simp)
+      exact (e1.sub h3).congr_fun fun k => by ring)
   exact ⟨M, fun k => (le_div_iff₀ (by positivity)).2 (hM k)⟩
 
-lemma exists_coeff_le (h : Continues f H Z κ A c θ) {s : ℂ} {R r : ℝ} (hs : c < s.re) (hr : 0 < r)
-    (hrR : r < R) (hR : R ≤ s.re - θ) (hZ : ∀ z ∈ Z, R ≤ dist z s) :
+lemma exists_coeff_le (h : ContinuesMero f H Z A c θ) {s : ℂ} {R r : ℝ} (hs : c < s.re)
+    (hr : 0 < r) (hrR : r < R) (hR : R ≤ s.re - θ) (hZ : ∀ z ∈ Z, R ≤ dist z s) :
     ∃ M, ∀ k, ‖coeff f k s‖ ≤ M / r ^ k := by
-  have := h.exists_coeff_sub_le (a := 0) (ρ := s + 1) (K := H) hs (by simp) hr hrR
+  have := h.exists_coeff_sub_le (p := fun _ => 0) (P := fun _ => 0) (K := H) hs hr hrR
     (fun z hz => (h.analytic z ?_ fun hzZ =>
       (hZ z hzZ).not_gt hz).differentiableAt.differentiableWithinAt) (by simp)
+    (by simp [hasSum_zero])
   · simpa using this
   · have := (abs_lt.1 ((abs_re_le_norm _).trans_lt (mem_ball_iff_norm.1 hz))).1
     simp at this
     linarith
 
-lemma exists_coeff_sub_pole_le (h : Continues f H Z κ A c θ) {s ρ : ℂ} (hs : c < s.re) (hρ : ρ ∈ Z)
-    (hlt : dist ρ s < s.re - θ) (huniq : ∀ z ∈ Z, z ≠ ρ → dist ρ s < dist z s) :
-    ∃ R > dist ρ s, ∃ M, ∀ k, ‖coeff f k s - κ ρ / (s - ρ) ^ (k + 1)‖ ≤ M / R ^ k := by
+/-- Near the nearest pole the coefficients at `s` follow those of the principal part. -/
+lemma exists_coeff_sub_pole_le (h : ContinuesMero f H Z A c θ) {s ρ : ℂ} {m : ℕ}
+    {g : ℂ → ℂ} (hs : c < s.re) (hρ : ρ ∈ Z) (hg : AnalyticAt ℂ g ρ)
+    (hH : ∀ᶠ z in 𝓝[≠] ρ, H z = g z / (z - ρ) ^ (m + 1)) (hlt : dist ρ s < s.re - θ)
+    (huniq : ∀ z ∈ Z, z ≠ ρ → dist ρ s < dist z s) : ∃ a : ℕ → ℂ, a m = g ρ ∧
+      ∃ R > dist ρ s, ∃ M, ∀ k, ‖coeff f k s - principal a m (s - ρ) k‖ ≤ M / R ^ k := by
   have hne : ρ ≠ s := fun e => by have := (h.re_mem ρ hρ).2; rw [e] at this; linarith
   obtain ⟨R, h1, h2, h3⟩ : ∃ R > dist ρ s, R ≤ s.re - θ ∧ ∀ z ∈ Z, z ≠ ρ → R ≤ dist z s := by
     rcases (Z \ {ρ}).eq_empty_or_nonempty with he | hn
@@ -315,26 +499,34 @@ lemma exists_coeff_sub_pole_le (h : Continues f H Z κ A c θ) {s ρ : ℂ} (hs 
       exact ⟨min (s.re - θ) (dist z s), lt_min hlt (huniq z hz.1 hz.2), min_le_left _ _,
         fun w hw hwρ => (min_le_right _ _).trans (hmin w ⟨hw, hwρ⟩)⟩
   obtain ⟨r, hr, hrR⟩ := exists_between h1
-  obtain ⟨g, hg, hgH⟩ := h.pole ρ hρ
-  refine ⟨r, hr, h.exists_coeff_sub_le (K := Function.update (fun z => H z - κ ρ / (z - ρ)) ρ (g ρ))
-    hs hne (dist_nonneg.trans_lt hr) hrR (fun z hz => DifferentiableAt.differentiableWithinAt ?_)
-    ?_⟩
+  obtain ⟨a, ha, g₂, hg₂, hexp⟩ := exists_principal hg m
+  refine ⟨a, ha, r, hr, h.exists_coeff_sub_le
+    (p := fun z => ∑ j ∈ Finset.range (m + 1), a j / (z - ρ) ^ (j + 1))
+    (K := Function.update (fun z => H z - ∑ j ∈ Finset.range (m + 1), a j / (z - ρ) ^ (j + 1))
+      ρ (g₂ ρ))
+    hs (dist_nonneg.trans_lt hr) hrR (fun z hz => DifferentiableAt.differentiableWithinAt ?_)
+    ?_ ?_⟩
   · rcases eq_or_ne z ρ with rfl | hzρ
-    · refine hg.differentiableAt.congr_of_eventuallyEq ?_
-      filter_upwards [eventually_nhdsWithin_iff.1 hgH] with w hw
+    · refine hg₂.differentiableAt.congr_of_eventuallyEq ?_
+      filter_upwards [eventually_nhdsWithin_iff.1 hH] with w hw
       rcases eq_or_ne w z with rfl | hwz
       · simp
-      · rw [Function.update_of_ne hwz, hw hwz, add_sub_cancel_left]
+      · rw [Function.update_of_ne hwz, hw hwz, hexp w hwz, add_sub_cancel_left]
     · have hre := (abs_lt.1 ((abs_re_le_norm _).trans_lt (mem_ball_iff_norm.1 hz))).1
       rw [sub_re] at hre
       have hzZ : z ∉ Z := fun hzZ => (h3 z hzZ hzρ).not_gt hz
-      have hH := (h.analytic z (by linarith) hzZ).differentiableAt
-      refine DifferentiableAt.congr_of_eventuallyEq (f := fun z => H z - κ ρ / (z - ρ)) ?_
+      have hH' := (h.analytic z (by linarith) hzZ).differentiableAt
+      refine DifferentiableAt.congr_of_eventuallyEq
+        (f := fun z => H z - ∑ j ∈ Finset.range (m + 1), a j / (z - ρ) ^ (j + 1)) ?_
         ((eventually_ne_nhds hzρ).mono fun w hw => Function.update_of_ne hw _ _)
-      exact hH.sub ((differentiableAt_const _).div (by fun_prop) (sub_ne_zero.2 hzρ))
+      exact hH'.sub (DifferentiableAt.fun_sum fun j _ => (differentiableAt_const _).div
+        (by fun_prop) (pow_ne_zero _ (sub_ne_zero.2 hzρ)))
   · exact (eventually_ne_nhds hne.symm).mono fun w hw => Function.update_of_ne hw _ _
+  · filter_upwards [ball_mem_nhds (0 : ℂ) (norm_pos_iff.2 (sub_ne_zero.2 hne.symm))] with w hw
+    rw [mem_ball_zero_iff] at hw
+    simpa only [sub_right_comm s w ρ] using hasSum_principal a m hw
 
-end Continues
+end ContinuesMero
 
 lemma false_of_frequently {a r R₁ R₂ R₃ M₁ M₂ M₃ : ℝ} (ha : 0 < a) (hr : 0 < r) (h1 : r < R₁)
     (h2 : r < R₂) (h3 : r < R₃)
@@ -351,12 +543,15 @@ lemma false_of_frequently {a r R₁ R₂ R₃ M₁ M₂ M₃ : ℝ} (ha : 0 < a)
   rw [pow_succ, div_mul_eq_div_div_swap, div_mul_cancel₀ _ (pow_pos hr k).ne'] at this
   linarith
 
-/-- **Landau's theorem on windows.** If `f ≥ 0` on arbitrarily late windows `[U, (1 + δ) U]` and the
-residues of its Laplace transform at real poles have negative real part, then the transform is
-analytic in `Re s > θ`. -/
-theorem Continues.eq_empty_of_window {H κ : ℂ → ℂ} {Z : Set ℂ} {θ δ : ℝ}
-    (h : Continues f H Z κ A c θ) (hθ : 0 ≤ θ) (hκ : ∀ ρ ∈ Z, ρ.im = 0 → (κ ρ).re < 0) (hδ : 0 < δ)
-    (hw : ∀ X, ∃ U ≥ X, ∀ u ∈ Icc U ((1 + δ) * U), 0 ≤ f u) : Z = ∅ := by
+
+/-- **Landau's theorem on windows**, for poles of finite order. If `f ≥ 0` on arbitrarily late
+windows `[U, (1 + δ) U]`, and at each real pole the transform is `g s / (s - ρ) ^ (m + 1)` for some
+`g` with `Re (g ρ) < 0`, then the transform is analytic in `Re s > θ`. -/
+theorem ContinuesMero.eq_empty_of_window {H : ℂ → ℂ} {Z : Set ℂ} {θ δ : ℝ}
+    (h : ContinuesMero f H Z A c θ) (hθ : 0 ≤ θ)
+    (hneg : ∀ ρ ∈ Z, ρ.im = 0 → ∃ (m : ℕ) (g : ℂ → ℂ), AnalyticAt ℂ g ρ ∧ (g ρ).re < 0 ∧
+      ∀ᶠ s in 𝓝[≠] ρ, H s = g s / (s - ρ) ^ (m + 1))
+    (hδ : 0 < δ) (hw : ∀ X, ∃ U ≥ X, ∀ u ∈ Icc U ((1 + δ) * U), 0 ≤ f u) : Z = ∅ := by
   by_contra hne
   obtain ⟨ρ₀, h₀⟩ := nonempty_iff_ne_empty.2 hne
   have hβ := (h.re_mem ρ₀ h₀).1
@@ -376,20 +571,27 @@ theorem Continues.eq_empty_of_window {H κ : ℂ → ℂ} {Z : Set ℂ} {θ δ :
   -- at `σ` are of smaller order
   have key (t : ℝ) (ρ : ℂ) (hρ : ρ ∈ Z) (hlt : dist ρ (σ + t * I) < σ - θ)
       (huniq : ∀ z ∈ Z, z ≠ ρ → dist ρ (σ + t * I) < dist z (σ + t * I)) (R M : ℝ)
-      (hR : dist ρ (σ + t * I) < R) (hM : ∀ k, (coeff f k σ).re ≤ M / R ^ k) : False := by
-    obtain ⟨R₁, hR₁, M₁, hM₁⟩ := h.exists_coeff_sub_pole_le (by simpa) hρ (by simpa) huniq
+      (hR : dist ρ (σ + t * I) < R) (hM : ∀ᶠ k : ℕ in atTop, (coeff f k σ).re ≤ M / R ^ k) :
+      False := by
+    obtain ⟨m, g, hg, hg0, hH⟩ := h.pole ρ hρ
+    obtain ⟨a, ha, R₁, hR₁, M₁, hM₁⟩ :=
+      h.exists_coeff_sub_pole_le (by simpa) hρ hg hH (by simpa) huniq
+    have ha0 : a m ≠ 0 := by rw [ha]; exact hg0
     have hpos : 0 < dist ρ (σ + t * I) := dist_pos.2 fun e => by
       have := (h.re_mem ρ hρ).2
       rw [e, hre] at this
       linarith
+    have hd : ‖σ + t * I - ρ‖ = dist ρ (σ + t * I) := by rw [dist_comm, dist_eq_norm]
+    have he : σ + t * I - ρ ≠ 0 := by rw [← norm_pos_iff, hd]; exact hpos
+    have ha' : 0 < ‖a m‖ := norm_pos_iff.2 ha0
     refine false_of_frequently (M₁ := M₁) (M₂ := M) (M₃ := B)
-      (norm_pos_iff.2 (h.residue_ne_zero ρ hρ)) hpos hR₁ hR (by linarith : _ < σ)
-      (hfreq.mono fun k hk => ?_)
-    have e : ‖κ ρ / (σ + t * I - ρ) ^ (k + 1)‖ = ‖κ ρ‖ / dist ρ (σ + t * I) ^ (k + 1) := by
-      rw [norm_div, norm_pow, dist_comm, dist_eq_norm]
-    have := norm_sub_norm_le (κ ρ / (σ + t * I - ρ) ^ (k + 1)) (coeff f k (σ + t * I))
-    rw [norm_sub_rev (κ ρ / _), e] at this
-    linarith [hM₁ k, hB k hk t, hM k]
+      (a := ‖a m‖ / (2 * dist ρ (σ + t * I) ^ m)) (by positivity) hpos hR₁ hR
+      (by linarith : _ < σ) ((hfreq.and_eventually
+        ((eventually_le_norm_principal a m he ha0).and hM)).mono fun k ⟨hk, hlow, hMk⟩ => ?_)
+    rw [hd] at hlow
+    have := norm_sub_norm_le (principal a m (σ + t * I - ρ) k) (coeff f k (σ + t * I))
+    rw [norm_sub_rev (principal a m _ k)] at this
+    linarith [hM₁ k, hB k hk t]
   obtain ⟨ρ, hρ, hmin⟩ := exists_nearest h.finite ⟨ρ₀, h₀⟩ σ
   have hρlt := (hmin ρ₀ h₀).trans_lt hfar
   by_cases hA : ∃ z ∈ Z, σ - z.re < dist ρ σ
@@ -432,7 +634,7 @@ theorem Continues.eq_empty_of_window {H κ : ℂ → ℂ} {Z : Set ℂ} {θ δ :
     obtain ⟨R, hR1, hR2⟩ := exists_between hlt
     obtain ⟨M, hM⟩ := h.exists_coeff_le (s := σ) hσc (dist_nonneg.trans_lt hR1) hR2 hρlt.le hmin
     refine key t ρ₁ hρ₁ (hlt.trans hρlt) (fun x hx hxρ => (hmin₁ x hx).lt_of_ne fun e => ht2 ?_) R M
-      hR1 fun k => (re_le_norm _).trans (hM k)
+      hR1 (.of_forall fun k => (re_le_norm _).trans (hM k))
     exact mem_biUnion hρ₁ (mem_biUnion hx ⟨hxρ.symm, e⟩)
   · -- the nearest pole to `σ` is real, and its sign is wrong
     push Not at hA
@@ -451,18 +653,30 @@ theorem Continues.eq_empty_of_window {H κ : ℂ → ℂ} {Z : Set ℂ} {θ δ :
         simpa using (by nlinarith : z.im ^ 2 = 0)
     have huniq (z : ℂ) (hz : z ∈ Z) (hzρ : z ≠ ρ) : dist ρ σ < dist z σ :=
       (hmin z hz).lt_of_ne fun e => hzρ ((hreal z hz e.symm).trans (hreal ρ hρ rfl).symm)
-    obtain ⟨R, hR, M, hM⟩ := h.exists_coeff_sub_pole_le (s := σ) hσc hρ (by simpa) huniq
-    refine key 0 ρ hρ (by simpa) (by simpa) R M (by simpa) fun k => ?_
-    have e : (κ ρ / (σ - ρ) ^ (k + 1)).re = (κ ρ).re / dist ρ σ ^ (k + 1) := by
-      have : (σ : ℂ) - ρ = (dist ρ σ : ℝ) := by
-        conv_lhs => rw [hreal ρ hρ rfl]
-        simp
-      rw [this, ← ofReal_pow, div_ofReal_re]
+    obtain ⟨m, g, hg, hgre, hH⟩ := hneg ρ hρ (by rw [hreal ρ hρ rfl]; simp)
+    obtain ⟨a, ha, R, hR, M, hM⟩ :=
+      h.exists_coeff_sub_pole_le (s := σ) hσc hρ hg hH (by simpa) huniq
+    have hσρ : (σ : ℂ) - ρ = (dist ρ σ : ℝ) := by
+      conv_lhs => rw [hreal ρ hρ rfl]
+      simp
+    have hpos : 0 < dist ρ σ := dist_pos.2 fun e => by
+      have := (h.re_mem ρ hρ).2
+      rw [e, ofReal_re] at this
+      linarith
+    refine key 0 ρ hρ (by simpa) (by simpa) R M (by simpa) ?_
+    filter_upwards [eventually_re_principal_nonpos a m hpos (by rw [ha]; exact hgre)] with k hk
     have h1 := (re_le_norm _).trans (hM k)
-    rw [sub_re, e] at h1
-    have h2 : (κ ρ).re / dist ρ σ ^ (k + 1) ≤ 0 :=
-      div_nonpos_of_nonpos_of_nonneg
-        (hκ ρ hρ (by rw [hreal ρ hρ rfl]; simp)).le (by positivity)
+    rw [sub_re, hσρ] at h1
     linarith
+
+/-- **Landau's theorem on windows.** If `f ≥ 0` on arbitrarily late windows `[U, (1 + δ) U]` and the
+residues of its Laplace transform at real poles have negative real part, then the transform is
+analytic in `Re s > θ`. -/
+theorem Continues.eq_empty_of_window {H κ : ℂ → ℂ} {Z : Set ℂ} {θ δ : ℝ}
+    (h : Continues f H Z κ A c θ) (hθ : 0 ≤ θ) (hκ : ∀ ρ ∈ Z, ρ.im = 0 → (κ ρ).re < 0) (hδ : 0 < δ)
+    (hw : ∀ X, ∃ U ≥ X, ∀ u ∈ Icc U ((1 + δ) * U), 0 ≤ f u) : Z = ∅ :=
+  h.toMero.eq_empty_of_window hθ (fun ρ hρ hi => by
+    obtain ⟨g, hg, hgρ, hH⟩ := h.exists_pole hρ
+    exact ⟨0, g, hg, hgρ ▸ hκ ρ hρ hi, hH⟩) hδ hw
 
 end Masullo.Landau
