@@ -53,17 +53,6 @@ lemma hasSum_term (u : ℝ) : HasSum (fun n => term n u)
     rw [sub_nonpos, div_le_one (by exact_mod_cast h1)]
     exact ((Nat.floor_lt (Real.exp_pos u).le).1 h2).le
 
-lemma laplace_exp {a s : ℂ} (h : a.re < s.re) (c : ℝ) :
-    IntegrableOn (fun u : ℝ => cexp (a * u) * cexp (-(s * u))) (Ioi c) ∧
-      ∫ u in Ioi c, cexp (a * u) * cexp (-(s * u)) = cexp ((a - s) * c) / (s - a) := by
-  have e (u : ℝ) : cexp (a * u) * cexp (-(s * u)) = cexp ((a - s) * u) := by
-    rw [← Complex.exp_add]
-    ring_nf
-  have h' : (a - s).re < 0 := by simpa using h
-  simp_rw [e]
-  refine ⟨integrableOn_exp_mul_complex_Ioi h' c, ?_⟩
-  rw [integral_exp_mul_complex_Ioi h', ← neg_sub s a, div_neg, neg_div, neg_neg]
-
 lemma laplace_mul_exp {s : ℂ} (h : 1 < s.re) :
     IntegrableOn (fun u : ℝ => ((u * Real.exp u : ℝ) : ℂ) * cexp (-(s * u))) (Ioi 0) ∧
       ∫ u in Ioi (0 : ℝ), ((u * Real.exp u : ℝ) : ℂ) * cexp (-(s * u)) = 1 / (s - 1) ^ 2 := by
@@ -172,8 +161,8 @@ lemma laplace_sum {s : ℂ} (hs : 1 < s.re) : ∫ u in Ioi (0 : ℝ),
 noncomputable def num (s : ℂ) : ℂ :=
   (1 + Real.eulerMascheroniConstant) * s - 1 - logDeriv zetaNum s
 
-/-- The continuation of the Laplace transform of `C e ^ (θ u) - windowSum (e ^ u)`. -/
-noncomputable def continuation (C θ : ℝ) (s : ℂ) : ℂ := C / (s - θ) - dslope num 1 s / s
+/-- The continuation of the Laplace transform of `-windowSum (e ^ u)`. -/
+noncomputable def continuation (s : ℂ) : ℂ := -(dslope num 1 s / s)
 
 lemma zetaNum_ne_zero {s : ℂ} (h : riemannZeta s ≠ 0) : zetaNum s ≠ 0 := by
   rcases eq_or_ne s 1 with rfl | hs
@@ -199,45 +188,33 @@ lemma analyticAt_num {s : ℂ} (h : riemannZeta s ≠ 0) : AnalyticAt ℂ num s 
   have h1 := differentiable_zetaNum.analyticAt s
   exact (analyticAt_linear s).sub (h1.deriv.div h1 (zetaNum_ne_zero h))
 
-lemma analyticAt_dslope {p : ℂ → ℂ} {a : ℂ} (h : AnalyticAt ℂ p a) :
-    AnalyticAt ℂ (dslope p a) a := by
-  have hs := h.eventually_analyticAt
-  exact ((differentiableOn_dslope hs).2 fun z hz =>
-    hz.differentiableAt.differentiableWithinAt).analyticAt hs
-
-lemma continuation_of_ne {C θ : ℝ} {s : ℂ} (hs : s ≠ 1) :
-    continuation C θ s = C / (s - θ) - num s / (s * (s - 1)) := by
+lemma continuation_of_ne {s : ℂ} (hs : s ≠ 1) : continuation s = -(num s / (s * (s - 1))) := by
   rw [continuation, dslope_of_ne _ hs, slope_def_field, num_one, sub_zero, div_div, mul_comm s]
 
-lemma analyticAt_continuation {C θ : ℝ} (hθ : 0 < θ) {s : ℂ} (hs : θ < s.re)
-    (h : riemannZeta s ≠ 0) : AnalyticAt ℂ (continuation C θ) s := by
-  have h0 : s ≠ 0 := fun e => by simp [e] at hs; linarith
-  have hθs : s - θ ≠ 0 := sub_ne_zero.2 fun e => by simp [e] at hs
-  refine .sub (analyticAt_const.div (g := fun s : ℂ => s - θ) (by fun_prop) hθs)
-    (.div (g := fun s : ℂ => s) ?_ analyticAt_id h0)
+lemma analyticAt_continuation {s : ℂ} (h0 : s ≠ 0) (h : riemannZeta s ≠ 0) :
+    AnalyticAt ℂ continuation s := by
+  refine (AnalyticAt.div (g := fun s : ℂ => s) ?_ analyticAt_id h0).fun_neg
   rcases eq_or_ne s 1 with rfl | hs1
-  · exact analyticAt_dslope (analyticAt_num h)
+  · exact analyticAt_dslope_self (analyticAt_num h)
   · refine (((analyticAt_num h).sub analyticAt_const).div (by fun_prop)
       (sub_ne_zero.2 hs1) : AnalyticAt ℂ (fun z => (num z - num 1) / (z - 1)) s).congr ?_
     filter_upwards [eventually_ne_nhds hs1] with z hz
     rw [dslope_of_ne _ hz, slope_def_field]
     rfl
 
-lemma continuation_pole {C θ : ℝ} {ρ : ℂ} (hθ : θ ≠ ρ.re) (h0 : ρ ≠ 0) (h : riemannZeta ρ = 0) :
+lemma continuation_pole {ρ : ℂ} (h0 : ρ ≠ 0) (h : riemannZeta ρ = 0) :
     ∃ g, AnalyticAt ℂ g ρ ∧ ∀ᶠ s in 𝓝[≠] ρ,
-      continuation C θ s = zeroMult ρ / (ρ * (ρ - 1)) / (s - ρ) + g s := by
+      continuation s = zeroMult ρ / (ρ * (ρ - 1)) / (s - ρ) + g s := by
   have h1 : ρ ≠ 1 := fun e => riemannZeta_one_ne_zero (e ▸ h)
   have hd := differentiable_zetaNum.analyticAt ρ
   obtain ⟨g, hg, hg0, hfac⟩ := hd.analyticOrderAt_eq_natCast.1 (analyticOrderAt_zetaNum ρ)
   have hp : AnalyticAt ℂ (fun s : ℂ => (zeroMult ρ : ℂ) / (s * (s - 1))) ρ :=
     analyticAt_const.div (g := fun s : ℂ => s * (s - 1)) (by fun_prop)
       (mul_ne_zero h0 (sub_ne_zero.2 h1))
-  have hθρ : ρ - θ ≠ 0 := sub_ne_zero.2 fun e => hθ (by simp [e])
-  refine ⟨fun s => dslope (fun s : ℂ => (zeroMult ρ : ℂ) / (s * (s - 1))) ρ s + (C / (s - θ) -
-    ((1 + Real.eulerMascheroniConstant) * s - 1 - logDeriv g s) / (s * (s - 1))),
-    (analyticAt_dslope hp).add (.sub (analyticAt_const.div (g := fun s : ℂ => s - θ) (by fun_prop)
-      hθρ) (((analyticAt_linear ρ).sub (hg.deriv.div hg hg0)).div (g := fun s : ℂ => s * (s - 1))
-        (by fun_prop) (mul_ne_zero h0 (sub_ne_zero.2 h1)))), ?_⟩
+  refine ⟨fun s => dslope (fun s : ℂ => (zeroMult ρ : ℂ) / (s * (s - 1))) ρ s -
+    ((1 + Real.eulerMascheroniConstant) * s - 1 - logDeriv g s) / (s * (s - 1)),
+    (analyticAt_dslope_self hp).sub (((analyticAt_linear ρ).sub (hg.deriv.div hg hg0)).div
+      (g := fun s : ℂ => s * (s - 1)) (by fun_prop) (mul_ne_zero h0 (sub_ne_zero.2 h1))), ?_⟩
   filter_upwards [hfac.eventually_nhds.filter_mono nhdsWithin_le_nhds, self_mem_nhdsWithin,
     (eventually_ne_nhds h1).filter_mono nhdsWithin_le_nhds,
     (eventually_ne_nhds h0).filter_mono nhdsWithin_le_nhds,
@@ -340,41 +317,31 @@ lemma laplace_windowSum {s : ℂ} (hs : 3 < s.re) :
   field_simp
   ring
 
-lemma continues {C θ : ℝ} (hθ : 0 < θ) (hθ1 : θ < 1) :
-    Continues (fun u => C * Real.exp (θ * u) - windowSum (Real.exp u)) (continuation C θ)
-      {ρ | θ < ρ.re ∧ riemannZeta ρ = 0} (fun ρ => zeroMult ρ / (ρ * (ρ - 1))) (|C| + 4) 3 θ where
-  measurable := by
-    have := measurable_windowSum
-    fun_prop
-  growth u hu := by
-    have h1 := abs_windowSum_le (Real.one_le_exp hu)
-    rw [← Real.exp_nat_mul] at h1
-    push_cast at h1
-    have h2 : Real.exp (θ * u) ≤ Real.exp (3 * u) := Real.exp_le_exp.2 (by nlinarith)
-    refine (abs_sub _ _).trans ?_
-    rw [abs_mul, Real.abs_exp, add_mul]
-    gcongr
+lemma re_lt_one_of_zero {ρ : ℂ} (h : riemannZeta ρ = 0) : ρ.re < 1 :=
+  lt_of_not_ge fun h1 => riemannZeta_ne_zero_of_one_le_re h1 h
+
+lemma continues {θ : ℝ} (hθ : 0 ≤ θ) :
+    Continues (fun u => -windowSum (Real.exp u)) continuation {ρ | θ < ρ.re ∧ riemannZeta ρ = 0}
+      (fun ρ => zeroMult ρ / (ρ * (ρ - 1))) 4 3 θ where
+  measurable := measurable_windowSum.neg
+  growth u hu := by simpa [← Real.exp_nat_mul] using abs_windowSum_le (Real.one_le_exp hu)
   laplace s hs := by
-    obtain ⟨hi, hv⟩ := laplace_windowSum hs
-    obtain ⟨i1, v1⟩ := laplace_exp (a := θ) (s := s) (by simp; linarith) 0
-    rw [continuation_of_ne fun e => by norm_num [e] at hs, ← hv]
-    rw [ofReal_zero, mul_zero, Complex.exp_zero] at v1
-    rw [div_eq_mul_one_div, ← v1, ← integral_const_mul, ← integral_sub (i1.const_mul _) hi]
+    rw [continuation_of_ne fun e => by norm_num [e] at hs, ← (laplace_windowSum hs).2,
+      ← integral_neg]
     congr 1 with u
     push_cast
     ring
-  analytic s hs hZ := analyticAt_continuation hθ hs fun h => hZ ⟨hs, h⟩
+  analytic s hs hZ := analyticAt_continuation (ne_zero_of_re_pos (hθ.trans_lt hs))
+    fun h => hZ ⟨hs, h⟩
   finite s r := ((isCompact_closedBall s r).inter_riemannZetaZeros_finite).subset
     fun ρ h => ⟨h.2, h.1.2⟩
-  re_mem ρ h := ⟨h.1, by
-    by_contra hlt
-    exact riemannZeta_ne_zero_of_one_le_re (by linarith) h.2⟩
+  re_mem ρ h := ⟨h.1, (re_lt_one_of_zero h.2).le.trans (by norm_num)⟩
   residue_ne_zero ρ h := by
-    have h0 : ρ ≠ 0 := fun e => by have := h.1; simp [e] at this; linarith
     have h1 : ρ ≠ 1 := fun e => riemannZeta_one_ne_zero (e ▸ h.2)
     have hm : 0 < zeroMult ρ := zeroMult_pos h.2
-    exact div_ne_zero (by exact_mod_cast hm.ne') (mul_ne_zero h0 (sub_ne_zero.2 h1))
-  pole ρ h := continuation_pole h.1.ne (fun e => by have := h.1; simp [e] at this; linarith) h.2
+    exact div_ne_zero (by exact_mod_cast hm.ne')
+      (mul_ne_zero (ne_zero_of_re_pos (hθ.trans_lt h.1)) (sub_ne_zero.2 h1))
+  pole ρ h := continuation_pole (ne_zero_of_re_pos (hθ.trans_lt h.1)) h.2
 
 /-- The residue at a real zero is negative. -/
 lemma residue_re_neg {ρ : ℂ} (hr : 0 < ρ.re) (hz : riemannZeta ρ = 0) (hi : ρ.im = 0) :
@@ -382,27 +349,29 @@ lemma residue_re_neg {ρ : ℂ} (hr : 0 < ρ.re) (hz : riemannZeta ρ = 0) (hi :
   lift ρ to ℝ using hi
   rw [← ofReal_natCast, ← ofReal_one, ← ofReal_sub, ← ofReal_mul, ← ofReal_div, ofReal_re]
   refine div_neg_of_pos_of_neg (by exact_mod_cast zeroMult_pos hz) (mul_neg_of_pos_of_neg hr ?_)
-  exact sub_neg.2 (lt_of_not_ge fun h => riemannZeta_ne_zero_of_one_le_re h hz)
+  exact sub_neg.2 (by simpa using re_lt_one_of_zero hz)
 
-/-- **Window criterion.** A one-sided power bound with exponent `θ` on arbitrarily late windows
+/-- A one-sided power bound `F x ≤ C x ^ θ` on `[Y, Y ^ (1 + δ)]` is, in the variable `u = log x`,
+the bound `-F (e ^ u) ≥ -C e ^ (θ u)` on `[log Y, (1 + δ) log Y]`. -/
+lemma window_exp {F : ℝ → ℝ} {θ δ C : ℝ}
+    (h : ∀ X, ∃ Y ≥ X, ∀ x ∈ Icc Y (Y ^ (1 + δ)), F x ≤ C * x ^ θ) (X : ℝ) :
+    ∃ U ≥ X, ∀ u ∈ Icc U ((1 + δ) * U), -(C * Real.exp (θ * u)) ≤ -F (Real.exp u) := by
+  obtain ⟨Y, hY, hw⟩ := h (Real.exp X)
+  have hY0 : 0 < Y := (Real.exp_pos X).trans_le hY
+  refine ⟨Real.log Y, (Real.le_log_iff_exp_le hY0).2 hY, fun u hu => ?_⟩
+  have := hw (Real.exp u) ⟨(Real.log_le_iff_le_exp hY0).1 hu.1, by
+    rw [Real.rpow_def_of_pos hY0, mul_comm]
+    exact Real.exp_le_exp.2 hu.2⟩
+  rw [← Real.exp_mul, mul_comm u] at this
+  linarith
+
+/-- **Window criterion.** A one-sided power bound with exponent `θ ≥ 0` on arbitrarily late windows
 `[Y, Y ^ (1 + δ)]` rules out zeros of zeta to the right of `θ`. The converse is not asserted. -/
-theorem riemannZeta_ne_zero_of_window {θ δ C : ℝ} (hθ : 0 < θ) (hδ : 0 < δ)
-    (h : ∀ X, ∃ Y ≥ X, 1 < Y ∧ ∀ x ∈ Icc Y (Y ^ (1 + δ)), windowSum x ≤ C * x ^ θ) {ρ : ℂ}
-    (hρ : θ < ρ.re) : riemannZeta ρ ≠ 0 := by
-  rcases le_or_gt 1 θ with hθ1 | hθ1
-  · exact riemannZeta_ne_zero_of_one_le_re (by linarith)
-  have hZ := (continues (C := C) hθ hθ1).eq_empty_of_window hθ.le ?_ hδ ?_
-  · exact fun h0 => (hZ ▸ ⟨hρ, h0⟩ : ρ ∈ (∅ : Set ℂ)).elim
-  · exact fun ρ hρ hi => residue_re_neg (hθ.trans hρ.1) hρ.2 hi
-  · intro X
-    obtain ⟨Y, hY, hY1, hw⟩ := h (Real.exp X)
-    have hY0 : 0 < Y := by linarith
-    refine ⟨Real.log Y, (Real.le_log_iff_exp_le hY0).2 hY, fun u hu => ?_⟩
-    have := hw (Real.exp u) ⟨(Real.log_le_iff_le_exp hY0).1 hu.1, by
-      rw [Real.rpow_def_of_pos hY0, mul_comm]
-      exact Real.exp_le_exp.2 hu.2⟩
-    rw [← Real.exp_mul, mul_comm u] at this
-    linarith
+theorem riemannZeta_ne_zero_of_window {θ δ C : ℝ} (hθ : 0 ≤ θ) (hδ : 0 < δ)
+    (h : ∀ X, ∃ Y ≥ X, ∀ x ∈ Icc Y (Y ^ (1 + δ)), windowSum x ≤ C * x ^ θ) {ρ : ℂ}
+    (hρ : θ < ρ.re) : riemannZeta ρ ≠ 0 := fun h0 =>
+  ((continues hθ).eq_empty_of_window hθ (fun _ hρ hi => residue_re_neg (hθ.trans_lt hρ.1) hρ.2 hi)
+    hδ (window_exp h) ▸ ⟨hρ, h0⟩ : ρ ∈ (∅ : Set ℂ)).elim
 
 /-- Absence of zeros of zeta in `Re s > θ` gives the trace identity of `trace_eq_efFunctional_iff`
 at every positive width `a > θ - 1 / 2`. -/
@@ -416,13 +385,5 @@ theorem trace_eq_efFunctional_of_ne_zero {θ a : ℝ} (ha : 0 < a) (hθa : θ - 
     have h5 : 0 < zeroMult (1 - ρ) := zeroMult_one_sub h1 h2 ▸ zeroMult_pos h0
     exact apply_eq_zero_of_analyticOrderNatAt_ne_zero h5.ne'
   · exact h ρ (by linarith) h0
-
-/-- The window bound with `θ < 1 / 2 + a` gives the trace identity of `trace_eq_efFunctional_iff` at
-width `a`. The converse is not asserted. -/
-theorem trace_eq_efFunctional_of_window {θ δ C a : ℝ} (hθ : 0 < θ) (hδ : 0 < δ) (ha : 0 < a)
-    (hθa : θ - 1 / 2 < a)
-    (h : ∀ X, ∃ Y ≥ X, 1 < Y ∧ ∀ x ∈ Icc Y (Y ^ (1 + δ)), windowSum x ≤ C * x ^ θ)
-    (φ : TestFunction) : Trace.HasTrace (Trace.induced ha φ) φ.efFunctional :=
-  trace_eq_efFunctional_of_ne_zero ha hθa (fun _ => riemannZeta_ne_zero_of_window hθ hδ h) φ
 
 end Masullo.Window

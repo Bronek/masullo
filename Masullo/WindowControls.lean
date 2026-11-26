@@ -88,17 +88,17 @@ theorem residue_sign_needed : ∃ (f : ℝ → ℝ) (H κ : ℂ → ℂ) (Z : Se
 /-- Without the term `(1 + γ) x` the one-sided bound holds for every `x ≥ 1` and every exponent,
 with constant `0`. A criterion that omitted that term would exclude every zero with positive real
 part. -/
-theorem window_without_linear_term (θ δ : ℝ) : ∀ X, ∃ Y ≥ X, 1 < Y ∧ ∀ x ∈ Icc Y (Y ^ (1 + δ)),
+theorem window_without_linear_term (θ δ : ℝ) : ∀ X, ∃ Y ≥ X, ∀ x ∈ Icc Y (Y ^ (1 + δ)),
     ∑ n ∈ Finset.Icc 1 ⌊x⌋₊, Λ n * (x / n - 1) - x * Real.log x ≤ 0 * x ^ θ := fun X =>
-  ⟨max X 2, le_max_left _ _, one_lt_two.trans_le (le_max_right _ _), fun x hx => by
+  ⟨max X 2, le_max_left _ _, fun x hx => by
     have := (le_max_right X 2).trans hx.1
     rw [zero_mul]
     exact sum_sub_mul_log_nonpos (by linarith)⟩
 
 /-- The window bound holds for `windowSum` at `θ = 1`, where the criterion says nothing. -/
-theorem windowSum_window : ∀ X, ∃ Y ≥ X, 1 < Y ∧ ∀ x ∈ Icc Y (Y ^ (1 + (1 : ℝ))),
+theorem windowSum_window : ∀ X, ∃ Y ≥ X, ∀ x ∈ Icc Y (Y ^ (1 + (1 : ℝ))),
     windowSum x ≤ (1 + Real.eulerMascheroniConstant) * x ^ (1 : ℝ) := fun X =>
-  ⟨max X 2, le_max_left _ _, one_lt_two.trans_le (le_max_right _ _), fun x hx => by
+  ⟨max X 2, le_max_left _ _, fun x hx => by
     have := (le_max_right X 2).trans hx.1
     rw [Real.rpow_one, windowSum]
     linarith [sum_sub_mul_log_nonpos (x := x) (by linarith)]⟩
@@ -156,6 +156,7 @@ theorem windows_with_sign_changes :
 
 /-- The criterion applies to it. -/
 example : (∅ : Set ℂ) = ∅ :=
-  continues_cos_log.eq_empty_of_window (by norm_num) (by simp) one_pos windows_with_sign_changes.1
+  continues_cos_log.eq_empty_of_window (C := 0) (by norm_num) (by simp) one_pos
+    (by simpa using windows_with_sign_changes.1)
 
 end Masullo.Window.Controls

@@ -320,12 +320,4 @@ theorem riemannZeta_ne_zero_of_mellinBound {σ C : ℝ} (hσ : 0 < σ) (h : Mell
         integral_const_mul _ _
     _ ≤ (N : ℝ) ^ (σ - ρ.re) * C := mul_le_mul_of_nonneg_left hb (by positivity)
 
-/-- `MellinBound σ C` with `0 < σ < 1 / 2 + a` gives the trace identity of
-`trace_eq_efFunctional_iff` at width `a`. The converse is not asserted. -/
-theorem trace_eq_efFunctional_of_mellinBound {σ C a : ℝ} (hσ : 0 < σ) (ha : 0 < a)
-    (hσa : σ - 1 / 2 < a) (h : MellinBound σ C) (φ : TestFunction) :
-    Trace.HasTrace (Trace.induced ha φ) φ.efFunctional :=
-  Window.trace_eq_efFunctional_of_ne_zero ha hσa
-    (fun _ => riemannZeta_ne_zero_of_mellinBound hσ h) φ
-
 end Masullo.BaezDuarte

@@ -4,9 +4,11 @@ import Masullo.DyadicControls
 /-!
 # Controls for fixed-ratio sign runs
 
-At ratio `R = 1` the run hypothesis of `exists_rightmost_of_runs` holds trivially, so it carries
-information only through `1 < R`. The one-sided bound of `trace_width_of_bound` holds at
-`θ = 1` for every ratio, by Chebyshev's bound, so it carries information only through `θ < 1`.
+At ratio `R = 1` the hypothesis of `exists_rightmost_of_bound` holds trivially for every `C ≥ 0`
+and `θ`, so it carries information only through `1 < R`. The one-sided bound of
+`trace_width_of_bound` holds at `θ = 1` for every ratio, by Chebyshev's bound, so it carries
+information only through `θ < 1`. The hypothesis of `ne_zero_of_dyadic_window` also holds at
+`θ = 1`, where its conclusion is unconditional.
 The two-point factor attached to a zero of ordinate `γ`
 also cancels a zero of the same real part and ordinate `3γ`, so an arbitrary choice of
 survivor can fail; choosing one of least positive ordinate prevents this cancellation.
@@ -20,14 +22,16 @@ namespace Masullo.Runs.Controls
 open Window
 
 /-- Every window of ratio one is a single point, where `dyadicDiff` has a sign. -/
-theorem runs_at_ratio_one : ∀ Y₀, ∃ Y ≥ Y₀, (∀ x ∈ Icc Y (1 * Y), 0 ≤ dyadicDiff x) ∨
-    (∀ x ∈ Icc Y (1 * Y), dyadicDiff x ≤ 0) := by
+theorem bound_at_ratio_one {θ C : ℝ} (hC : 0 ≤ C) : ∀ Y₀, ∃ Y ≥ Y₀,
+    (∀ x ∈ Icc Y (1 * Y), -(C * x ^ θ) ≤ dyadicDiff x) ∨
+    (∀ x ∈ Icc Y (1 * Y), dyadicDiff x ≤ C * x ^ θ) := by
   intro Y₀
-  refine ⟨Y₀, le_rfl, ?_⟩
+  have hC0 := mul_nonneg hC (Real.rpow_nonneg (le_max_right Y₀ 0) θ)
+  refine ⟨max Y₀ 0, le_max_left _ _, ?_⟩
   rw [one_mul, Icc_self]
-  rcases le_total 0 (dyadicDiff Y₀) with h | h
-  · exact .inl fun x hx => (mem_singleton_iff.1 hx) ▸ h
-  · exact .inr fun x hx => (mem_singleton_iff.1 hx) ▸ h
+  rcases le_total 0 (dyadicDiff (max Y₀ 0)) with h | h
+  · exact .inl fun x hx => by obtain rfl := mem_singleton_iff.1 hx; linarith
+  · exact .inr fun x hx => by obtain rfl := mem_singleton_iff.1 hx; linarith
 
 /-- The upper bound with `θ = 1` holds on every window. -/
 theorem bound_at_exponent_one (R : ℝ) : ∀ Y₀, ∃ Y ≥ Y₀,
@@ -38,6 +42,15 @@ theorem bound_at_exponent_one (R : ℝ) : ∀ Y₀, ∃ Y ≥ Y₀,
     have h2 := Window.Controls.dyadicSum_le (X := 2 * x) (by linarith)
     rw [Real.rpow_one, dyadicDiff]
     linarith [Window.Controls.dyadicSum_nonneg x]⟩
+
+/-- The lower bound with `θ = 1` holds on every window, with the sign `ε = 1`. -/
+theorem dyadic_window_at_exponent_one (δ : ℝ) : ∀ X, ∃ Y ≥ X, ∃ ε : ℝ, (ε = 1 ∨ ε = -1) ∧
+    ∀ x ∈ Icc Y (Y ^ (1 + δ)), -((2 * (Real.log 4 + 4)) * x ^ (1 : ℝ)) ≤ ε * dyadicDiff x :=
+  fun X => ⟨max X 1, le_max_left _ _, 1, .inl rfl, fun x hx => by
+    have h1 := (le_max_right X 1).trans hx.1
+    have h2 := Window.Controls.dyadicSum_le (X := x) (by linarith)
+    rw [Real.rpow_one, dyadicDiff, one_mul]
+    linarith [Window.Controls.dyadicSum_nonneg (2 * x)]⟩
 
 /-- The factor attached to `β + iγ` cancels `β + 3iγ`. -/
 theorem factor_odd_multiple {β γ : ℝ} (hγ : 0 < γ) :

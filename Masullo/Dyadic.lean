@@ -6,14 +6,16 @@ import Masullo.Window
 `dyadicSum X` is a sum of `Λ(n)` over `X / 4 < n < X` with a nonnegative continuous weight, and
 `dyadicDiff X = dyadicSum (2 X) - 2 dyadicSum X`. Expressed in terms of `windowSum`, it is a
 combination of four scales that cancels both `X` and `X log X`, so that no main term is
-subtracted. A one-sided bound
-`dyadicDiff X ≤ C X ^ θ`, or `- C X ^ θ ≤ dyadicDiff X`, on windows `[Y, Y ^ (1 + δ)]` with `Y`
-arbitrarily large rules out zeros of zeta in `Re s > θ`. The implications are one-way: no converse
-is stated, and neither bound is asserted for any `θ < 1`.
+subtracted. A one-sided bound `dyadicDiff X ≤ C X ^ θ`, or `- C X ^ θ ≤ dyadicDiff X`, on windows
+`[Y, Y ^ (1 + δ)]` with `Y` arbitrarily large rules out zeros of zeta in `Re s > θ`. The
+implications are one-way: no converse is stated, and neither bound is asserted for any `θ < 1`.
+For `θ ≥ 1/2` both are contained in `Masullo.Runs.ne_zero_of_dyadic_window`, which goes through
+the explicit formula instead.
 
-On the Laplace transform in `u = log (2 X)` the combination multiplies by `(1 - 2 ^ (-s)) (1 - 2 ^ (1 - s)) ^ 2`, which
-has no zeros in `0 < Re s < 1` and is positive at real points there. The upper bound uses this sign;
-the lower bound uses that zeta has no zeros in `(0, 1)`.
+On the Laplace transform in `u = log (2 X)` the combination multiplies by
+`(1 - 2 ^ (-s)) (1 - 2 ^ (1 - s)) ^ 2`, which has no zeros in `0 < Re s < 1` and is positive at
+real points there. The upper bound uses this sign; the lower bound uses that zeta has no zeros in
+`(0, 1)`.
 -/
 
 open MeasureTheory Complex Set Filter Topology Metric
@@ -90,7 +92,7 @@ lemma delay_continues (h : Continues f H Z κ A c θ) (hc : 0 ≤ c) {a : ℝ}
     ring
   · obtain ⟨k, hk, he⟩ := h.pole ρ hρ
     refine ⟨fun s => κ ρ * dslope (factor a) ρ s + factor a s * k s,
-      (analyticAt_const.mul (Window.analyticAt_dslope (hfac ρ))).add ((hfac ρ).mul hk), ?_⟩
+      (analyticAt_const.mul (analyticAt_dslope_self (hfac ρ))).add ((hfac ρ).mul hk), ?_⟩
     filter_upwards [he, self_mem_nhdsWithin] with s hs hne
     have : s - ρ ≠ 0 := sub_ne_zero.2 hne
     rw [hs, dslope_of_ne _ hne, slope_def_field]
@@ -259,30 +261,26 @@ lemma riemannZeta_ofReal_ne_zero {b : ℝ} (hb : 0 < b) (h1 : b < 1) : riemannZe
       mul_nonneg (Real.rpow_nonneg (zero_le_one.trans (mem_Ioi.1 hx).le) _) (Int.fract_nonneg x)))
 
 /-- The sign of `ε` matters only if zeta has real zeros beyond `θ`. -/
-lemma ne_zero_of_dyadic_window {θ δ C ε : ℝ} (hθ : 0 < θ) (hδ : 0 < δ) (hε : ε ≠ 0)
+lemma ne_zero_of_dyadic_window {θ δ C ε : ℝ} (hθ : 0 ≤ θ) (hδ : 0 < δ) (hε : ε ≠ 0)
     (hβ : ∀ β : ℝ, θ < β → β < 1 → riemannZeta β = 0 → 0 < ε)
-    (h : ∀ X, ∃ Y ≥ X, 1 < Y ∧ ∀ x ∈ Icc Y (Y ^ (1 + δ)), ε * dyadicDiff x ≤ C * x ^ θ) {ρ : ℂ}
+    (h : ∀ X, ∃ Y ≥ X, ∀ x ∈ Icc Y (Y ^ (1 + δ)), ε * dyadicDiff x ≤ C * x ^ θ) {ρ : ℂ}
     (hρ : θ < ρ.re) : riemannZeta ρ ≠ 0 := by
-  rcases le_or_gt 1 θ with hθ1 | hθ1
-  · exact riemannZeta_ne_zero_of_one_le_re (by linarith)
-  have hlt {z : ℂ} (hz : riemannZeta z = 0) : z.re < 1 :=
-    not_le.1 fun hle => riemannZeta_ne_zero_of_one_le_re hle hz
-  have hgain := gain_pos hθ hθ1
   set L := Real.log 2 with hLdef
   have hL : 0 < L := Real.log_pos one_lt_two
-  set B := ε⁻¹ * C * Real.exp (-(L * θ)) / gain θ with hB
-  obtain ⟨H, κ, A, hc, hκ⟩ := ((continues (C := B) hθ hθ1).dyadic_continues
-    (by norm_num) fun ρ hρ => ⟨hθ.trans hρ.1, hlt hρ.2⟩)
-  have hZ := (hc.const_mul hε).eq_empty_of_window (δ := δ / 2) hθ.le ?_ (by positivity) ?_
+  obtain ⟨H, κ, A, hc, hκ⟩ := (continues hθ).dyadic_continues (by norm_num)
+    fun ρ hρ => ⟨hθ.trans_lt hρ.1, re_lt_one_of_zero hρ.2⟩
+  have hZ := (hc.const_mul hε).eq_empty_of_window (δ := δ / 2) (C := C * Real.exp (-(θ * L))) hθ
+    ?_ (by positivity) ?_
   · exact fun h0 => (hZ ▸ ⟨hρ, h0⟩ : ρ ∈ (∅ : Set ℂ)).elim
   · rintro ρ ⟨hr, hz⟩ hi
     lift ρ to ℝ using hi
     rw [re_ofReal_mul, hκ, re_ofReal_mul]
-    exact mul_neg_of_pos_of_neg (hβ _ hr (hlt hz) hz) (mul_neg_of_pos_of_neg
-      (gain_pos (hθ.trans hr) (hlt hz)) (residue_re_neg (hθ.trans hr) hz rfl))
+    exact mul_neg_of_pos_of_neg (hβ _ hr (re_lt_one_of_zero hz) hz) (mul_neg_of_pos_of_neg
+      (gain_pos (hθ.trans_lt hr) (re_lt_one_of_zero hz))
+      (residue_re_neg (hθ.trans_lt hr) hz rfl))
   · intro X
-    obtain ⟨Y, hY, hY1, hw⟩ := h (Real.exp (max X (3 * L)))
-    have hY0 : 0 < Y := by linarith
+    obtain ⟨Y, hY, hw⟩ := h (Real.exp (max X (3 * L)))
+    have hY0 : 0 < Y := (Real.exp_pos _).trans_le hY
     obtain ⟨hX, hL3⟩ := max_le_iff.1 ((Real.le_log_iff_exp_le hY0).2 hY)
     refine ⟨Real.log Y + L, by linarith, fun u hu => ?_⟩
     have hu1 : 3 * L < u := by linarith [hu.1]
@@ -290,51 +288,32 @@ lemma ne_zero_of_dyadic_window {θ δ C ε : ℝ} (hθ : 0 < θ) (hδ : 0 < δ) 
       rw [Real.rpow_def_of_pos hY0]
       exact Real.exp_le_exp.2 (by nlinarith [hu.2])⟩
     have hd := dyadicDiff_eq (Real.exp_pos (u - L - L - L))
-    have hb : B * gain θ = ε⁻¹ * C * Real.exp (-(θ * L)) := by
-      rw [hB, div_mul_cancel₀ _ hgain.ne', mul_comm L]
-    have hmain : dyadic (fun u => B * Real.exp (θ * u) - windowSum (Real.exp u)) u =
-        ε⁻¹ * (C * Real.exp (u - L) ^ θ) - dyadicDiff (Real.exp (u - L)) := by
-      rw [dyadic_apply _ hu1, ← hLdef, ← Real.exp_mul, mul_comm (u - L) θ]
-      simp only [gain, ← hLdef, mul_sub, Real.exp_sub, Real.exp_neg,
-        show Real.exp L = 2 from Real.exp_log two_pos] at hb hd ⊢
+    have hmain : dyadic (fun u => -windowSum (Real.exp u)) u = -dyadicDiff (Real.exp (u - L)) := by
+      rw [dyadic_apply _ hu1, ← hLdef]
+      simp only [Real.exp_sub, show Real.exp L = 2 from Real.exp_log two_pos] at hd ⊢
       ring_nf at hd ⊢
-      linear_combination Real.exp (θ * u) * hb + hd
-    rw [hmain, mul_sub, mul_inv_cancel_left₀ hε]
-    linarith
+      linear_combination hd
+    have hexp : Real.exp (u - L) ^ θ = Real.exp (θ * u) * Real.exp (-(θ * L)) := by
+      rw [← Real.exp_mul, ← Real.exp_add]
+      ring_nf
+    rw [hmain]
+    linarith [hexp ▸ hw1]
 
-/-- **Dyadic window criterion.** For fixed `θ > 0`, `δ > 0` and `C`, an upper bound `C x ^ θ` on
-arbitrarily late windows `[Y, Y ^ (1 + δ)]` rules out zeros of zeta to the right of `θ`. The converse is not
-asserted. -/
-theorem riemannZeta_ne_zero_of_dyadicDiff_le {θ δ C : ℝ} (hθ : 0 < θ) (hδ : 0 < δ)
-    (h : ∀ X, ∃ Y ≥ X, 1 < Y ∧ ∀ x ∈ Icc Y (Y ^ (1 + δ)), dyadicDiff x ≤ C * x ^ θ) {ρ : ℂ}
+/-- **Dyadic window criterion.** For fixed `θ ≥ 0`, `δ > 0` and `C`, an upper bound `C x ^ θ` on
+arbitrarily late windows `[Y, Y ^ (1 + δ)]` rules out zeros of zeta to the right of `θ`. The
+converse is not asserted. -/
+theorem riemannZeta_ne_zero_of_dyadicDiff_le {θ δ C : ℝ} (hθ : 0 ≤ θ) (hδ : 0 < δ)
+    (h : ∀ X, ∃ Y ≥ X, ∀ x ∈ Icc Y (Y ^ (1 + δ)), dyadicDiff x ≤ C * x ^ θ) {ρ : ℂ}
     (hρ : θ < ρ.re) : riemannZeta ρ ≠ 0 :=
   ne_zero_of_dyadic_window hθ hδ one_ne_zero (fun _ _ _ _ => one_pos) (by simpa using h) hρ
 
-/-- For fixed `θ > 0`, `δ > 0` and `C`, a lower bound `- C x ^ θ` on arbitrarily late windows
+/-- For fixed `θ ≥ 0`, `δ > 0` and `C`, a lower bound `- C x ^ θ` on arbitrarily late windows
 `[Y, Y ^ (1 + δ)]` rules out zeros of zeta to the right of `θ`. The converse is not asserted. -/
-theorem riemannZeta_ne_zero_of_le_dyadicDiff {θ δ C : ℝ} (hθ : 0 < θ) (hδ : 0 < δ)
-    (h : ∀ X, ∃ Y ≥ X, 1 < Y ∧ ∀ x ∈ Icc Y (Y ^ (1 + δ)), -(C * x ^ θ) ≤ dyadicDiff x) {ρ : ℂ}
+theorem riemannZeta_ne_zero_of_le_dyadicDiff {θ δ C : ℝ} (hθ : 0 ≤ θ) (hδ : 0 < δ)
+    (h : ∀ X, ∃ Y ≥ X, ∀ x ∈ Icc Y (Y ^ (1 + δ)), -(C * x ^ θ) ≤ dyadicDiff x) {ρ : ℂ}
     (hρ : θ < ρ.re) : riemannZeta ρ ≠ 0 :=
   ne_zero_of_dyadic_window (ε := -1) hθ hδ (by norm_num)
-    (fun _ h1 h2 h3 => (riemannZeta_ofReal_ne_zero (hθ.trans h1) h2 h3).elim)
+    (fun _ h1 h2 h3 => (riemannZeta_ofReal_ne_zero (hθ.trans_lt h1) h2 h3).elim)
     (by simpa [neg_le] using h) hρ
-
-/-- The dyadic window bound with `θ < 1 / 2 + a` gives the trace identity of
-`trace_eq_efFunctional_iff` at width `a`. The converse is not asserted. -/
-theorem trace_eq_efFunctional_of_dyadicDiff_le {θ δ C a : ℝ} (hθ : 0 < θ) (hδ : 0 < δ) (ha : 0 < a)
-    (hθa : θ - 1 / 2 < a)
-    (h : ∀ X, ∃ Y ≥ X, 1 < Y ∧ ∀ x ∈ Icc Y (Y ^ (1 + δ)), dyadicDiff x ≤ C * x ^ θ)
-    (φ : TestFunction) : Trace.HasTrace (Trace.induced ha φ) φ.efFunctional :=
-  trace_eq_efFunctional_of_ne_zero ha hθa
-    (fun _ => riemannZeta_ne_zero_of_dyadicDiff_le hθ hδ h) φ
-
-/-- The lower dyadic window bound with `θ < 1 / 2 + a` gives the trace identity of
-`trace_eq_efFunctional_iff` at width `a`. The converse is not asserted. -/
-theorem trace_eq_efFunctional_of_le_dyadicDiff {θ δ C a : ℝ} (hθ : 0 < θ) (hδ : 0 < δ) (ha : 0 < a)
-    (hθa : θ - 1 / 2 < a)
-    (h : ∀ X, ∃ Y ≥ X, 1 < Y ∧ ∀ x ∈ Icc Y (Y ^ (1 + δ)), -(C * x ^ θ) ≤ dyadicDiff x)
-    (φ : TestFunction) : Trace.HasTrace (Trace.induced ha φ) φ.efFunctional :=
-  trace_eq_efFunctional_of_ne_zero ha hθa
-    (fun _ => riemannZeta_ne_zero_of_le_dyadicDiff hθ hδ h) φ
 
 end Masullo.Window

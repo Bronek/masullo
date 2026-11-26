@@ -38,17 +38,19 @@ and excludes no zero: on paper, a single zero off the critical line contributes 
 mean.
 
 One sufficient condition is arithmetic. Let `G(x) = ∑_{n ≤ x} Λ(n)(x/n - 1) - x log x + (1 + γ)x`,
-and fix real numbers `θ > 0`, `δ > 0` and `C`. Suppose there are arbitrarily large `Y > 1` for which
+and fix real numbers `θ ≥ 0`, `δ > 0` and `C`. Suppose there are arbitrarily large `Y` for which
 `G(x) ≤ C x^θ` for every real `x` in `[Y, Y^(1+δ)]`. Then zeta has no zero with real part greater
-than `θ` (`riemannZeta_ne_zero_of_window` in `Masullo/Window.lean`), and the trace identity holds
-for every test function at every positive width `a > θ - 1/2` (`trace_eq_efFunctional_of_window`).
+than `θ` (`riemannZeta_ne_zero_of_window` in `Masullo/Window.lean`), so the trace identity holds
+for every test function at every positive width `a > θ - 1/2` (`trace_eq_efFunctional_of_ne_zero`).
 No such bound with `θ < 1` is proved here.
 
 A variant needs no main term. Let `R(y) = max(1/y - 1, 0)`, `w(y) = R(y) - 3R(2y) + 2R(4y)`, which
 is nonnegative, `P(X) = ∑_{n ≤ X} Λ(n) w(n/X)` and `D(X) = P(2X) - 2P(X)`. If `D(x) ≤ C x^θ` on such
 windows, or if `D(x) ≥ -C x^θ` on them, the same conclusions hold
-(`trace_eq_efFunctional_of_dyadicDiff_le` and `trace_eq_efFunctional_of_le_dyadicDiff` in
-`Masullo/Dyadic.lean`). Both bounds hold at `θ = 1`; neither is proved for any `θ < 1`.
+(`riemannZeta_ne_zero_of_dyadicDiff_le` and `riemannZeta_ne_zero_of_le_dyadicDiff` in
+`Masullo/Dyadic.lean`). For `θ ≥ 1/2` the side may also change with `Y`: it suffices that one of the
+two bounds holds on each such window (`ne_zero_of_dyadic_window` in `Masullo/Runs.lean`, through
+the explicit formula). Both bounds hold at `θ = 1`; neither is proved for any `θ < 1`.
 
 Fixed-ratio windows also suffice, at the cost of the exact exponent. If there are `R > 1`,
 `θ < 1` and arbitrarily large `Y` such that `D(x) ≥ -C x^θ` on all of `[Y, RY]`, or
@@ -56,9 +58,8 @@ Fixed-ratio windows also suffice, at the cost of the exact exponent. If there ar
 most `max(θ, 1/2)` (`exists_rightmost_of_bound` in `Masullo/Runs.lean`). Either way the trace
 identity holds for every test function at some positive width below `1/2`
 (`trace_width_of_bound`). Conversely, on paper, such a width gives such a bound by the explicit
-formula, so this condition has exactly the strength of the trace gap. Sign runs are the case `C = 0`
-(`trace_width_of_runs`); on paper they are equivalent to the maximal real part being attained,
-which is stronger.
+formula, so this condition has exactly the strength of the trace gap. Sign runs are the case
+`C = 0`; on paper they are equivalent to the maximal real part being attained, which is stronger.
 The analytic input, that the zeros right of each line `re s = σ > 1/2` have summable reciprocal
 ordinates, is proved in `WeilExplicit/Density.lean`. The bound holds at `θ = 1`
 (`Controls.bound_at_exponent_one`); neither it for any `θ < 1` nor such runs is proved here.
@@ -79,9 +80,8 @@ Möbius function, `g_N = ∑_{k ≤ N} μ(k)/k` and
 `E_N(x) = 1 + ∑_{k ≤ N} μ(k){1/(kx)} - N g_N {1/(Nx)}` for `0 < x ≤ 1`, `E_N` vanishes on
 `(1/N, 1]` and its Mellin transform at each zero `ρ` with `re ρ > 0` is `1/ρ` for every `N ≥ 1`.
 So for `σ > 0`, a bound `∫_0^1 |E_N(x)| x^(σ-1) dx ≤ C` for arbitrarily large `N` rules out zeros
-with real part greater than `σ` (`riemannZeta_ne_zero_of_mellinBound` in `Masullo/BaezDuarte.lean`)
-and gives the trace identity at every positive width `a > σ - 1/2`
-(`trace_eq_efFunctional_of_mellinBound`). The bound holds at `σ = 1`
+with real part greater than `σ` (`riemannZeta_ne_zero_of_mellinBound` in `Masullo/BaezDuarte.lean`),
+hence the trace identity at every positive width `a > σ - 1/2`. The bound holds at `σ = 1`
 (`Controls.mellinBound_one`, constant 3); it is not proved here for any `σ < 1`, and no converse
 is formalised.
 

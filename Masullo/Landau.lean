@@ -240,6 +240,17 @@ lemma frequently_window {δ σ : ℝ} (hδ : 0 < δ) (hσ : 0 < σ)
   · rw [div_le_iff₀ hσ, div_mul_eq_mul_div, div_le_iff₀ (by positivity)]
     nlinarith
 
+lemma laplace_exp {a s : ℂ} (h : a.re < s.re) (c : ℝ) :
+    IntegrableOn (fun u : ℝ => cexp (a * u) * cexp (-(s * u))) (Ioi c) ∧
+      ∫ u in Ioi c, cexp (a * u) * cexp (-(s * u)) = cexp ((a - s) * c) / (s - a) := by
+  have e (u : ℝ) : cexp (a * u) * cexp (-(s * u)) = cexp ((a - s) * u) := by
+    rw [← Complex.exp_add]
+    ring_nf
+  have h' : (a - s).re < 0 := by simpa using h
+  simp_rw [e]
+  refine ⟨integrableOn_exp_mul_complex_Ioi h' c, ?_⟩
+  rw [integral_exp_mul_complex_Ioi h', ← neg_sub s a, div_neg, neg_div, neg_neg]
+
 /-! ### The criterion -/
 
 /-- `H` continues the Laplace transform of `f` from `Re s > c` to `Re s > θ`, and its poles there
@@ -298,6 +309,55 @@ lemma Continues.toMero {H κ : ℂ → ℂ} {Z : Set ℂ} {θ : ℝ} (h : Contin
   pole ρ hρ := by
     obtain ⟨g, hg, hgρ, hH⟩ := h.exists_pole hρ
     exact ⟨0, g, hg, hgρ ▸ h.residue_ne_zero ρ hρ, hH⟩
+
+/-- Adding `C / (s - θ)` to `g s / (s - ρ) ^ (m + 1)`, with `θ < re ρ`, keeps the order and the
+leading coefficient of the pole. -/
+lemma exists_pole_add {H g : ℂ → ℂ} {ρ : ℂ} {m : ℕ} {θ : ℝ} (C : ℂ) (hρ : θ < ρ.re)
+    (hg : AnalyticAt ℂ g ρ) (hH : ∀ᶠ s in 𝓝[≠] ρ, H s = g s / (s - ρ) ^ (m + 1)) :
+    ∃ g' : ℂ → ℂ, AnalyticAt ℂ g' ρ ∧ g' ρ = g ρ ∧
+      ∀ᶠ s in 𝓝[≠] ρ, C / (s - θ) + H s = g' s / (s - ρ) ^ (m + 1) := by
+  have hθρ : ρ - θ ≠ 0 := sub_ne_zero.2 fun e => by simp [e] at hρ
+  refine ⟨fun s => C * (s - ρ) ^ (m + 1) / (s - θ) + g s,
+    ((by fun_prop : AnalyticAt ℂ (fun s : ℂ => C * (s - ρ) ^ (m + 1)) ρ).div
+      (by fun_prop) hθρ).add hg, by simp, ?_⟩
+  filter_upwards [hH, self_mem_nhdsWithin,
+    ((continuous_sub_right (θ : ℂ)).continuousAt.eventually_ne hθρ).filter_mono
+      nhdsWithin_le_nhds] with s hs hne hsθ
+  have : s - ρ ≠ 0 := sub_ne_zero.2 hne
+  rw [hs]
+  field_simp
+
+/-- Adding `C e ^ (θ u)` to `f` adds `C / (s - θ)` to the transform and keeps the poles. -/
+lemma ContinuesMero.add_exp {H : ℂ → ℂ} {Z : Set ℂ} {θ : ℝ} (h : ContinuesMero f H Z A c θ)
+    (hθc : θ ≤ c) (C : ℝ) : ContinuesMero (fun u => C * Real.exp (θ * u) + f u)
+      (fun s => C / (s - θ) + H s) Z (|C| + A) c θ where
+  measurable := by
+    have := h.measurable
+    fun_prop
+  growth u hu := by
+    have h1 := Real.exp_le_exp.2 (mul_le_mul_of_nonneg_right hθc hu)
+    refine (abs_add_le _ _).trans ?_
+    rw [abs_mul, Real.abs_exp, add_mul]
+    gcongr
+    exact h.growth u hu
+  laplace s hs := by
+    obtain ⟨i1, v1⟩ := laplace_exp (a := θ) (s := s) (by simp; linarith) 0
+    have i2 := integrable_kernel h.measurable h.growth 0 hs
+    simp only [pow_zero, Nat.factorial_zero, Nat.cast_one, div_one, one_mul] at i2
+    rw [ofReal_zero, mul_zero, Complex.exp_zero] at v1
+    rw [h.laplace s hs, div_eq_mul_one_div, ← v1, ← integral_const_mul,
+      ← integral_add (i1.const_mul _) i2]
+    congr 1 with u
+    push_cast
+    ring
+  analytic s hs hZ := (analyticAt_const.div (g := fun s : ℂ => s - θ) (by fun_prop)
+    (sub_ne_zero.2 fun e => by simp [e] at hs)).add (h.analytic s hs hZ)
+  finite := h.finite
+  re_mem := h.re_mem
+  pole ρ hρ := by
+    obtain ⟨m, g, hg, hg0, hH⟩ := h.pole ρ hρ
+    obtain ⟨g', hg', he, hH'⟩ := exists_pole_add C (h.re_mem ρ hρ).1 hg hH
+    exact ⟨m, g', hg', he ▸ hg0, hH'⟩
 
 /-! ### Principal parts -/
 
@@ -665,13 +725,30 @@ theorem ContinuesMero.eq_empty_of_window {H : ℂ → ℂ} {Z : Set ℂ} {θ δ 
     rw [sub_re, hσρ] at h1
     linarith
 
-/-- **Landau's theorem on windows.** If `f ≥ 0` on arbitrarily late windows `[U, (1 + δ) U]` and the
-residues of its Laplace transform at real poles have negative real part, then the transform is
-analytic in `Re s > θ`. -/
-theorem Continues.eq_empty_of_window {H κ : ℂ → ℂ} {Z : Set ℂ} {θ δ : ℝ}
+/-- `ContinuesMero.eq_empty_of_window` with `f ≥ -C e ^ (θ u)` on the windows in place of
+`f ≥ 0`. -/
+theorem ContinuesMero.eq_empty_of_window_ge {H : ℂ → ℂ} {Z : Set ℂ} {θ δ C : ℝ}
+    (h : ContinuesMero f H Z A c θ) (hθ : 0 ≤ θ)
+    (hneg : ∀ ρ ∈ Z, ρ.im = 0 → ∃ (m : ℕ) (g : ℂ → ℂ), AnalyticAt ℂ g ρ ∧ (g ρ).re < 0 ∧
+      ∀ᶠ s in 𝓝[≠] ρ, H s = g s / (s - ρ) ^ (m + 1)) (hδ : 0 < δ)
+    (hw : ∀ X, ∃ U ≥ X, ∀ u ∈ Icc U ((1 + δ) * U), -(C * Real.exp (θ * u)) ≤ f u) : Z = ∅ := by
+  by_contra hne
+  obtain ⟨ρ₀, h₀⟩ := nonempty_iff_ne_empty.2 hne
+  refine hne ((h.add_exp ((h.re_mem ρ₀ h₀).1.le.trans (h.re_mem ρ₀ h₀).2) C).eq_empty_of_window
+    hθ (fun ρ hρ hi => ?_) hδ fun X => ?_)
+  · obtain ⟨m, g, hg, hre, hH⟩ := hneg ρ hρ hi
+    obtain ⟨g', hg', he, hH'⟩ := exists_pole_add C (h.re_mem ρ hρ).1 hg hH
+    exact ⟨m, g', hg', he ▸ hre, hH'⟩
+  · obtain ⟨U, hU, hu⟩ := hw X
+    exact ⟨U, hU, fun u hu' => by linarith [hu u hu']⟩
+
+/-- **Landau's theorem on windows.** If `f ≥ -C e ^ (θ u)` on arbitrarily late windows
+`[U, (1 + δ) U]` and the residues of its Laplace transform at real poles have negative real part,
+then the transform is analytic in `Re s > θ`. -/
+theorem Continues.eq_empty_of_window {H κ : ℂ → ℂ} {Z : Set ℂ} {θ δ C : ℝ}
     (h : Continues f H Z κ A c θ) (hθ : 0 ≤ θ) (hκ : ∀ ρ ∈ Z, ρ.im = 0 → (κ ρ).re < 0) (hδ : 0 < δ)
-    (hw : ∀ X, ∃ U ≥ X, ∀ u ∈ Icc U ((1 + δ) * U), 0 ≤ f u) : Z = ∅ :=
-  h.toMero.eq_empty_of_window hθ (fun ρ hρ hi => by
+    (hw : ∀ X, ∃ U ≥ X, ∀ u ∈ Icc U ((1 + δ) * U), -(C * Real.exp (θ * u)) ≤ f u) : Z = ∅ :=
+  h.toMero.eq_empty_of_window_ge hθ (fun ρ hρ hi => by
     obtain ⟨g, hg, hgρ, hH⟩ := h.exists_pole hρ
     exact ⟨0, g, hg, hgρ ▸ hκ ρ hρ hi, hH⟩) hδ hw
 

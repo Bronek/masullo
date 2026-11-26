@@ -27,18 +27,18 @@ lemma dyadicSum_le {X : ℝ} (hX : 0 < X) : dyadicSum X ≤ (Real.log 4 + 4) * X
     mul_le_of_le_one_right vonMangoldt_nonneg (weight_le_one _)
 
 /-- The upper dyadic bound holds at `θ = 1`, where zero-freeness is already unconditional. -/
-theorem dyadicDiff_le_window : ∀ X, ∃ Y ≥ X, 1 < Y ∧ ∀ x ∈ Icc Y (Y ^ (1 + (1 : ℝ))),
+theorem dyadicDiff_le_window : ∀ X, ∃ Y ≥ X, ∀ x ∈ Icc Y (Y ^ (1 + (1 : ℝ))),
     dyadicDiff x ≤ (2 * (Real.log 4 + 4)) * x ^ (1 : ℝ) := fun X =>
-  ⟨max X 2, le_max_left _ _, one_lt_two.trans_le (le_max_right _ _), fun x hx => by
+  ⟨max X 2, le_max_left _ _, fun x hx => by
     have h1 := (le_max_right X 2).trans hx.1
     have h2 := dyadicSum_le (X := 2 * x) (by linarith)
     rw [Real.rpow_one, dyadicDiff]
     linarith [dyadicSum_nonneg x]⟩
 
 /-- The lower dyadic bound holds at `θ = 1`. -/
-theorem le_dyadicDiff_window : ∀ X, ∃ Y ≥ X, 1 < Y ∧ ∀ x ∈ Icc Y (Y ^ (1 + (1 : ℝ))),
+theorem le_dyadicDiff_window : ∀ X, ∃ Y ≥ X, ∀ x ∈ Icc Y (Y ^ (1 + (1 : ℝ))),
     -((2 * (Real.log 4 + 4)) * x ^ (1 : ℝ)) ≤ dyadicDiff x := fun X =>
-  ⟨max X 2, le_max_left _ _, one_lt_two.trans_le (le_max_right _ _), fun x hx => by
+  ⟨max X 2, le_max_left _ _, fun x hx => by
     have h1 := (le_max_right X 2).trans hx.1
     have h2 := dyadicSum_le (X := x) (by linarith)
     rw [Real.rpow_one, dyadicDiff]
@@ -46,15 +46,13 @@ theorem le_dyadicDiff_window : ∀ X, ∃ Y ≥ X, 1 < Y ∧ ∀ x ∈ Icc Y (Y 
 
 /-- If zeta has a zero in `Re s > θ`, the upper bound with `C = 0` still holds at arbitrarily late
 points: windows of length zero do not suffice. -/
-theorem singleton_window_insufficient {θ : ℝ} {ρ : ℂ} (hθ : 0 < θ) (hz : riemannZeta ρ = 0)
-    (hρ : θ < ρ.re) : ∀ X, ∃ Y ≥ X, 1 < Y ∧ dyadicDiff Y ≤ 0 := by
+theorem singleton_window_insufficient {θ : ℝ} {ρ : ℂ} (hθ : 0 ≤ θ) (hz : riemannZeta ρ = 0)
+    (hρ : θ < ρ.re) : ∀ X, ∃ Y ≥ X, dyadicDiff Y ≤ 0 := by
   intro X
   by_contra! hh
   refine riemannZeta_ne_zero_of_le_dyadicDiff (C := 0) hθ zero_lt_one (fun T => ?_) hρ hz
-  have hX : X ≤ max (max T X) 2 := (le_max_right _ _).trans (le_max_left _ _)
-  have hY : 1 < max (max T X) 2 := one_lt_two.trans_le (le_max_right _ _)
-  refine ⟨_, (le_max_left _ _).trans (le_max_left _ _), hY, fun x hx => ?_⟩
-  simpa using (hh x (hX.trans hx.1) (hY.trans_le hx.1)).le
+  refine ⟨max T X, le_max_left _ _, fun x hx => ?_⟩
+  simpa using (hh x ((le_max_right _ _).trans hx.1)).le
 
 /-- The dyadic combination of `e ^ (u / 2)` is nonnegative on all late windows and its transform has
 a pole at `1 / 2` with a positive residue: it satisfies every hypothesis but the sign. -/

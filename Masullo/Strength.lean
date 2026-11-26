@@ -304,6 +304,8 @@ def outerZeros (a : ℝ) : Set ℂ :=
 def innerZeros (a : ℝ) : Set ℂ :=
   {ρ | riemannZeta ρ = 0 ∧ 0 < ρ.re ∧ ρ.re < 1 ∧ |ρ.re - 1 / 2| < a}
 
+lemma innerZeros_subset (a : ℝ) : innerZeros a ⊆ stripZeros := fun _ h => ⟨h.1, h.2.1, h.2.2.1⟩
+
 /-- The sum over zeros at distance at least `a` from the critical line converges to `0` on every
 test function. -/
 def ZeroSumVanishes (a : ℝ) : Prop :=

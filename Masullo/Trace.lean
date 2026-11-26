@@ -363,10 +363,8 @@ lemma summable_index (ha : 0 < a) {c : ℝ} (hc : a < c) :
     Summable fun i : Index a => (1 / ((c : ℂ) - ((i.1 : ℂ) - 1 / 2))).re := by
   have h1 : Summable fun ρ : innerZeros a =>
       (zeroMult ρ : ℝ) / (1 + Complex.normSq (((ρ : ℂ) - 1 / 2) / I)) := by
-    have hinj : Function.Injective fun ρ : innerZeros a =>
-        (⟨ρ, ρ.2.1, ρ.2.2.1, ρ.2.2.2.1⟩ : stripZeros) := fun x y h =>
-      Subtype.ext (Subtype.mk.inj h)
-    refine (WeilExplicit.summable_zeroMult_div_one_add_normSq.comp_injective hinj).congr
+    refine (WeilExplicit.summable_zeroMult_div_one_add_normSq.comp_injective
+      (inclusion_injective (innerZeros_subset a))).congr
       fun ρ => ?_
     simp only [Function.comp_apply]
   have h2 : Summable fun i : Index a =>

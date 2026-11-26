@@ -129,7 +129,7 @@ theorem innerExpansion_iff (a : ℝ) :
     (zeroSumVanishes_of_full_of_inner a _ TestFunction.hasSum_full h), fun h φ => ?_⟩
   have e : innerZeros a = stripZeros := by
     ext ρ
-    refine ⟨fun hρ => ⟨hρ.1, hρ.2.1, hρ.2.2.1⟩, fun hρ => ⟨hρ.1, hρ.2.1, hρ.2.2, ?_⟩⟩
+    refine ⟨fun hρ => innerZeros_subset a hρ, fun hρ => ⟨hρ.1, hρ.2.1, hρ.2.2, ?_⟩⟩
     exact lt_of_not_ge fun hge => h ⟨ρ, hρ.1, hρ.2.1, hρ.2.2, hge⟩
   rw [e]
   exact φ.hasSum_full

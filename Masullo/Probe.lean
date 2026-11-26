@@ -12,7 +12,7 @@ being no zeros in the critical strip at distance more than `a` from the critical
 is asserted.
 
 The bound follows from the trace identity at `a'` for the translates, with a constant that does not
-depend on `a'`. The converse applies Landau's theorem on windows to `C e ^ (a t) - L(t)`: the
+depend on `a'`. The converse applies Landau's theorem on windows to `-L(t) ≥ -C e ^ (a t)`: the
 Mellin transform of a nonnegative function is nonnegative at real points.
 -/
 
@@ -50,22 +50,16 @@ theorem re_le_of_window (hl : Function.Injective l) (hB : ∀ i, (l i).re ≤ B)
     (l i).re ≤ a := by
   have hs : Summable fun i => ‖c i‖ := by simpa using (hF 0 le_rfl).summable.norm
   have : Countable ι := countable_univ_iff.1 (hs.of_norm.countable_support.mono fun i _ => hc i)
-  set f : ℝ → ℝ := fun u => C * Real.exp (a * u) - (∑' i, c i * exp (u * l i)).re
-  have hf {u : ℝ} (hu : 0 ≤ u) : f u = C * Real.exp (a * u) - F u := by
+  set f : ℝ → ℝ := fun u => -(∑' i, c i * exp (u * l i)).re
+  have hf {u : ℝ} (hu : 0 ≤ u) : f u = -F u := by
     simp only [f, (hF u hu).tsum_eq, ofReal_re]
   have hm : Measurable f := by unfold f; fun_prop
-  have hg (u : ℝ) (hu : 0 ≤ u) : |f u| ≤ (|C| + ∑' i, ‖c i‖) * Real.exp (max a B * u) := by
-    have h1 : |F u| ≤ ∑' i, ‖c i‖ * Real.exp (max a B * u) := by
-      rw [← Real.norm_eq_abs, ← norm_real, ← (hF u hu).tsum_eq]
-      refine tsum_of_norm_bounded (hs.mul_right _).hasSum fun i => ?_
-      rw [norm_mul, norm_exp, re_ofReal_mul, mul_comm u]
-      gcongr
-      exact (hB i).trans (le_max_right _ _)
-    rw [hf hu, add_mul, ← tsum_mul_right]
-    refine (abs_sub _ _).trans (add_le_add ?_ h1)
-    rw [abs_mul, Real.abs_exp]
+  have hg (u : ℝ) (hu : 0 ≤ u) : |f u| ≤ (∑' i, ‖c i‖) * Real.exp (B * u) := by
+    rw [hf hu, abs_neg, ← Real.norm_eq_abs, ← norm_real, ← (hF u hu).tsum_eq, ← tsum_mul_right]
+    refine tsum_of_norm_bounded (hs.mul_right _).hasSum fun i => ?_
+    rw [norm_mul, norm_exp, re_ofReal_mul, mul_comm u]
     gcongr
-    exact le_max_left _ _
+    exact hB i
   have hsum (s : ℂ) : Summable fun i => c i / (s - l i) := by
     obtain ⟨r, hr, hi⟩ := hd s
     refine .of_norm_bounded (hs.div_const r) fun i => ?_
@@ -74,36 +68,22 @@ theorem re_le_of_window (hl : Function.Injective l) (hB : ∀ i, (l i).re ≤ B)
       positivity
     · rw [norm_div]
       exact div_le_div_of_nonneg_left (norm_nonneg _) hr (hi i e)
-  have hpole {s : ℂ} (h : a < s.re) : AnalyticAt ℂ (fun s : ℂ => (C : ℂ) / (s - a)) s :=
-    analyticAt_const.div (g := fun s : ℂ => s - a) (by fun_prop)
-      (sub_ne_zero.2 fun e => by simp [e] at h)
-  have key : Landau.Continues f (fun s => C / (s - a) - ∑' i, c i / (s - l i))
-      {z | z ∈ range l ∧ a < z.re} (fun z => -Function.extend l c 0 z) (|C| + ∑' i, ‖c i‖)
-      (max a B) a :=
+  have key : Landau.Continues f (fun s => -∑' i, c i / (s - l i))
+      {z | z ∈ range l ∧ a < z.re} (fun z => -Function.extend l c 0 z) (∑' i, ‖c i‖) B a :=
     { measurable := hm
       growth := hg
       laplace s h := by
-        obtain ⟨h1, h2⟩ := max_lt_iff.1 h
-        obtain ⟨i1, v1⟩ := Window.laplace_exp (a := a) (s := s) (by simpa) 0
-        have i2 := Landau.integrable_kernel hm hg 0 h
-        simp only [pow_zero, Nat.factorial_zero, Nat.cast_one, div_one, one_mul] at i2
-        have e : ∫ u in Ioi (0 : ℝ), (F u : ℂ) * exp (-(s * u)) =
-            C * (∫ u in Ioi (0 : ℝ), exp (a * u) * exp (-(s * u))) -
-              ∫ u in Ioi (0 : ℝ), (f u : ℂ) * exp (-(s * u)) := by
-          rw [← integral_const_mul, ← integral_sub (i1.const_mul _) i2]
-          refine setIntegral_congr_fun measurableSet_Ioi fun u hu => ?_
-          simp only [hf (le_of_lt hu)]
-          push_cast
-          ring
-        rw [(hasSum_cauchySum hB hs hF h2).tsum_eq, e, v1]
-        simp [div_eq_mul_inv]
-      analytic s h hZ :=
-        (hpole h).sub (((differentiableOn_cauchySum hd hs).analyticOnNhd
-          (isOpen_compl_range hd)) s fun hr => hZ ⟨hr, h⟩)
+        rw [(hasSum_cauchySum hB hs hF h).tsum_eq, ← integral_neg]
+        refine setIntegral_congr_fun measurableSet_Ioi fun u hu => ?_
+        simp only [hf (le_of_lt hu)]
+        push_cast
+        ring
+      analytic s h hZ := (((differentiableOn_cauchySum hd hs).analyticOnNhd
+        (isOpen_compl_range hd)) s fun hr => hZ ⟨hr, h⟩).fun_neg
       finite s r := (finite_range_inter hd s r).subset (inter_subset_inter_left _ fun _ h => h.1)
       re_mem := by
         rintro _ ⟨⟨i, rfl⟩, h⟩
-        exact ⟨h, (hB i).trans (le_max_right _ _)⟩
+        exact ⟨h, hB i⟩
       residue_ne_zero := by
         rintro _ ⟨⟨i, rfl⟩, -⟩
         rw [hl.extend_apply]
@@ -116,13 +96,13 @@ theorem re_le_of_window (hl : Function.Injective l) (hB : ∀ i, (l i).re ≤ B)
           (hs.subtype _)).analyticOnNhd (isOpen_compl_range hd') (l i) (by
             rintro ⟨j, hj⟩
             exact j.2 (hl hj))
-        refine ⟨_, (hpole h).sub hA, .of_forall fun s => ?_⟩
+        refine ⟨_, hA.fun_neg, .of_forall fun s => ?_⟩
         have e := (hsum s).tsum_subtype_add_tsum_subtype_compl {i}
         rw [tsum_singleton i fun i => c i / (s - l i)] at e
-        simp only [← e, hl.extend_apply, Pi.sub_apply]
+        simp only [← e, hl.extend_apply]
         ring }
   by_contra h
-  refine (key.eq_empty_of_window ha ?_ hδ fun X => ?_).subset
+  refine (key.eq_empty_of_window (C := C) ha ?_ hδ fun X => ?_).subset
     (⟨⟨i, rfl⟩, not_le.1 h⟩ : l i ∈ {z | z ∈ range l ∧ a < z.re})
   · rintro _ ⟨⟨i, rfl⟩, h⟩ him
     rw [hl.extend_apply, neg_re, neg_lt_zero]
@@ -130,7 +110,7 @@ theorem re_le_of_window (hl : Function.Injective l) (hB : ∀ i, (l i).re ≤ B)
   · obtain ⟨U, hU, h⟩ := hw (max X 0)
     obtain ⟨h1, h2⟩ := max_le_iff.1 hU
     refine ⟨U, h1, fun u hu => ?_⟩
-    rw [hf (h2.trans hu.1), sub_nonneg]
+    rw [hf (h2.trans hu.1), neg_le_neg_iff]
     exact h u hu (h2.trans hu.1)
 
 end ExpSum
@@ -259,8 +239,7 @@ lemma norm_efFunctional_le_of_trace (ha : 0 < a) (φ : TestFunction) {t : ℝ} (
   obtain ⟨s, h1, h2⟩ := exists_hasTrace_induced ha (φ.translate t ht)
   rw [h.unique h1, ← h2.tsum_eq, ← tsum_mul_right]
   have hs := φ.hasSum_full.summable.norm.mul_right (Real.exp (a * t))
-  have hinj : Function.Injective fun ρ : innerZeros a =>
-      (⟨ρ, ρ.2.1, ρ.2.2.1, ρ.2.2.2.1⟩ : stripZeros) := fun x y h => Subtype.ext (Subtype.mk.inj h)
+  have hinj := inclusion_injective (innerZeros_subset a)
   have hle (ρ : innerZeros a) : ‖(zeroMult ρ : ℂ) * (φ.translate t ht).hat ((ρ : ℂ) - 1 / 2)‖ ≤
       ‖(zeroMult ρ : ℂ) * φ.hat ((ρ : ℂ) - 1 / 2)‖ * Real.exp (a * t) := by
     rw [TestFunction.hat_translate, mul_left_comm, norm_mul, norm_exp, re_ofReal_mul, mul_comm,
