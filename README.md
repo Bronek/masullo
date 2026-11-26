@@ -35,7 +35,9 @@ unconditionally. Let `φ^τ(x) = x^(iτ) φ(x)` and `κ = min(a/2, 1/8)²/3`. Th
 `a` is at most `C T^(-κ) log²(2T)` for `T ≥ 2`, with `C` depending on `a` and `φ`
 (`mean_modulate_le` in `Masullo/Modulation.lean`). It is a consequence of the zero-density estimate
 and excludes no zero: on paper, a single zero off the critical line contributes `O(1/T)` to the
-mean.
+mean. The exponent cannot reach 1 for a test with a nonzero discrepancy: if the unnormalised
+integral over `[-T, T]` falls below every `ε > 0` at arbitrarily large `T`, the identity holds at
+every modulation of `φ` (`trace_eq_of_integral_small`), since the integrand is continuous.
 
 One sufficient condition is arithmetic. Let `G(x) = ∑_{n ≤ x} Λ(n)(x/n - 1) - x log x + (1 + γ)x`,
 and fix real numbers `θ ≥ 0`, `δ > 0` and `C`. Suppose there are arbitrarily large `Y` for which

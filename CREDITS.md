@@ -82,6 +82,8 @@ natural approximant, a Claude Fable subagent reviewed it, and Claude formalised 
 For `Masullo/Modulation.lean` and `WeilExplicit/DensityWeighted.lean`, a Claude Fable subagent
 proposed averaging the trace identity over modulations, Codex supplied the unconditional proof
 from the existing density estimate, and Claude formalised it.
+A Claude Fable subagent proposed its converse `trace_eq_of_integral_small`, Codex reviewed and
+sharpened it to every modulation, and Claude formalised it.
 A Claude Fable subagent surveyed the tree for shorter statements that subsume longer ones and
 proved `Runs.ne_zero_of_dyadic_window`; Claude added it, with
 `Landau.ContinuesMero.eq_empty_of_window_ge` and the removal of duplicated lemmas.

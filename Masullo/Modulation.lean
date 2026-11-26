@@ -106,36 +106,20 @@ private lemma one_add_normSq_le (z : ℂ) (τ : ℝ) :
 
 private lemma normSq_div_I (z : ℂ) : normSq (z / I) = normSq z := by simp
 
-/-- **The trace on average over modulations.** For `0 < a` and a test function `φ` there is `C` such
-that for every `T ≥ 2`, the absolute difference between Weil's functional and the trace at width
-`a`, at the modulation of `φ` by `τ`, is integrable over `τ ∈ [-T, T]` with mean at most
-`C T^(-κ) log² (2T)`, where `κ = min (a / 2) (1 / 8) ^ 2 / 3`. The trace values `s τ` are unique
-(`HasTrace.unique`) and exist (`exists_hasTrace_induced`). -/
-theorem mean_modulate_le {a : ℝ} (ha : 0 < a) (φ : TestFunction) :
-    ∃ C : ℝ, 0 ≤ C ∧ ∀ T : ℝ, 2 ≤ T → ∀ s : ℝ → ℂ,
-      (∀ τ, HasTrace (induced ha (φ.modulate τ)) (s τ)) →
-      IntervalIntegrable (fun τ => ‖(φ.modulate τ).efFunctional - s τ‖) volume (-T) T ∧
-      (2 * T)⁻¹ * ∫ τ in -T..T, ‖(φ.modulate τ).efFunctional - s τ‖ ≤
-        C * T ^ (-(min (a / 2) (1 / 8) ^ 2 / 3)) * Real.log (2 * T) ^ 2 := by
+/-- **The discrepancy is continuous in the modulation.** For `0 < a`, a test function `φ` and trace
+values `s τ` at width `a` of the modulations of `φ`, the map
+`τ ↦ ‖Weil's functional at φ.modulate τ - s τ‖` is continuous. -/
+theorem continuous_modulate_sub {a : ℝ} (ha : 0 < a) (φ : TestFunction) (s : ℝ → ℂ)
+    (hs : ∀ τ, HasTrace (induced ha (φ.modulate τ)) (s τ)) :
+    Continuous fun τ => ‖(φ.modulate τ).efFunctional - s τ‖ := by
   classical
-  set κ := min (a / 2) (1 / 8) ^ 2 / 3
-  have hκ0 : 0 ≤ κ := by positivity
-  have hκ1 : κ ≤ 1 := by
-    have : min (a / 2) (1 / 8) ≤ 1 / 8 := min_le_right _ _
-    have h0 : 0 < min (a / 2) (1 / 8) := lt_min (by linarith) (by norm_num)
-    simp only [κ]; nlinarith
   obtain ⟨M, hM, hφ⟩ := φ.exists_hat_bound
-  obtain ⟨A, hA, hcount⟩ := WeilExplicit.exterior_mult_le ha
   let w (ρ : ℂ) := (zeroMult ρ : ℝ) / (1 + normSq ((ρ - 1 / 2) / I))
   have hw (ρ : ℂ) : 0 ≤ w ρ :=
     div_nonneg (Nat.cast_nonneg _) (add_nonneg zero_le_one (normSq_nonneg _))
   have hb := (hasSum_subtype_iff_indicator (f := w)).1
     WeilExplicit.summable_zeroMult_div_one_add_normSq.hasSum
   set W := ∑' ρ : stripZeros, w ρ
-  have hW : 0 ≤ W := tsum_nonneg fun _ => hw _
-  refine ⟨9 * Real.pi * M * A + 8 * M * W, by positivity, fun T hT s hs => ?_⟩
-  have hT0 : 0 < T := by linarith
-  -- the exterior sum and its terms
   let f (τ : ℝ) (ρ : ℂ) : ℂ :=
     (exterior a).indicator (fun ρ : ℂ => (zeroMult ρ : ℂ) * φ.hat (ρ - 1 / 2 + I * τ)) ρ
   have hF (τ : ℝ) : (φ.modulate τ).efFunctional - s τ = ∑' ρ, f τ ρ :=
@@ -155,8 +139,8 @@ theorem mean_modulate_le {a : ℝ} (ha : 0 < a) (φ : TestFunction) :
     linarith [normSq_nonneg (ρ - 1 / 2 + I * τ)]
   have hpos (x : ℝ) (hx : 1 ≤ x) : M / x ^ 2 ≤ M / x :=
     div_le_div_of_nonneg_left hM (by linarith) (by nlinarith)
-  -- continuity on `[-T, T]`
-  have hcont : ContinuousOn (fun τ => ‖(φ.modulate τ).efFunctional - s τ‖) (uIcc (-T) T) := by
+  have hcont (T : ℝ) (hT : 0 ≤ T) :
+      ContinuousOn (fun τ => ‖(φ.modulate τ).efFunctional - s τ‖) (uIcc (-T) T) := by
     simp only [hF]
     refine (continuousOn_tsum (u := fun ρ => 2 * (1 + T ^ 2) * M * stripZeros.indicator w ρ)
       (fun ρ => ?_) (hb.summable.mul_left _) fun ρ τ hτ => ?_).norm
@@ -191,8 +175,59 @@ theorem mean_modulate_le {a : ℝ} (ha : 0 < a) (φ : TestFunction) :
         first
           | exact mul_nonneg (by positivity) (hw ρ)
           | exact le_of_eq (mul_zero _).symm
+  refine continuous_iff_continuousAt.2 fun τ => ?_
+  have h := hcont (|τ| + 1) (by positivity)
+  rw [uIcc_of_le (by linarith [abs_nonneg τ])] at h
+  exact h.continuousAt
+    (Icc_mem_nhds (by linarith [neg_abs_le τ]) (by linarith [le_abs_self τ]))
+
+
+/-- **The trace on average over modulations.** For `0 < a` and a test function `φ` there is `C` such
+that for every `T ≥ 2`, the absolute difference between Weil's functional and the trace at width
+`a`, at the modulation of `φ` by `τ`, is integrable over `τ ∈ [-T, T]` with mean at most
+`C T^(-κ) log² (2T)`, where `κ = min (a / 2) (1 / 8) ^ 2 / 3`. The trace values `s τ` are unique
+(`HasTrace.unique`) and exist (`exists_hasTrace_induced`). -/
+theorem mean_modulate_le {a : ℝ} (ha : 0 < a) (φ : TestFunction) :
+    ∃ C : ℝ, 0 ≤ C ∧ ∀ T : ℝ, 2 ≤ T → ∀ s : ℝ → ℂ,
+      (∀ τ, HasTrace (induced ha (φ.modulate τ)) (s τ)) →
+      IntervalIntegrable (fun τ => ‖(φ.modulate τ).efFunctional - s τ‖) volume (-T) T ∧
+      (2 * T)⁻¹ * ∫ τ in -T..T, ‖(φ.modulate τ).efFunctional - s τ‖ ≤
+        C * T ^ (-(min (a / 2) (1 / 8) ^ 2 / 3)) * Real.log (2 * T) ^ 2 := by
+  classical
+  set κ := min (a / 2) (1 / 8) ^ 2 / 3
+  have hκ0 : 0 ≤ κ := by positivity
+  have hκ1 : κ ≤ 1 := by
+    have : min (a / 2) (1 / 8) ≤ 1 / 8 := min_le_right _ _
+    have h0 : 0 < min (a / 2) (1 / 8) := lt_min (by linarith) (by norm_num)
+    simp only [κ]; nlinarith
+  obtain ⟨M, hM, hφ⟩ := φ.exists_hat_bound
+  obtain ⟨A, hA, hcount⟩ := WeilExplicit.exterior_mult_le ha
+  let w (ρ : ℂ) := (zeroMult ρ : ℝ) / (1 + normSq ((ρ - 1 / 2) / I))
+  have hw (ρ : ℂ) : 0 ≤ w ρ :=
+    div_nonneg (Nat.cast_nonneg _) (add_nonneg zero_le_one (normSq_nonneg _))
+  have hb := (hasSum_subtype_iff_indicator (f := w)).1
+    WeilExplicit.summable_zeroMult_div_one_add_normSq.hasSum
+  set W := ∑' ρ : stripZeros, w ρ
+  have hW : 0 ≤ W := tsum_nonneg fun _ => hw _
+  refine ⟨9 * Real.pi * M * A + 8 * M * W, by positivity, fun T hT s hs => ?_⟩
+  have hT0 : 0 < T := by linarith
+  have hre {ρ : ℂ} (hρ : ρ ∈ stripZeros) (τ : ℝ) : |(ρ - 1 / 2 + I * τ).re| ≤ 1 / 2 := by
+    have h1 := hρ.2.1
+    have h2 := hρ.2.2
+    simp only [add_re, sub_re, mul_re, I_re, I_im, ofReal_re, ofReal_im, abs_le]
+    norm_num
+    constructor <;> linarith
+  have hhat {ρ : ℂ} (hρ : ρ ∈ stripZeros) (τ : ℝ) :
+      ‖(zeroMult ρ : ℂ) * φ.hat (ρ - 1 / 2 + I * τ)‖ ≤
+        zeroMult ρ * (M / (1 + normSq (ρ - 1 / 2 + I * τ)) ^ 2) := by
+    rw [norm_mul, norm_natCast]
+    exact mul_le_mul_of_nonneg_left (hφ _ (hre hρ τ)) (Nat.cast_nonneg _)
+  have hns (ρ : ℂ) (τ : ℝ) : 0 < 1 + normSq (ρ - 1 / 2 + I * τ) := by
+    linarith [normSq_nonneg (ρ - 1 / 2 + I * τ)]
+  have hpos (x : ℝ) (hx : 1 ≤ x) : M / x ^ 2 ≤ M / x :=
+    div_le_div_of_nonneg_left hM (by linarith) (by nlinarith)
   have hint : IntervalIntegrable (fun τ => ‖(φ.modulate τ).efFunctional - s τ‖) volume (-T) T :=
-    hcont.intervalIntegrable
+    (continuous_modulate_sub ha φ s hs).intervalIntegrable _ _
   refine ⟨hint, ?_⟩
   -- the pointwise majorant
   set S := (finite_outerZerosUpTo a (2 * T)).toFinset
@@ -351,6 +386,47 @@ theorem mean_modulate_le {a : ℝ} (ha : 0 < a) (φ : TestFunction) :
         rw [mul_add]
         refine (add_le_add hcnt hfar).trans_eq ?_
         ring
+
+/-- **Sharpness of the averaged trace.** For `0 < a`, a test function `φ` and trace values `s τ`
+at width `a` of the modulations of `φ`: if the unnormalised integrals
+`∫ τ in -T..T, ‖Weil's functional at φ.modulate τ - s τ‖` fall below every `ε > 0` for arbitrarily
+large `T`, then the trace identity `s τ = Weil's functional at φ.modulate τ` holds at every `τ`.
+The integrand is continuous and nonnegative, and the integral is nondecreasing in `T`. -/
+theorem trace_eq_of_integral_small {a : ℝ} (ha : 0 < a) (φ : TestFunction) (s : ℝ → ℂ)
+    (hs : ∀ τ, HasTrace (induced ha (φ.modulate τ)) (s τ))
+    (h : ∀ ε : ℝ, 0 < ε → ∀ T₀ : ℝ, ∃ T, T₀ ≤ T ∧
+      ∫ τ in -T..T, ‖(φ.modulate τ).efFunctional - s τ‖ ≤ ε) (τ₀ : ℝ) :
+    s τ₀ = (φ.modulate τ₀).efFunctional := by
+  by_contra hne
+  have hg := continuous_modulate_sub ha φ s hs
+  have hδ : 0 < ‖(φ.modulate τ₀).efFunctional - s τ₀‖ :=
+    norm_pos_iff.2 fun h0 => hne (sub_eq_zero.1 h0).symm
+  set δ := ‖(φ.modulate τ₀).efFunctional - s τ₀‖
+  obtain ⟨r, hr, hball⟩ := Metric.eventually_nhds_iff_ball.1
+    (hg.continuousAt.eventually (lt_mem_nhds (show δ / 2 < δ by linarith)))
+  obtain ⟨r', hr2⟩ : ∃ r', r' = r / 2 := ⟨_, rfl⟩
+  have hr' : 0 < r' := by rw [hr2]; positivity
+  obtain ⟨T, hT, hle⟩ := h (r' * δ / 2) (by positivity) (|τ₀| + r)
+  have hlo : -T ≤ τ₀ - r' := by linarith [neg_abs_le τ₀]
+  have hhi : τ₀ + r' ≤ T := by linarith [le_abs_self τ₀]
+  have hint := fun u v : ℝ => (hg.intervalIntegrable (μ := volume) u v)
+  have h1 := intervalIntegral.integral_mono_interval hlo (by linarith) hhi
+    (Eventually.of_forall fun τ => norm_nonneg _) (hint _ _)
+  have h2 := intervalIntegral.integral_mono_on (μ := volume) (by linarith : τ₀ - r' ≤ τ₀ + r')
+    (intervalIntegrable_const (c := δ / 2)) (hint _ _) fun τ hτ => by
+      refine (hball τ ?_).le
+      rw [Metric.mem_ball, Real.dist_eq, abs_lt]
+      constructor <;> linarith [hτ.1, hτ.2]
+  rw [intervalIntegral.integral_const, smul_eq_mul] at h2
+  nlinarith
+
+/-- At `τ = 0` the sharpness statement is about `φ` itself. -/
+theorem trace_eq_of_integral_small_zero {a : ℝ} (ha : 0 < a) (φ : TestFunction) (s : ℝ → ℂ)
+    (hs : ∀ τ, HasTrace (induced ha (φ.modulate τ)) (s τ))
+    (h : ∀ ε : ℝ, 0 < ε → ∀ T₀ : ℝ, ∃ T, T₀ ≤ T ∧
+      ∫ τ in -T..T, ‖(φ.modulate τ).efFunctional - s τ‖ ≤ ε) :
+    s 0 = φ.efFunctional := by
+  simpa [TestFunction.modulate_zero] using trace_eq_of_integral_small ha φ s hs h 0
 
 /-- **Markov's inequality.** With `C` and `κ` as in `mean_modulate_le`, the set of `τ ∈ (-T, T]`
 where the difference has absolute value at least `ε` has measure at most

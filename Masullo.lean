@@ -11,6 +11,7 @@ import Masullo.Trace.Operator
 import Masullo.Trace
 import Masullo.Tail
 import Masullo.Modulation
+import Masullo.ModulationControls
 import Masullo.Landau
 import Masullo.Window
 import Masullo.WindowControls
