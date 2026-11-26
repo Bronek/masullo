@@ -93,7 +93,11 @@ Weil's functional at the translate of `φ` by `t` in the logarithmic variable. F
 arbitrarily large `U`, `L_φ(t) ≤ C e^(at)` for all `t ≥ 0` in `[U, (1+δ)U]`. It holds iff the
 trace identity holds for every test function at every width `a' > a` (`trace_eq_efFunctional_iff_probeBound` in
 `Masullo/Probe.lean`), and for `a = 0` iff the Riemann hypothesis holds. At `a = 1/2` it holds
-unconditionally; it is not proved for any smaller `a`.
+unconditionally; it is not proved for any smaller `a`. One probe suffices: some nonnegative `φ` has
+transform nonzero at `ρ - 1/2` for every zero `ρ` in the strip
+(`TestFunction.exists_nonneg_forall_hat_ne_zero`), and for any such `φ` its bound alone is
+equivalent to there being no zeros at distance more than `a` from the critical line
+(`windowBound_iff`, `exists_windowBound_zero_iff_riemannHypothesis`).
 
 The second library, `WeilExplicit`, proves Weil's explicit formula for twice continuously
 differentiable test functions of compact support (`explicit_formula`), and on the way a zero count,

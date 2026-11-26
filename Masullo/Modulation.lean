@@ -27,9 +27,9 @@ namespace Masullo
 
 namespace TestFunction
 
-/-- The modulation `x ↦ x ^ (iτ) φ(x)`. -/
-noncomputable def modulate (φ : TestFunction) (τ : ℝ) : TestFunction where
-  toFun t := φ.toFun t * exp (I * τ * (Real.log t : ℂ))
+/-- The tilt `x ↦ x ^ w φ(x)`. -/
+noncomputable def tilt (φ : TestFunction) (w : ℂ) : TestFunction where
+  toFun t := φ.toFun t * exp (w * (Real.log t : ℂ))
   contDiff := by
     rw [contDiff_iff_contDiffAt]
     intro t
@@ -47,26 +47,36 @@ noncomputable def modulate (φ : TestFunction) (τ : ℝ) : TestFunction where
   hasCompactSupport := φ.hasCompactSupport.mul_right
   tsupport_subset := (tsupport_mul_subset_left).trans φ.tsupport_subset
 
-lemma modulate_zero (φ : TestFunction) : φ.modulate 0 = φ := by
-  cases φ
-  simp [modulate]
-
-/-- Modulation by `τ` shifts the transform by `iτ`. -/
-lemma hat_modulate (φ : TestFunction) (τ : ℝ) (z : ℂ) :
-    (φ.modulate τ).hat z = φ.hat (z + I * τ) := by
+/-- Tilting by `w` shifts the transform by `w`. -/
+lemma hat_tilt (φ : TestFunction) (w z : ℂ) : (φ.tilt w).hat z = φ.hat (z + w) := by
   unfold hat mellin
   refine setIntegral_congr_fun measurableSet_Ioi fun t ht => ?_
   have ht' : (t : ℂ) ≠ 0 := ofReal_ne_zero.2 (ne_of_gt ht)
-  simp only [modulate, smul_eq_mul]
-  rw [show z + I * τ - 1 = z - 1 + I * τ by ring, cpow_add _ _ ht',
-    cpow_def_of_ne_zero ht' (I * τ), ← ofReal_log (le_of_lt ht)]
+  simp only [tilt, smul_eq_mul]
+  rw [show z + w - 1 = z - 1 + w by ring, cpow_add _ _ ht', cpow_def_of_ne_zero ht' w,
+    ← ofReal_log (le_of_lt ht)]
   ring_nf
 
-lemma continuous_hat (φ : TestFunction) : Continuous φ.hat := by
+/-- The modulation `x ↦ x ^ (iτ) φ(x)`. -/
+noncomputable def modulate (φ : TestFunction) (τ : ℝ) : TestFunction := φ.tilt (I * τ)
+
+lemma modulate_zero (φ : TestFunction) : φ.modulate 0 = φ := by
+  cases φ
+  simp [modulate, tilt]
+
+/-- Modulation by `τ` shifts the transform by `iτ`. -/
+lemma hat_modulate (φ : TestFunction) (τ : ℝ) (z : ℂ) :
+    (φ.modulate τ).hat z = φ.hat (z + I * τ) :=
+  φ.hat_tilt _ z
+
+/-- The transform is entire. -/
+lemma differentiable_hat (φ : TestFunction) : Differentiable ℂ φ.hat := by
   have h := (WeilExplicit.differentiable_transform φ.pull_contDiff.continuous
-    φ.pull_hasCompactSupport).continuous.comp (continuous_id.div_const I)
-  refine h.congr fun z => ?_
-  simp only [Function.comp, id, transform_pull]
+    φ.pull_hasCompactSupport).comp (differentiable_id.div_const I)
+  exact (funext fun z => (transform_pull φ z).symm : φ.hat = _) ▸ h
+
+lemma continuous_hat (φ : TestFunction) : Continuous φ.hat :=
+  φ.differentiable_hat.continuous
 
 end TestFunction
 

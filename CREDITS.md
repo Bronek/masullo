@@ -111,3 +111,5 @@ Weil's explicit formula. OpenAI Codex proposed translating nonnegative tests, th
 and a bump adapted to each zero, in a form with constants tending to zero; Claude chose the form with
 one constant per test and wrote the Lean. Codex reviewed it. The power-series precedent for the role
 of positivity is the Vivanti–Pringsheim theorem.
+Codex proposed in review the criterion with one probe, a real tilt of a bump that avoids the
+countably many bad exponents, and a Claude Opus subagent formalised it (`windowBound_iff`).

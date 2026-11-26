@@ -1,4 +1,4 @@
-import Masullo.Trace
+import Masullo.Modulation
 import Masullo.Window
 
 /-!
@@ -14,6 +14,12 @@ is asserted.
 The bound follows from the trace identity at `a'` for the translates, with a constant that does not
 depend on `a'`. The converse applies Landau's theorem on windows to `-L(t) ≥ -C e ^ (a t)`: the
 Mellin transform of a nonnegative function is nonnegative at real points.
+
+One test function suffices. Landau's theorem sees each zero at which the transform of the test
+function does not vanish (`re_sub_half_le_of_windowBound`), and some nonnegative test function has
+transform nonvanishing at every zero in the strip (`TestFunction.exists_nonneg_forall_hat_ne_zero`).
+Its window bounds alone are equivalent to the absence of zeros at distance more than `a`
+(`windowBound_iff`).
 -/
 
 open MeasureTheory Complex Set Filter Topology Metric
@@ -216,17 +222,57 @@ lemma exists_nonneg_hat_ne_zero (z : ℂ) : ∃ φ : TestFunction, φ.Nonneg ∧
   simp only [reCLM_apply, e, h0, zero_mul, zero_re] at h1
   exact hp.ne' h1
 
+lemma Nonneg.tilt (h : φ.Nonneg) (r : ℝ) : (φ.tilt r).Nonneg := fun x => by
+  have e : φ.toFun x = ((φ.toFun x).re : ℂ) := Complex.ext rfl (by simp [(h x).2])
+  have e2 : (φ.tilt r).toFun x = (((φ.toFun x).re * Real.exp (r * Real.log x) : ℝ) : ℂ) := by
+    simp only [TestFunction.tilt]
+    conv_lhs => rw [e]
+    push_cast
+    rfl
+  rw [e2, ofReal_re, ofReal_im]
+  exact ⟨mul_nonneg (h x).1 (Real.exp_pos _).le, rfl⟩
+
+/-- A transform that does not vanish at one point vanishes at countably many points. -/
+lemma countable_hat_eq_zero {z₀ : ℂ} (h : φ.hat z₀ ≠ 0) : {z | φ.hat z = 0}.Countable := by
+  rcases (φ.differentiable_hat.differentiableOn.analyticOnNhd isOpen_univ)
+    |>.eqOn_zero_or_eventually_ne_zero_of_preconnected isPreconnected_univ with h0 | h0
+  · exact absurd (h0 (mem_univ z₀)) h
+  · have := (isDiscrete_of_codiscreteWithin (s := {z | φ.hat z = 0}) h0).to_subtype
+    simpa using (TopologicalSpace.separableSpace_iff_countable.1 inferInstance :
+      Countable ({z | φ.hat z = 0} ∩ univ : Set ℂ))
+
+/-- **A universal probe.** Some nonnegative test function has transform nonzero at `ρ - 1/2` for
+every zero `ρ` in the critical strip. It is a nonnegative bump tilted by a real power `x ^ r`,
+whose transform is that of the bump shifted by `r`; the transform of the bump has countably many
+zeros and there are countably many zeros in the strip, so all but countably many `r` qualify. -/
+theorem exists_nonneg_forall_hat_ne_zero :
+    ∃ φ : TestFunction, φ.Nonneg ∧ ∀ ρ ∈ stripZeros, φ.hat (ρ - 1 / 2) ≠ 0 := by
+  obtain ⟨b, hb, hb0⟩ := exists_nonneg_hat_ne_zero 0
+  have hB : (⋃ ρ ∈ stripZeros, (fun r : ℝ => ρ - 1 / 2 + r) ⁻¹' {z | b.hat z = 0}).Countable :=
+    (countable_zeros.mono fun ρ hρ => mem_riemannZetaZeros.2 hρ.1).biUnion fun ρ _ =>
+      (countable_hat_eq_zero hb0).preimage ((add_right_injective _).comp ofReal_injective)
+  obtain ⟨r, hr⟩ : ∃ r : ℝ, r ∉ ⋃ ρ ∈ stripZeros,
+      (fun r : ℝ => ρ - 1 / 2 + r) ⁻¹' {z | b.hat z = 0} := by
+    by_contra! h
+    exact Cardinal.not_countable_real (hB.mono fun r _ => h r)
+  refine ⟨b.tilt r, hb.tilt r, fun ρ hρ h0 => hr (mem_iUnion₂.2 ⟨ρ, hρ, ?_⟩)⟩
+  rwa [hat_tilt] at h0
+
 end TestFunction
 
 /-! ### The equivalence -/
 
 open Trace
 
+/-- The translates of `φ` have `L(t) ≤ C e ^ (a t)`, for some `C`, on arbitrarily late windows
+`[U, (1 + δ) U]`. -/
+def TestFunction.WindowBound (φ : TestFunction) (a δ : ℝ) : Prop :=
+  ∃ C, ∀ X, ∃ U ≥ X, ∀ t ∈ Icc U ((1 + δ) * U), ∀ ht : 0 ≤ t,
+    (φ.translate t ht).efFunctional.re ≤ C * Real.exp (a * t)
+
 /-- The translates of every nonnegative test function have `L(t) ≤ C e ^ (a t)`, for some `C`, on
 arbitrarily late windows `[U, (1 + δ) U]`. -/
-def ProbeBound (a δ : ℝ) : Prop :=
-  ∀ φ : TestFunction, φ.Nonneg → ∃ C, ∀ X, ∃ U ≥ X, ∀ t ∈ Icc U ((1 + δ) * U), ∀ ht : 0 ≤ t,
-    (φ.translate t ht).efFunctional.re ≤ C * Real.exp (a * t)
+def ProbeBound (a δ : ℝ) : Prop := ∀ φ : TestFunction, φ.Nonneg → φ.WindowBound a δ
 
 variable {a δ : ℝ}
 
@@ -249,60 +295,99 @@ lemma norm_efFunctional_le_of_trace (ha : 0 < a) (φ : TestFunction) {t : ℝ} (
   exact (tsum_of_norm_bounded (hs.comp_injective hinj).hasSum hle).trans
     (tsum_comp_le_tsum_of_inj hs (fun ρ => by positivity) hinj)
 
+/-- One nonnegative test function with transform nonzero at `ρ₀ - 1/2` and with the window bounds
+leaves the zero `ρ₀` at most `a` to the right of the critical line. -/
+lemma re_sub_half_le_of_windowBound (ha : 0 ≤ a) (hδ : 0 < δ) {φ : TestFunction}
+    (hφ : φ.Nonneg) (h : φ.WindowBound a δ) {ρ₀ : ℂ} (hρ₀ : ρ₀ ∈ stripZeros)
+    (hne : φ.hat (ρ₀ - 1 / 2) ≠ 0) : ρ₀.re - 1 / 2 ≤ a := by
+  obtain ⟨C, hC⟩ := h
+  let S : Set stripZeros := Function.support fun ρ => φ.hat ((ρ : ℂ) - 1 / 2)
+  have key := re_le_of_window (ι := S) (l := fun ρ => (ρ : ℂ) - 1 / 2)
+    (c := fun ρ => (zeroMult ρ : ℂ) * φ.hat ((ρ : ℂ) - 1 / 2)) (B := 1 / 2) (a := a) (C := C)
+    (F := fun t => (φ.translate |t| (abs_nonneg t)).efFunctional.re)
+    (fun x y e => Subtype.ext (Subtype.ext (sub_left_injective e)))
+    (fun ρ => by
+      have := ρ.1.2.2.2
+      norm_num
+      linarith)
+    (fun z => by
+      obtain ⟨r, hr, hiso⟩ := exists_isolating_radius (z + 1 / 2)
+      refine ⟨r, hr, fun ρ hne => ?_⟩
+      have := hiso ρ ρ.1.2.1 fun e => hne (by rw [e]; ring)
+      rwa [show z - ((ρ : ℂ) - 1 / 2) = z + 1 / 2 - ρ by ring])
+    (fun ρ => mul_ne_zero (Nat.cast_ne_zero.2 (zeroMult_pos ρ.1.2.1).ne') ρ.2)
+    (fun x hx => by
+      have h0 := (φ.translate |x| (abs_nonneg x)).hasSum_full
+      rw [← conj_eq_iff_re.1 (conj_eq_iff_im.2 (hφ.translate (abs_nonneg x)).efFunctional_im)]
+        at h0
+      refine ((hasSum_subtype_iff_of_support_subset fun ρ hρ => ?_).2 (h0.congr_fun
+        fun ρ : stripZeros => ?_ : HasSum (fun ρ : stripZeros =>
+          (zeroMult ρ : ℂ) * φ.hat ((ρ : ℂ) - 1 / 2) * exp (x * ((ρ : ℂ) - 1 / 2))) _))
+      · exact right_ne_zero_of_mul (left_ne_zero_of_mul hρ)
+      · rw [TestFunction.hat_translate, abs_of_nonneg hx]
+        ring)
+    ha (fun ρ him _ => ?_) hδ (fun X => ?_) ⟨⟨ρ₀, hρ₀⟩, hne⟩
+  · simpa using key
+  · have e : (ρ : ℂ) - 1 / 2 = (((ρ : ℂ) - 1 / 2).re : ℝ) := Complex.ext rfl (by simpa using him)
+    have h1 := hφ.hat_ofReal_re ((ρ : ℂ) - 1 / 2).re
+    have h2 := hφ.conj_hat ((ρ : ℂ) - 1 / 2)
+    rw [e, conj_ofReal, ← e, conj_eq_iff_im] at h2
+    rw [← e] at h1
+    rw [← ofReal_natCast, re_ofReal_mul]
+    exact mul_pos (Nat.cast_pos.2 (zeroMult_pos ρ.1.2.1))
+      (h1.lt_of_ne fun h3 => ρ.2 (Complex.ext h3.symm h2))
+  · obtain ⟨U, hU, hb⟩ := hC X
+    refine ⟨U, hU, fun t ht h0 => ?_⟩
+    simp only [abs_of_nonneg h0]
+    exact hb t ht h0
+
+/-- The trace identities at all widths above `a` give the window bounds of every test function. -/
+lemma windowBound_of_trace (ha : 0 ≤ a)
+    (h : ∀ (a' : ℝ) (h : a < a') (φ : TestFunction),
+      HasTrace (induced (ha.trans_lt h) φ) φ.efFunctional) (φ : TestFunction) :
+    φ.WindowBound a δ := by
+  refine ⟨∑' ρ : stripZeros, ‖(zeroMult ρ : ℂ) * φ.hat ((ρ : ℂ) - 1 / 2)‖,
+    fun X => ⟨X, le_rfl, fun t _ ht => ?_⟩⟩
+  refine (re_le_norm _).trans (ge_of_tendsto (x := 𝓝[>] a) ?_
+    (eventually_mem_nhdsWithin.mono fun a' ha' =>
+      norm_efFunctional_le_of_trace (ha.trans_lt ha') φ ht (h a' ha' _)))
+  exact (by fun_prop : Continuous fun x : ℝ => _ * Real.exp (x * t)).continuousWithinAt
+
+/-- **One probe.** For a nonnegative test function whose transform is nonzero at `ρ - 1/2` for
+every zero `ρ` in the critical strip, its window bounds hold iff there are no zeros in the critical
+strip at distance more than `a` from the critical line. Neither side is asserted. -/
+theorem windowBound_iff (ha : 0 ≤ a) (hδ : 0 < δ) {φ : TestFunction} (hφ : φ.Nonneg)
+    (hne : ∀ ρ ∈ stripZeros, φ.hat (ρ - 1 / 2) ≠ 0) : φ.WindowBound a δ ↔
+      ¬ ∃ ρ : ℂ, riemannZeta ρ = 0 ∧ 0 < ρ.re ∧ ρ.re < 1 ∧ a < |ρ.re - 1 / 2| := by
+  refine ⟨fun h => ?_, fun h => windowBound_of_trace ha (fun a' ha' =>
+    (trace_eq_efFunctional_iff (ha.trans_lt ha')).2 ?_) φ⟩
+  · have right {ρ₀ : ℂ} (hρ₀ : ρ₀ ∈ stripZeros) : ρ₀.re - 1 / 2 ≤ a :=
+      re_sub_half_le_of_windowBound ha hδ hφ h hρ₀ (hne ρ₀ hρ₀)
+    rintro ⟨ρ, h0, h1, h2, h3⟩
+    rcases lt_abs.1 h3 with h4 | h4
+    · exact h4.not_ge (right ⟨h0, h1, h2⟩)
+    · have h5 : 0 < zeroMult (1 - ρ) := WeilExplicit.zeroMult_one_sub h1 h2 ▸ zeroMult_pos h0
+      have h6 := right (ρ₀ := 1 - ρ) ⟨apply_eq_zero_of_analyticOrderNatAt_ne_zero h5.ne',
+        by simpa using h2, by simpa using h1⟩
+      simp only [sub_re, one_re] at h6
+      linarith
+  · rintro ⟨ρ, h0, h1, h2, h3⟩
+    exact h ⟨ρ, h0, h1, h2, ha'.trans_le h3⟩
+
+/-- Some nonnegative test function has window bounds iff there are no zeros in the critical strip
+at distance more than `a` from the critical line. Neither side is asserted. -/
+theorem exists_windowBound_iff (ha : 0 ≤ a) (hδ : 0 < δ) : ∃ φ : TestFunction, φ.Nonneg ∧
+    (φ.WindowBound a δ ↔
+      ¬ ∃ ρ : ℂ, riemannZeta ρ = 0 ∧ 0 < ρ.re ∧ ρ.re < 1 ∧ a < |ρ.re - 1 / 2|) :=
+  have ⟨φ, hφ, hne⟩ := TestFunction.exists_nonneg_forall_hat_ne_zero
+  ⟨φ, hφ, windowBound_iff ha hδ hφ hne⟩
+
 /-- The window bounds leave no zeros in the critical strip at distance more than `a` from the
 critical line. -/
 theorem not_exists_zero_of_probeBound (ha : 0 ≤ a) (hδ : 0 < δ) (h : ProbeBound a δ) :
-    ¬ ∃ ρ : ℂ, riemannZeta ρ = 0 ∧ 0 < ρ.re ∧ ρ.re < 1 ∧ a < |ρ.re - 1 / 2| := by
-  have right {ρ₀ : ℂ} (hρ₀ : ρ₀ ∈ stripZeros) : ρ₀.re - 1 / 2 ≤ a := by
-    obtain ⟨φ, hφ, hne⟩ := TestFunction.exists_nonneg_hat_ne_zero (ρ₀ - 1 / 2)
-    obtain ⟨C, hC⟩ := h φ hφ
-    let S : Set stripZeros := Function.support fun ρ => φ.hat ((ρ : ℂ) - 1 / 2)
-    have key := re_le_of_window (ι := S) (l := fun ρ => (ρ : ℂ) - 1 / 2)
-      (c := fun ρ => (zeroMult ρ : ℂ) * φ.hat ((ρ : ℂ) - 1 / 2)) (B := 1 / 2) (a := a) (C := C)
-      (F := fun t => (φ.translate |t| (abs_nonneg t)).efFunctional.re)
-      (fun x y e => Subtype.ext (Subtype.ext (sub_left_injective e)))
-      (fun ρ => by
-        have := ρ.1.2.2.2
-        norm_num
-        linarith)
-      (fun z => by
-        obtain ⟨r, hr, hiso⟩ := exists_isolating_radius (z + 1 / 2)
-        refine ⟨r, hr, fun ρ hne => ?_⟩
-        have := hiso ρ ρ.1.2.1 fun e => hne (by rw [e]; ring)
-        rwa [show z - ((ρ : ℂ) - 1 / 2) = z + 1 / 2 - ρ by ring])
-      (fun ρ => mul_ne_zero (Nat.cast_ne_zero.2 (zeroMult_pos ρ.1.2.1).ne') ρ.2)
-      (fun x hx => by
-        have h0 := (φ.translate |x| (abs_nonneg x)).hasSum_full
-        rw [← conj_eq_iff_re.1 (conj_eq_iff_im.2 (hφ.translate (abs_nonneg x)).efFunctional_im)]
-          at h0
-        refine ((hasSum_subtype_iff_of_support_subset fun ρ hρ => ?_).2 (h0.congr_fun
-          fun ρ : stripZeros => ?_ : HasSum (fun ρ : stripZeros =>
-            (zeroMult ρ : ℂ) * φ.hat ((ρ : ℂ) - 1 / 2) * exp (x * ((ρ : ℂ) - 1 / 2))) _))
-        · exact right_ne_zero_of_mul (left_ne_zero_of_mul hρ)
-        · rw [TestFunction.hat_translate, abs_of_nonneg hx]
-          ring)
-      ha (fun ρ him _ => ?_) hδ (fun X => ?_) ⟨⟨ρ₀, hρ₀⟩, hne⟩
-    · simpa using key
-    · have e : (ρ : ℂ) - 1 / 2 = (((ρ : ℂ) - 1 / 2).re : ℝ) := Complex.ext rfl (by simpa using him)
-      have h1 := hφ.hat_ofReal_re ((ρ : ℂ) - 1 / 2).re
-      have h2 := hφ.conj_hat ((ρ : ℂ) - 1 / 2)
-      rw [e, conj_ofReal, ← e, conj_eq_iff_im] at h2
-      rw [← e] at h1
-      rw [← ofReal_natCast, re_ofReal_mul]
-      exact mul_pos (Nat.cast_pos.2 (zeroMult_pos ρ.1.2.1))
-        (h1.lt_of_ne fun h3 => ρ.2 (Complex.ext h3.symm h2))
-    · obtain ⟨U, hU, hb⟩ := hC X
-      refine ⟨U, hU, fun t ht h0 => ?_⟩
-      simp only [abs_of_nonneg h0]
-      exact hb t ht h0
-  rintro ⟨ρ, h0, h1, h2, h3⟩
-  rcases lt_abs.1 h3 with h4 | h4
-  · exact h4.not_ge (right ⟨h0, h1, h2⟩)
-  · have h5 : 0 < zeroMult (1 - ρ) := WeilExplicit.zeroMult_one_sub h1 h2 ▸ zeroMult_pos h0
-    have h6 := right (ρ₀ := 1 - ρ) ⟨apply_eq_zero_of_analyticOrderNatAt_ne_zero h5.ne',
-      by simpa using h2, by simpa using h1⟩
-    simp only [sub_re, one_re] at h6
-    linarith
+    ¬ ∃ ρ : ℂ, riemannZeta ρ = 0 ∧ 0 < ρ.re ∧ ρ.re < 1 ∧ a < |ρ.re - 1 / 2| :=
+  have ⟨φ, hφ, hne⟩ := TestFunction.exists_nonneg_forall_hat_ne_zero
+  (windowBound_iff ha hδ hφ hne).1 (h φ hφ)
 
 /-- **Theorem P.** The trace identities at all widths above `a` hold iff the functional of the
 explicit formula on translates of nonnegative test functions is `O(e ^ (a t))`, from above and on
@@ -310,15 +395,10 @@ arbitrarily late windows. Neither side is asserted. -/
 theorem trace_eq_efFunctional_iff_probeBound (ha : 0 ≤ a) (hδ : 0 < δ) :
     (∀ (a' : ℝ) (h : a < a') (φ : TestFunction),
       HasTrace (induced (ha.trans_lt h) φ) φ.efFunctional) ↔ ProbeBound a δ := by
-  refine ⟨fun h φ _ => ⟨∑' ρ : stripZeros, ‖(zeroMult ρ : ℂ) * φ.hat ((ρ : ℂ) - 1 / 2)‖,
-    fun X => ⟨X, le_rfl, fun t _ ht => ?_⟩⟩, fun h a' ha' => ?_⟩
-  · refine (re_le_norm _).trans (ge_of_tendsto (x := 𝓝[>] a) ?_
-      (eventually_mem_nhdsWithin.mono fun a' ha' =>
-        norm_efFunctional_le_of_trace (ha.trans_lt ha') φ ht (h a' ha' _)))
-    exact (by fun_prop : Continuous fun x : ℝ => _ * Real.exp (x * t)).continuousWithinAt
-  · refine (trace_eq_efFunctional_iff (ha.trans_lt ha')).2 ?_
-    rintro ⟨ρ, h0, h1, h2, h3⟩
-    exact not_exists_zero_of_probeBound ha hδ h ⟨ρ, h0, h1, h2, ha'.trans_le h3⟩
+  refine ⟨fun h φ _ => windowBound_of_trace ha h φ, fun h a' ha' => ?_⟩
+  refine (trace_eq_efFunctional_iff (ha.trans_lt ha')).2 ?_
+  rintro ⟨ρ, h0, h1, h2, h3⟩
+  exact not_exists_zero_of_probeBound ha hδ h ⟨ρ, h0, h1, h2, ha'.trans_le h3⟩
 
 /-- The window bounds hold iff there are no zeros in the critical strip at distance more than `a`
 from the critical line; zeros at distance `a` are allowed. Neither side is asserted. -/
@@ -345,5 +425,13 @@ theorem probeBound_zero_iff_riemannHypothesis (hδ : 0 < δ) :
     ← forall_innerExpansion_iff_riemannHypothesis]
   exact forall₂_congr fun a' ha' =>
     (trace_eq_efFunctional_iff ha').trans (innerExpansion_iff a').symm
+
+/-- For any one `δ > 0`, some nonnegative test function has bounds on windows by constants iff the
+Riemann hypothesis holds. Neither side is asserted. -/
+theorem exists_windowBound_zero_iff_riemannHypothesis (hδ : 0 < δ) :
+    ∃ φ : TestFunction, φ.Nonneg ∧ (φ.WindowBound 0 δ ↔ RiemannHypothesis) :=
+  have ⟨φ, hφ, h⟩ := exists_windowBound_iff le_rfl hδ
+  ⟨φ, hφ, h.trans ((probeBound_iff le_rfl hδ).symm.trans
+    (probeBound_zero_iff_riemannHypothesis hδ))⟩
 
 end Masullo

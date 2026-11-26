@@ -4,7 +4,9 @@ import Masullo.Probe
 # Controls for the nonnegative probes
 
 Counterexamples to `re_le_of_window` without the sign of the coefficients and with the inequality
-reversed; and the window bounds at `a = 1 / 2`, which hold unconditionally.
+reversed; the window bounds at `a = 1 / 2`, which hold unconditionally; and the zero test function,
+which has the window bounds at every `a` and shows that `windowBound_iff` needs its hypothesis on
+the transform.
 -/
 
 open Complex Set
@@ -42,5 +44,20 @@ example (z : ℂ) : ∃ r > 0, ∀ i, (fun _ : Unit => (1 : ℂ)) i ≠ z →
 /-- At `a = 1 / 2` the window bounds hold unconditionally. -/
 theorem probeBound_half (δ : ℝ) : ProbeBound (1 / 2) δ :=
   probeBound_of_trace (by norm_num) Trace.hasTrace_induced_half
+
+/-- The zero test function. -/
+noncomputable def zeroProbe : TestFunction := ⟨0, contDiff_const, HasCompactSupport.zero, by simp⟩
+
+/-- The zero test function is nonnegative and has the window bounds at every `a`, since its
+transform vanishes everywhere. So `windowBound_iff` without its hypothesis that the transform is
+nonzero at the zeros would give, at `a = 0`, the Riemann hypothesis
+(`probeBound_iff`, `probeBound_zero_iff_riemannHypothesis`). -/
+theorem windowBound_zeroProbe (a δ : ℝ) : zeroProbe.Nonneg ∧ zeroProbe.WindowBound a δ := by
+  refine ⟨fun _ => by simp [zeroProbe], 0, fun X => ⟨X, le_rfl, fun t _ ht => ?_⟩⟩
+  have h := (zeroProbe.translate t ht).hasSum_full
+  have e (z : ℂ) : (zeroProbe.translate t ht).hat z = 0 := by
+    simp [TestFunction.hat, TestFunction.translate, zeroProbe, mellin]
+  simp only [e, mul_zero] at h
+  simp [h.unique hasSum_zero]
 
 end Masullo.Probe.Controls
