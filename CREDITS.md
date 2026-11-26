@@ -69,7 +69,8 @@ For `Masullo/Runs.lean`, OpenAI Codex proposed the fixed-ratio sign-run argument
 prime sum and the positive two-point averages that isolate a conjugate pair; related oscillation
 arguments are due to Kaczorowski and to Montgomery and Vorhauer. Claude formalised the implication
 from sign runs to a rightmost zero and its trace corollary. Codex reviewed the Lean and shortened
-several proofs.
+several proofs. A Claude Fable subagent proposed replacing sign runs by a one-sided power bound
+on the same windows, which has exactly the strength of the trace gap; Claude formalised it.
 
 For `WeilExplicit/Density*.lean`, Codex supplied the Carlson-type mollified mean-square argument
 for the summability of reciprocal ordinates of the zeros to the right of `re s = σ > 1/2`. Claude

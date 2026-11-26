@@ -42,11 +42,18 @@ windows, or if `D(x) ≥ -C x^θ` on them, the same conclusions hold
 (`trace_eq_efFunctional_of_dyadicDiff_le` and `trace_eq_efFunctional_of_le_dyadicDiff` in
 `Masullo/Dyadic.lean`). Both bounds hold at `θ = 1`; neither is proved for any `θ < 1`.
 
-A sign condition needs no exponent. If there are `R > 1` and arbitrarily large `Y` such that `D`
-keeps one sign on all of `[Y, RY]`, the trace identity holds for every test function at some
-positive width below `1/2` (`trace_width_of_runs` in `Masullo/Runs.lean`). Its analytic input,
-that the zeros right of each line `re s = σ > 1/2` have summable reciprocal ordinates, is proved in
-`WeilExplicit/Density.lean`. Such runs are not proved here.
+Fixed-ratio windows also suffice, at the cost of the exact exponent. If there are `R > 1`,
+`θ < 1` and arbitrarily large `Y` such that `D(x) ≥ -C x^θ` on all of `[Y, RY]`, or
+`D(x) ≤ C x^θ` on all of it, then some zero has maximal real part or every zero has real part at
+most `max(θ, 1/2)` (`exists_rightmost_of_bound` in `Masullo/Runs.lean`). Either way the trace
+identity holds for every test function at some positive width below `1/2`
+(`trace_width_of_bound`). Conversely, on paper, such a width gives such a bound by the explicit
+formula, so this condition has exactly the strength of the trace gap. Sign runs are the case `C = 0`
+(`trace_width_of_runs`); on paper they are equivalent to the maximal real part being attained,
+which is stronger.
+The analytic input, that the zeros right of each line `re s = σ > 1/2` have summable reciprocal
+ordinates, is proved in `WeilExplicit/Density.lean`. The bound holds at `θ = 1`
+(`Controls.bound_at_exponent_one`); neither it for any `θ < 1` nor such runs is proved here.
 
 A further condition is equivalent rather than sufficient. For a test function `φ` let `L_φ(t)` be
 Weil's functional at the translate of `φ` by `t` in the logarithmic variable. Fix `a ≥ 0` and

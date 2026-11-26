@@ -4,29 +4,32 @@ import WeilExplicit.Controls
 import WeilExplicit.Density
 
 /-!
-# Fixed-ratio sign runs of the dyadic sum
+# Fixed-ratio sign runs and one-sided bounds of the dyadic sum
 
-If `dyadicDiff` keeps one sign on `[Y, RY]` for a fixed `R > 1` and arbitrarily large `Y`,
-and the zeros to the right of each line `re s = σ > 1/2` have summable reciprocal ordinates
-(`Sparse`), then the trace identity holds for all tests at a positive width below `1/2`
-(`exists_trace_width_of_runs`). If moreover the critical strip contains a zero, some zero has
-maximal real part (`exists_rightmost_of_runs`). `Sparse` holds (`sparse`, from
-`WeilExplicit.summable_inv_im_of_half_lt`), so `trace_width_of_runs` assumes the runs alone.
+Let `dyadicDiff x ≥ -C x ^ θ` on `[Y, RY]`, or `dyadicDiff x ≤ C x ^ θ` on `[Y, RY]`, for a
+fixed `R > 1` and arbitrarily large `Y`, and let the zeros to the right of each line
+`re s = σ > 1/2` have summable reciprocal ordinates (`Sparse`). Then some zero has maximal real
+part, or every zero in the critical strip has real part at most `max θ (1/2)`
+(`exists_rightmost_of_bound`). `Sparse` holds (`sparse`, from
+`WeilExplicit.summable_inv_im_of_half_lt`), so for `θ < 1` the bound alone gives the trace
+identity for all tests at a positive width below `1/2` (`trace_width_of_bound`). Sign runs are
+the case `C = 0` (`exists_rightmost_of_runs`, `trace_width_of_runs`).
 
 The proof feeds Weil's explicit formula a smoothed version of the kernel of `dyadicDiff` in
 the logarithmic variable, then averages over the shifts of products of two-point probability
 measures. Each measure cancels one zero and its conjugate. One zero `ρ₀` of least ordinate to
 the right of a cutoff `σ` survives, by an odd-ratio argument. If the supremum of the real parts
-is not attained, the cutoff can approach it while the total shift tends to zero, and
-`dyadicDiff` takes both strict signs in every late window `[Y, RY]` (`both_signs`).
+is not attained, the cutoff can approach it while the total shift tends to zero. With the
+cutoff at least `θ`, `dyadicDiff` then exceeds `C x ^ θ` and falls below `-C x ^ θ` in every late
+window `[Y, RY]` (`both_signs`).
 
 The averages are taken over finite sub-products and passed to the limit by dominated
-convergence of the zero sum. The archimedean term is bounded by `C e^{t/2}` without
+convergence of the zero sum. The archimedean term is bounded by a multiple of `e^{t/2}` without
 oscillation estimates.
 
 OpenAI Codex proposed the fixed-ratio sign-run argument for the dyadic prime sum and the
-positive two-point averages that isolate a conjugate pair. Claude formalised the implication
-from sign runs to a rightmost zero and its trace corollary.
+positive two-point averages that isolate a conjugate pair. A Claude Fable subagent proposed
+the one-sided power-bound form. Claude formalised both in Lean.
 -/
 
 open MeasureTheory Complex Set Filter Topology
@@ -419,21 +422,28 @@ lemma smoothDiff_eq (t : ℝ) {N : ℕ} (hN : 2 * Real.exp (t + b.rOut) < N) :
     rw [Real.log_mul two_ne_zero (Real.exp_pos _).ne', Real.log_exp] at this
     rw [smooth_eq_zero b (Or.inr (by linarith)), mul_zero]
 
-/-- A sign of `ε dyadicDiff` on `[e ^ (t - r), e ^ (t + r)]` passes to `ε smoothDiff b t`, where
-`r` is the radius of `b`. -/
-lemma smoothDiff_sign {t ε : ℝ}
-    (h : ∀ x ∈ Icc (Real.exp (t - b.rOut)) (Real.exp (t + b.rOut)), 0 ≤ ε * dyadicDiff x) :
-    0 ≤ ε * smoothDiff b t := by
+/-- A lower bound `-B ≤ ε dyadicDiff` with `0 ≤ B` on `[e ^ (t - r), e ^ (t + r)]` passes to
+`ε smoothDiff b t`, where `r` is the radius of `b`. -/
+lemma smoothDiff_sign {t ε B : ℝ} (hB : 0 ≤ B)
+    (h : ∀ x ∈ Icc (Real.exp (t - b.rOut)) (Real.exp (t + b.rOut)), -B ≤ ε * dyadicDiff x) :
+    -B ≤ ε * smoothDiff b t := by
   obtain ⟨N, hN⟩ := exists_nat_gt (2 * Real.exp (t + b.rOut))
-  rw [smoothDiff_eq b t hN, ← integral_const_mul]
-  refine integral_nonneg fun u => ?_
-  by_cases hu : b.normed volume u = 0
-  · simp [hu]
-  have := abs_lt_of_normed_ne_zero b hu
-  rw [abs_lt] at this
-  have := h (Real.exp (t + u)) ⟨Real.exp_le_exp.2 (by linarith), Real.exp_le_exp.2 (by linarith)⟩
-  rw [mul_left_comm]
-  exact mul_nonneg (b.nonneg_normed u) this
+  rw [smoothDiff_eq b t hN]
+  by_cases hi : Integrable fun u => b.normed volume u * dyadicDiff (Real.exp (t + u))
+  swap
+  · rw [integral_undef hi, mul_zero]; linarith
+  calc -B = ∫ u, b.normed volume u * -B := by rw [integral_mul_const, b.integral_normed, one_mul]
+    _ ≤ _ := by
+      rw [← integral_const_mul]
+      refine integral_mono (b.integrable_normed.mul_const _) (hi.const_mul ε) fun u => ?_
+      by_cases hu : b.normed volume u = 0
+      · simp [hu]
+      have := abs_lt_of_normed_ne_zero b hu
+      rw [abs_lt] at this
+      have := mul_le_mul_of_nonneg_left (h (Real.exp (t + u)) ⟨Real.exp_le_exp.2 (by linarith),
+        Real.exp_le_exp.2 (by linarith)⟩) (b.nonneg_normed (μ := volume) u)
+      dsimp only
+      linarith
 
 end Average
 
@@ -487,15 +497,16 @@ section Limit
 
 variable (b : ContDiffBump (0 : ℝ)) {J : Type*} (q d : J → ℝ)
 
-/-- If `smoothDiff b` has the sign `ε` on `[t, t + L]`, the zero sum of Weil's formula weighted
-by a finite product of two-point factors is bounded by the pole and archimedean terms. -/
+/-- If `-B ≤ ε smoothDiff b` on `[t, t + L]`, the zero sum of Weil's formula weighted
+by a finite product of two-point factors is bounded by `B` and the pole and archimedean terms. -/
 lemma avg_bound [DecidableEq J] (hq : ∀ j, 0 ≤ q j ∧ q j ≤ 1) (hd : ∀ j, 0 ≤ d j)
-    (F : Finset J) {L C ε t : ℝ} (hL : ∑ j ∈ F, d j ≤ L)
+    (F : Finset J) {L C ε t B : ℝ} (hL : ∑ j ∈ F, d j ≤ L)
     (hC : ∀ t, ‖arch b t‖ ≤ C * Real.exp (t / 2))
     (hε : |ε| = 1) (ht : 2 * Real.log 2 + b.rOut < t)
-    (hs : ∀ u ∈ Icc 0 L, 0 ≤ ε * smoothDiff b (t + u)) :
+    (hs : ∀ u ∈ Icc 0 L, -B ≤ ε * smoothDiff b (t + u)) :
     ε * (∑' ρ : stripZeros, (zeroMult ρ : ℂ) * (cexp (ρ * t) * lap (smooth b) ρ) *
-      ∏ j ∈ F, factor (q j) (d j) ρ).re ≤ ‖lap (smooth b) 0‖ + C * Real.exp ((t + L) / 2) := by
+      ∏ j ∈ F, factor (q j) (d j) ρ).re ≤
+      ‖lap (smooth b) 0‖ + C * Real.exp ((t + L) / 2) + B := by
   set w : Finset J → ℝ := fun S => (∏ j ∈ S, q j) * ∏ j ∈ F \ S, (1 - q j)
   have hw (S : Finset J) : 0 ≤ w S := mul_nonneg (Finset.prod_nonneg fun j _ => (hq j).1)
     (Finset.prod_nonneg fun j _ => by linarith [(hq j).2])
@@ -519,7 +530,7 @@ lemma avg_bound [DecidableEq J] (hq : ∀ j, 0 ≤ q j ∧ q j ≤ 1) (hd : ∀ 
     have := (norm_nonneg _).trans (hC 0)
     rwa [zero_div, Real.exp_zero, mul_one] at this
   rw [hsum.tsum_eq, re_sum, Finset.mul_sum]
-  calc _ ≤ ∑ S ∈ F.powerset, w S * (‖lap (smooth b) 0‖ + C * Real.exp ((t + L) / 2)) := by
+  calc _ ≤ ∑ S ∈ F.powerset, w S * (‖lap (smooth b) 0‖ + C * Real.exp ((t + L) / 2) + B) := by
         refine Finset.sum_le_sum fun S hS => ?_
         rw [re_ofReal_mul, mul_left_comm]
         refine mul_le_mul_of_nonneg_left ?_ (hw S)
@@ -538,12 +549,12 @@ lemma avg_bound [DecidableEq J] (hq : ∀ j, 0 ≤ q j ∧ q j ≤ 1) (hd : ∀ 
 /-- The bound of `avg_bound` for an infinite product of two-point factors. -/
 lemma limit_bound (hq : ∀ j, 0 ≤ q j ∧ q j ≤ 1) (hd : ∀ j, 0 ≤ d j) {M : ℂ → ℂ}
     (hM : ∀ ρ : stripZeros, HasProd (fun j => factor (q j) (d j) ρ) (M ρ))
-    {L C ε t : ℝ} (hL : ∀ F : Finset J, ∑ j ∈ F, d j ≤ L)
+    {L C ε t B : ℝ} (hL : ∀ F : Finset J, ∑ j ∈ F, d j ≤ L)
     (hC : ∀ t, ‖arch b t‖ ≤ C * Real.exp (t / 2))
     (hε : |ε| = 1) (ht : 2 * Real.log 2 + b.rOut < t)
-    (hs : ∀ u ∈ Icc 0 L, 0 ≤ ε * smoothDiff b (t + u)) :
+    (hs : ∀ u ∈ Icc 0 L, -B ≤ ε * smoothDiff b (t + u)) :
     ε * (∑' ρ : stripZeros, (zeroMult ρ : ℂ) * (cexp (ρ * t) * lap (smooth b) ρ) * M ρ).re ≤
-      ‖lap (smooth b) 0‖ + C * Real.exp ((t + L) / 2) := by
+      ‖lap (smooth b) 0‖ + C * Real.exp ((t + L) / 2) + B := by
   classical
   have ht0 : 0 ≤ t := by linarith [Real.log_pos one_lt_two, b.rOut_pos]
   have hlim := tendsto_tsum_of_dominated_convergence (𝓕 := atTop)
@@ -706,14 +717,15 @@ def upper (σ : ℝ) : Set ℂ := {ρ | ρ ∈ stripZeros ∧ σ < ρ.re ∧ 0 <
 
 /-- Let `ρ₀` have least ordinate among the zeros of positive ordinate to the right of
 `σ ≥ 1/2`, and let the reciprocal ordinates of these zeros have sum `S` with `3πS < log R`.
-Then from some height on, every window `[Y, RY]` contains points where `dyadicDiff` has either
-strict sign. -/
-theorem both_signs {σ R : ℝ} (hσ : 1 / 2 ≤ σ) (hR : 0 < R) {ρ₀ : ℂ} (h₀ : ρ₀ ∈ upper σ)
+Let `0 ≤ C` and `0 ≤ θ ≤ σ`. Then from some height on, every window `[Y, RY]` contains points
+where `dyadicDiff x < -C x ^ θ` and points where `dyadicDiff x > C x ^ θ`. -/
+theorem both_signs {σ R θ C : ℝ} (hσ : 1 / 2 ≤ σ) (hR : 0 < R) (hθ : 0 ≤ θ) (hθσ : θ ≤ σ)
+    (hC : 0 ≤ C) {ρ₀ : ℂ} (h₀ : ρ₀ ∈ upper σ)
     (hmin : ∀ ρ ∈ upper σ, ρ₀.im ≤ ρ.im)
     (hsum : Summable fun ρ : upper σ => 1 / (ρ : ℂ).im)
     (hW : 3 * π * ∑' ρ : upper σ, 1 / (ρ : ℂ).im < Real.log R) :
     ∃ Y₀, ∀ Y ≥ Y₀, ∀ ε : ℝ, (ε = 1 ∨ ε = -1) →
-      ¬ ∀ x ∈ Icc Y (R * Y), 0 ≤ ε * dyadicDiff x := by
+      ¬ ∀ x ∈ Icc Y (R * Y), -(C * x ^ θ) ≤ ε * dyadicDiff x := by
   classical
   obtain ⟨hz₀, hσ₀, hγ₀⟩ := h₀
   set S := ∑' ρ : upper σ, 1 / (ρ : ℂ).im
@@ -766,9 +778,9 @@ theorem both_signs {σ R : ℝ} (hσ : 1 / 2 ≤ σ) (hR : 0 < R) {ρ₀ : ℂ} 
     rw [← Real.exp_sum]
     exact Real.exp_le_exp.2 (hL F)
   -- constants
-  obtain ⟨C, hC⟩ := exists_arch_bound b
-  have hC0 : 0 ≤ C := by
-    have := (norm_nonneg _).trans (hC 0)
+  obtain ⟨Q, hQ⟩ := exists_arch_bound b
+  have hQ0 : 0 ≤ Q := by
+    have := (norm_nonneg _).trans (hQ 0)
     rwa [zero_div, Real.exp_zero, mul_one] at this
   set SK := ∑' ρ : stripZeros, (zeroMult ρ : ℝ) * ‖K ρ‖
   have hSK : 0 ≤ SK := tsum_nonneg fun ρ => mul_nonneg (Nat.cast_nonneg _) (norm_nonneg _)
@@ -778,7 +790,7 @@ theorem both_signs {σ R : ℝ} (hσ : 1 / 2 ≤ σ) (hR : 0 < R) {ρ₀ : ℂ} 
   have hm₀ : 0 < m₀ := Nat.cast_pos.2 (WeilExplicit.zeroMult_pos hz₀)
   set a := 2 * m₀ * ‖A‖
   have ha : 0 < a := by positivity
-  set c := ‖K 0‖ + C * Real.exp (L / 2) + Real.exp L * SK
+  set c := ‖K 0‖ + Q * Real.exp (L / 2) + Real.exp L * SK + C * R ^ θ
   set T₀ := max (c / (a * (ρ₀.re - σ))) (2 * Real.log 2 + b.rOut) + 1
   refine ⟨Real.exp T₀, fun Y hY ε hε hrun => ?_⟩
   have hY0 : 0 < Y := (Real.exp_pos _).trans_le hY
@@ -822,19 +834,23 @@ theorem both_signs {σ R : ℝ} (hσ : 1 / 2 ≤ σ) (hR : 0 < R) {ρ₀ : ℂ} 
           rw [show ((φ : ℂ) - n * (2 * π)) * I = φ * I - n * (2 * π * I) by ring,
             Complex.exp_sub, exp_int_mul_two_pi_mul_I, div_one, hφ]
   -- the averaged explicit formula
-  have hs : ∀ u ∈ Icc 0 L, 0 ≤ ε * smoothDiff b (t + u) := fun u hu =>
-    smoothDiff_sign b fun z hz => hrun z ⟨by
-      calc Y = Real.exp (T - b.rOut) := by
-            simp only [T]; rw [add_sub_cancel_right, Real.exp_log hY0]
-        _ ≤ Real.exp (t + u - b.rOut) := Real.exp_le_exp.2 (by linarith [hu.1])
-        _ ≤ z := hz.1, by
-      have h2S := mul_le_mul_of_nonneg_left hS0 (by positivity : (0 : ℝ) ≤ 2 * π)
-      calc z ≤ Real.exp (t + u + b.rOut) := hz.2
-        _ ≤ Real.exp (Real.log Y + Real.log R) := Real.exp_le_exp.2 (by
-            simp only [r, L, T] at *; linarith [hu.2])
-        _ = R * Y := by rw [Real.exp_add, Real.exp_log hY0, Real.exp_log hR]; ring⟩
+  set B := C * (R * Y) ^ θ
+  have hs : ∀ u ∈ Icc 0 L, -B ≤ ε * smoothDiff b (t + u) := fun u hu =>
+    smoothDiff_sign b (mul_nonneg hC (by positivity)) fun z hz => by
+      have hz' : z ∈ Icc Y (R * Y) := ⟨by
+        calc Y = Real.exp (T - b.rOut) := by
+              simp only [T]; rw [add_sub_cancel_right, Real.exp_log hY0]
+          _ ≤ Real.exp (t + u - b.rOut) := Real.exp_le_exp.2 (by linarith [hu.1])
+          _ ≤ z := hz.1, by
+        have h2S := mul_le_mul_of_nonneg_left hS0 (by positivity : (0 : ℝ) ≤ 2 * π)
+        calc z ≤ Real.exp (t + u + b.rOut) := hz.2
+          _ ≤ Real.exp (Real.log Y + Real.log R) := Real.exp_le_exp.2 (by
+              simp only [r, L, T] at *; linarith [hu.2])
+          _ = R * Y := by rw [Real.exp_add, Real.exp_log hY0, Real.exp_log hR]; ring⟩
+      have := mul_le_mul_of_nonneg_left (Real.rpow_le_rpow (hY0.le.trans hz'.1) hz'.2 hθ) hC
+      linarith [hrun z hz']
   have key := limit_bound b (fun j : J => mass j) (fun j => shift j) (fun j => mass_mem j)
-    (fun j => (div_pos Real.pi_pos (hJ j j.2)).le) (M := M) (fun ρ => hM ρ) hL hC hεa ht hs
+    (fun j => (div_pos Real.pi_pos (hJ j j.2)).le) (M := M) (fun ρ => hM ρ) hL hQ hεa ht hs
   -- the pair `ρ₀, conj ρ₀` against the remaining zeros
   set f : stripZeros → ℂ := fun ρ => (zeroMult ρ : ℂ) * (cexp (ρ * t) * K ρ) * M ρ
   have hf : Summable f := ((summable_norm_lap b).mul_left (Real.exp t * Real.exp L)).of_norm_bounded
@@ -902,11 +918,22 @@ theorem both_signs {σ R : ℝ} (hσ : 1 / 2 ≤ σ) (hR : 0 < R) {ρ₀ : ℂ} 
   have hE1 : 1 ≤ E := Real.one_le_exp (by nlinarith)
   have hEh : Real.exp ((t + L) / 2) ≤ Real.exp (L / 2) * E := by
     rw [← Real.exp_add]; exact Real.exp_le_exp.2 (by nlinarith)
-  have hcE : c * E = ‖K 0‖ * E + C * Real.exp (L / 2) * E + Real.exp L * SK * E := by
+  have hcE : c * E = ‖K 0‖ * E + Q * Real.exp (L / 2) * E + Real.exp L * SK * E +
+      C * R ^ θ * E := by
     simp only [c]; ring
+  have hB : B ≤ C * R ^ θ * E := by
+    have h1 : 0 ≤ Real.log Y := by
+      linarith [Real.log_pos one_lt_two,
+        le_max_right (c / (a * (ρ₀.re - σ))) (2 * Real.log 2 + b.rOut)]
+    have h2 : Real.log Y ≤ t := by linarith
+    have : Real.log Y * θ ≤ σ * t := by
+      linarith [mul_le_mul_of_nonneg_left hθσ h1, mul_le_mul_of_nonneg_right h2 (hθ.trans hθσ)]
+    show C * (R * Y) ^ θ ≤ C * R ^ θ * Real.exp (σ * t)
+    rw [Real.mul_rpow hR.le hY0.le, ← mul_assoc, Real.rpow_def_of_pos hY0]
+    exact mul_le_mul_of_nonneg_left (Real.exp_le_exp.2 this) (mul_nonneg hC (by positivity))
   have hdom := exp_dominates ha hσ₀ htc
   have hK0 := norm_nonneg (K 0)
-  have := mul_le_mul_of_nonneg_left hEh hC0
+  have := mul_le_mul_of_nonneg_left hEh hQ0
   have haE : a * Real.exp (ρ₀.re * t) = 2 * (m₀ * (Real.exp (ρ₀.re * t) * ‖A‖)) := by
     simp only [a]; ring
   simp only [f, K] at key hlow
@@ -923,22 +950,18 @@ def Sparse : Prop :=
 lemma one_sub_mem_stripZeros {ρ : ℂ} (h : ρ ∈ stripZeros) : 1 - ρ ∈ stripZeros := by
   rwa [← xi_eq_zero_iff, xi_one_sub, xi_eq_zero_iff]
 
-/-- A sign run of `dyadicDiff` at one fixed ratio `R > 1` and arbitrarily large heights forces
-a zero of maximal real part, given `Sparse` and at least one zero in the critical strip. -/
-theorem exists_rightmost_of_runs (hS : Sparse) {R : ℝ} (hR : 1 < R)
-    (h : ∀ Y₀, ∃ Y ≥ Y₀, (∀ x ∈ Icc Y (R * Y), 0 ≤ dyadicDiff x) ∨
-      (∀ x ∈ Icc Y (R * Y), dyadicDiff x ≤ 0))
-    (hne : stripZeros.Nonempty) :
-    ∃ ρ₀ ∈ stripZeros, ∀ ρ ∈ stripZeros, ρ.re ≤ ρ₀.re := by
+/-- Let `dyadicDiff x ≥ -C x ^ θ` on `[Y, RY]`, or `dyadicDiff x ≤ C x ^ θ` on `[Y, RY]`, for one
+fixed ratio `R > 1` and arbitrarily large `Y`. Given `Sparse`, either some zero has maximal real
+part, or every zero in the critical strip has real part at most `max θ (1/2)`. -/
+theorem exists_rightmost_of_bound (hS : Sparse) {R θ C : ℝ} (hR : 1 < R)
+    (h : ∀ Y₀, ∃ Y ≥ Y₀, (∀ x ∈ Icc Y (R * Y), -(C * x ^ θ) ≤ dyadicDiff x) ∨
+      (∀ x ∈ Icc Y (R * Y), dyadicDiff x ≤ C * x ^ θ)) :
+    (∃ ρ₀ ∈ stripZeros, ∀ ρ ∈ stripZeros, ρ.re ≤ ρ₀.re) ∨
+      ∀ ρ ∈ stripZeros, ρ.re ≤ max θ (1 / 2) := by
   by_contra hcon
   push Not at hcon
-  -- a zero to the right of the critical line
-  obtain ⟨ρ₂, h₂, h12⟩ : ∃ ρ₂ ∈ stripZeros, 1 / 2 < ρ₂.re := by
-    obtain ⟨ρ₁, h₁⟩ := hne
-    rcases le_or_gt (1 / 2) ρ₁.re with h1 | h1
-    · obtain ⟨ρ₂, h₂, hl⟩ := hcon ρ₁ h₁
-      exact ⟨ρ₂, h₂, h1.trans_lt hl⟩
-    · exact ⟨1 - ρ₁, one_sub_mem_stripZeros h₁, by simp; linarith⟩
+  obtain ⟨hcon, ρ₂, h₂, hθ2⟩ := hcon
+  have h12 : 1 / 2 < ρ₂.re := (le_max_right _ _).trans_lt hθ2
   classical
   set E := {z : ℂ | z ∈ stripZeros ∧ ρ₂.re ≤ z.re ∧ 0 < z.im}
   let w (z : E) : ℝ := 1 / (z : ℂ).im
@@ -947,7 +970,8 @@ theorem exists_rightmost_of_runs (hS : Sparse) {R : ℝ} (hR : 1 < R)
   obtain ⟨F, hF⟩ := ((tendsto_tsum_compl_atTop_zero w).eventually (gt_mem_nhds hsmall)).exists
   let P : Finset ℂ := insert ρ₂ (F.image Subtype.val)
   obtain ⟨p, hp, hmax⟩ := P.exists_max_image re (Finset.insert_nonempty _ _)
-  have hσ2 : 1 / 2 < p.re := h12.trans_le (hmax ρ₂ (Finset.mem_insert_self ..))
+  have hθp : max θ (1 / 2) < p.re := hθ2.trans_le (hmax ρ₂ (Finset.mem_insert_self ..))
+  have hσ2 : 1 / 2 < p.re := (le_max_right _ _).trans_lt hθp
   have hpZ : p ∈ stripZeros := by
     rcases Finset.mem_insert.1 hp with rfl | h
     · exact h₂
@@ -977,34 +1001,63 @@ theorem exists_rightmost_of_runs (hS : Sparse) {R : ℝ} (hR : 1 < R)
     simpa [Function.comp_def, one_div] using tendsto_inv_nhdsGT_zero.comp hpos
   let : Nonempty (upper σ) := ⟨⟨ρ₃, h₃⟩⟩
   obtain ⟨ρ₀, hmin⟩ := him.exists_forall_le
-  obtain ⟨Y₀, hY₀⟩ := both_signs hσ2.le (by linarith) ρ₀.2 (fun ρ hρ => hmin ⟨ρ, hρ⟩) hsum hW
-  obtain ⟨Y, hY, hrun | hrun⟩ := h Y₀
-  · exact hY₀ Y hY 1 (.inl rfl) fun x hx => by simpa using hrun x hx
-  · exact hY₀ Y hY (-1) (.inr rfl) fun x hx => by simpa using hrun x hx
+  obtain ⟨Y₀, hY₀⟩ := both_signs hσ2.le (by linarith) (le_max_right θ 0)
+    ((max_le_max le_rfl (by norm_num)).trans hθp.le) (le_max_right C 0) ρ₀.2
+    (fun ρ hρ => hmin ⟨ρ, hρ⟩) hsum hW
+  obtain ⟨Y, hY, hrun⟩ := h (max Y₀ 1)
+  have hle (x : ℝ) (hx : x ∈ Icc Y (R * Y)) : C * x ^ θ ≤ max C 0 * x ^ max θ 0 := by
+    have hx1 := (le_of_max_le_right hY).trans hx.1
+    exact mul_le_mul (le_max_left _ _) (Real.rpow_le_rpow_of_exponent_le hx1 (le_max_left _ _))
+      (Real.rpow_nonneg (by linarith) _) (le_max_right _ _)
+  rcases hrun with hrun | hrun
+  · exact hY₀ Y (le_of_max_le_left hY) 1 (.inl rfl) fun x hx => by
+      linarith [hrun x hx, hle x hx]
+  · exact hY₀ Y (le_of_max_le_left hY) (-1) (.inr rfl) fun x hx => by
+      linarith [hrun x hx, hle x hx]
 
-/-- Under the hypotheses of `exists_rightmost_of_runs`, the trace identity holds for all tests
-at some positive width below `1/2`. -/
-theorem exists_trace_width_of_runs (hS : Sparse) {R : ℝ} (hR : 1 < R)
+/-- A sign run is a one-sided bound with `C = 0` and `θ = 0`. -/
+lemma bound_of_runs {R : ℝ} (h : ∀ Y₀, ∃ Y ≥ Y₀, (∀ x ∈ Icc Y (R * Y), 0 ≤ dyadicDiff x) ∨
+      (∀ x ∈ Icc Y (R * Y), dyadicDiff x ≤ 0)) (Y₀ : ℝ) :
+    ∃ Y ≥ Y₀, (∀ x ∈ Icc Y (R * Y), -(0 * x ^ (0 : ℝ)) ≤ dyadicDiff x) ∨
+      (∀ x ∈ Icc Y (R * Y), dyadicDiff x ≤ 0 * x ^ (0 : ℝ)) := by
+  simpa using h Y₀
+
+/-- A sign run of `dyadicDiff` at one fixed ratio `R > 1` and arbitrarily large heights forces
+a zero of maximal real part, given `Sparse` and at least one zero in the critical strip. -/
+theorem exists_rightmost_of_runs (hS : Sparse) {R : ℝ} (hR : 1 < R)
     (h : ∀ Y₀, ∃ Y ≥ Y₀, (∀ x ∈ Icc Y (R * Y), 0 ≤ dyadicDiff x) ∨
-      (∀ x ∈ Icc Y (R * Y), dyadicDiff x ≤ 0)) :
-    ∃ a, ∃ ha : 0 < a, a < 1 / 2 ∧
-      ∀ φ : TestFunction, Trace.HasTrace (Trace.induced ha φ) φ.efFunctional := by
-  have hz (θ : ℝ) (hθ : 0 ≤ θ) (hθ' : ∀ ρ ∈ stripZeros, ρ.re ≤ θ) (z : ℂ) (hz : θ < z.re) :
-      riemannZeta z ≠ 0 := by
-    rcases le_or_gt 1 z.re with h1 | h1
-    · exact riemannZeta_ne_zero_of_one_le_re h1
-    · exact fun h0 => by linarith [hθ' z ⟨h0, hθ.trans_lt hz, h1⟩]
-  rcases stripZeros.eq_empty_or_nonempty with he | hne
-  · have ha : (0 : ℝ) < 1 / 4 := by norm_num
-    refine ⟨1 / 4, ha, by norm_num, trace_eq_efFunctional_of_ne_zero (θ := 0) ha (by norm_num)
-      (hz 0 le_rfl fun ρ hρ => by simp [he] at hρ)⟩
-  · obtain ⟨ρ₀, h₀, hmax⟩ := exists_rightmost_of_runs hS hR h hne
-    have ha : 0 < ρ₀.re / 2 := by linarith [h₀.2.1]
-    refine ⟨ρ₀.re / 2, ha, by linarith [h₀.2.2], trace_eq_efFunctional_of_ne_zero ha
-      (by linarith [h₀.2.2]) (hz ρ₀.re h₀.2.1.le hmax)⟩
+      (∀ x ∈ Icc Y (R * Y), dyadicDiff x ≤ 0))
+    (hne : stripZeros.Nonempty) :
+    ∃ ρ₀ ∈ stripZeros, ∀ ρ ∈ stripZeros, ρ.re ≤ ρ₀.re := by
+  rcases exists_rightmost_of_bound hS hR (bound_of_runs h) with h' | h'
+  · exact h'
+  obtain ⟨ρ₁, h₁⟩ := hne
+  have e : max (0 : ℝ) (1 / 2) = 1 / 2 := by norm_num
+  have h1 := h' _ (one_sub_mem_stripZeros h₁)
+  rw [e, sub_re, one_re] at h1
+  exact ⟨ρ₁, h₁, fun ρ hρ => by linarith [e ▸ h' ρ hρ]⟩
 
 /-- The zeros to the right of each line `re s = σ > 1/2` have summable reciprocal ordinates. -/
 theorem sparse : Sparse := fun _ hσ => summable_inv_im_of_half_lt hσ
+
+/-- If `dyadicDiff x ≥ -C x ^ θ` on `[Y, RY]`, or `dyadicDiff x ≤ C x ^ θ` on `[Y, RY]`, for
+one fixed ratio `R > 1`, one exponent `θ < 1` and arbitrarily large `Y`, the trace identity
+holds for all tests at some positive width below `1/2`. -/
+theorem trace_width_of_bound {R θ C : ℝ} (hR : 1 < R) (hθ : θ < 1)
+    (h : ∀ Y₀, ∃ Y ≥ Y₀, (∀ x ∈ Icc Y (R * Y), -(C * x ^ θ) ≤ dyadicDiff x) ∨
+      (∀ x ∈ Icc Y (R * Y), dyadicDiff x ≤ C * x ^ θ)) :
+    ∃ a, ∃ ha : 0 < a, a < 1 / 2 ∧
+      ∀ φ : TestFunction, Trace.HasTrace (Trace.induced ha φ) φ.efFunctional := by
+  obtain ⟨β, hβ0, hβ1, hβ⟩ : ∃ β, 0 < β ∧ β < 1 ∧ ∀ ρ ∈ stripZeros, ρ.re ≤ β := by
+    rcases exists_rightmost_of_bound sparse hR h with ⟨ρ₀, h₀, hmax⟩ | h'
+    · exact ⟨ρ₀.re, h₀.2.1, h₀.2.2, hmax⟩
+    · exact ⟨_, lt_max_of_lt_right (by norm_num), max_lt hθ (by norm_num), h'⟩
+  have ha : 0 < β / 2 := by linarith
+  refine ⟨β / 2, ha, by linarith, trace_eq_efFunctional_of_ne_zero (θ := β) ha (by linarith)
+    fun z hz => ?_⟩
+  rcases le_or_gt 1 z.re with h1 | h1
+  · exact riemannZeta_ne_zero_of_one_le_re h1
+  · exact fun h0 => by linarith [hβ z ⟨h0, hβ0.trans hz, h1⟩]
 
 /-- If `dyadicDiff` keeps one sign on `[Y, RY]` for a fixed `R > 1` and arbitrarily large
 `Y`, the trace identity holds for all tests at some positive width below `1/2`. -/
@@ -1013,6 +1066,6 @@ theorem trace_width_of_runs {R : ℝ} (hR : 1 < R)
       (∀ x ∈ Icc Y (R * Y), dyadicDiff x ≤ 0)) :
     ∃ a, ∃ ha : 0 < a, a < 1 / 2 ∧
       ∀ φ : TestFunction, Trace.HasTrace (Trace.induced ha φ) φ.efFunctional :=
-  exists_trace_width_of_runs sparse hR h
+  trace_width_of_bound hR one_pos (bound_of_runs h)
 
 end Masullo.Runs
