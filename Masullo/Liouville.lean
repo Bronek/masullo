@@ -3,29 +3,37 @@ import Masullo.Dyadic
 /-!
 # The Liouville window criterion
 
-`liouvilleSum x = ∑_{n ≤ x} λ(n)`, with `λ(n) = (-1) ^ Ω(n)` the Liouville function. For
-`θ ≥ 1 / 2`, a one-sided bound `ε liouvilleSum x ≤ C x ^ θ` with `ε = ±1` on windows
-`[Y, Y ^ (1 + δ)]` with `Y` arbitrarily large rules out zeros of zeta in `Re s > θ`; the sign may
-depend on `Y`. The implication is one-way: no converse is stated, and the bound is not asserted for
-any `θ < 1`.
+`liouvilleSum x = ∑_{n ≤ x} λ(n)`, with `λ(n) = (-1) ^ Ω(n)` the Liouville function.
+`WindowBound θ δ C` says that for arbitrarily large `Y` there is a sign `ε = ±1` with
+`ε liouvilleSum x ≤ C x ^ θ` for all `x ∈ [Y, Y ^ (1 + δ)]`. For `θ ≥ 1 / 2` it rules out zeros of
+zeta in `Re s > θ` (`riemannZeta_ne_zero_of_windowBound`). The exponent is exact: on paper the
+Riemann hypothesis gives `|liouvilleSum x| ≤ C x ^ θ` for every `θ > 1 / 2`. That direction is not
+formalised.
 
 The Laplace transform of `liouvilleSum (e ^ u)` is `ζ(2s) / (s ζ(s))`, from the Euler product of
 `∑ λ(n) n ^ (-s)`. Its poles in `Re s > 1 / 2` are the zeros of zeta, of their full multiplicity, so
 the generic argument is `Masullo.Landau.ContinuesMero.eq_empty_of_window`. Zeta has no zeros in
 `(0, 1)`, so no sign condition at real poles arises.
 
-The same conclusion follows from a one-sided bound on short-interval increments
-`(liouvilleSum (t + h) - liouvilleSum t) / h` with `0 < h ≤ Y ^ θ`: if the integral of the positive
-part of `ε` times the increment over `[Y, x]` is at most `C x ^ θ` for every `x ∈ [Y, Y ^ (1 + δ)]`,
-then `riemannZeta_ne_zero_of_mean`. The average `smoothSum h` of `liouvilleSum` over `[x, x + h]`
-is within `h + 1` of `liouvilleSum x` and its derivative is the increment, so splitting the window
-at `Y ^ (1 + δ / 2)` gives a pointwise window of exponent `1 + δ / (2 + δ)` for one of the signs.
-Both hypotheses hold at `θ = 1` (`Controls.window_at_exponent_one`,
-`Controls.mean_at_exponent_one`); neither is proved here for any `θ < 1`.
+`MeanBound θ δ C` bounds short-interval increments instead. For arbitrarily large `Y` there are a
+width `0 < h ≤ Y ^ θ` and a sign `ε = ±1`, both fixed for the window, such that the integral from
+`Y` to `x` of the positive part of `ε (liouvilleSum (t + h) - liouvilleSum t) / h` is at most
+`C x ^ θ` for every `x ∈ [Y, Y ^ (1 + δ)]`. The integral is cumulative from `Y`; the same bound on
+each block `[y, 2 y]` starting in the window implies it (`BlockMeanBound.meanBound`). It also rules
+out zeros in `Re s > θ` (`riemannZeta_ne_zero_of_meanBound`), but its exponent is not faithful. The
+positive part discards cancellation: increments of size `√h` would make the integral of order
+`x h ^ (-1 / 2) ≥ x ^ (1 - θ / 2)`, so the hypothesis is expected to hold only for `θ` above about
+`2 / 3`, and it is a quasi-Riemann-hypothesis criterion. The average `smoothSum h` of
+`liouvilleSum` over `[x, x + h]` is within `h + 1` of `liouvilleSum x` and its derivative is the
+increment, so splitting the window at `Y ^ (1 + δ / 2)` gives `WindowBound θ (δ / (2 + δ))`.
+
+Both hypotheses hold at `θ = 1` (`Masullo/LiouvilleControls.lean`); neither is proved here for any
+`θ < 1`.
 
 OpenAI Codex proposed the Liouville form of the trace gap; a Claude Fable subagent proposed the
 route through Landau's argument with poles of finite order; Claude formalised it.
 -/
+
 
 open MeasureTheory Complex Set Filter Topology Metric
 open ArithmeticFunction (liouville liouville_apply liouville_apply_one liouville_apply_mul)
@@ -234,27 +242,33 @@ lemma continues {C θ ε : ℝ} (hθ : 1 / 2 ≤ θ) (hθ1 : θ < 1) (hε : ε �
       rw [continuation, hs, hn, smul_eq_mul]
       field_simp
 
-/-! ### The criterion -/
 
-/-- The sign `ε = ±1` may depend on `Y`. -/
-theorem riemannZeta_ne_zero_of_window {θ δ C : ℝ} (hθ : 1 / 2 ≤ θ) (hδ : 0 < δ)
-    (h : ∀ X, ∃ Y ≥ X, 1 < Y ∧ ∃ ε : ℝ, (ε = 1 ∨ ε = -1) ∧
-      ∀ x ∈ Icc Y (Y ^ (1 + δ)), ε * liouvilleSum x ≤ C * x ^ θ) {ρ : ℂ}
-    (hρ : θ < ρ.re) : riemannZeta ρ ≠ 0 := by
+/-! ### The window criterion -/
+
+/-- For arbitrarily large `Y` there is a sign `ε = ±1`, which may depend on `Y`, with
+`ε liouvilleSum x ≤ C x ^ θ` for all `x ∈ [Y, Y ^ (1 + δ)]`. -/
+def WindowBound (θ δ C : ℝ) : Prop :=
+  ∀ X, ∃ Y ≥ X, ∃ ε : ℝ, (ε = 1 ∨ ε = -1) ∧
+    ∀ x ∈ Icc Y (Y ^ (1 + δ)), ε * liouvilleSum x ≤ C * x ^ θ
+
+/-- `WindowBound θ δ C` with `θ ≥ 1 / 2` rules out zeros of zeta to the right of `θ`. The converse
+is not asserted. -/
+theorem riemannZeta_ne_zero_of_windowBound {θ δ C : ℝ} (hθ : 1 / 2 ≤ θ) (hδ : 0 < δ)
+    (h : WindowBound θ δ C) {ρ : ℂ} (hρ : θ < ρ.re) : riemannZeta ρ ≠ 0 := by
   rcases le_or_gt 1 θ with hθ1 | hθ1
   · exact riemannZeta_ne_zero_of_one_le_re (by linarith)
   -- one sign occurs for arbitrarily large `Y`
-  obtain ⟨ε, hε, hw⟩ : ∃ ε : ℝ, ε ≠ 0 ∧ ∀ X, ∃ Y ≥ X, 1 < Y ∧
+  obtain ⟨ε, hε, hw⟩ : ∃ ε : ℝ, ε ≠ 0 ∧ ∀ X, ∃ Y ≥ X,
       ∀ x ∈ Icc Y (Y ^ (1 + δ)), ε * liouvilleSum x ≤ C * x ^ θ := by
     by_contra hne
     push Not at hne
     obtain ⟨X₁, hX₁⟩ := hne 1 one_ne_zero
     obtain ⟨X₂, hX₂⟩ := hne (-1) (by norm_num)
-    obtain ⟨Y, hY, hY1, ε, hε, hb⟩ := h (max X₁ X₂)
+    obtain ⟨Y, hY, ε, hε, hb⟩ := h (max X₁ X₂)
     rcases hε with rfl | rfl
-    · obtain ⟨x, hx, hlt⟩ := hX₁ Y (le_of_max_le_left hY) hY1
+    · obtain ⟨x, hx, hlt⟩ := hX₁ Y (le_of_max_le_left hY)
       exact (hb x hx).not_gt hlt
-    · obtain ⟨x, hx, hlt⟩ := hX₂ Y (le_of_max_le_right hY) hY1
+    · obtain ⟨x, hx, hlt⟩ := hX₂ Y (le_of_max_le_right hY)
       exact (hb x hx).not_gt hlt
   have hZ := (continues (C := C) hθ hθ1 hε).eq_empty_of_window (by linarith) ?_ hδ ?_
   · exact fun h0 => (hZ ▸ ⟨hρ, h0⟩ : ρ ∈ (∅ : Set ℂ)).elim
@@ -264,8 +278,8 @@ theorem riemannZeta_ne_zero_of_window {θ δ C : ℝ} (hθ : 1 / 2 ≤ θ) (hδ 
       riemannZeta_ne_zero_of_one_le_re (by simpa using h1) hz
     exact (riemannZeta_ofReal_ne_zero (by simp at hr; linarith) h1 hz).elim
   · intro X
-    obtain ⟨Y, hY, hY1, hw⟩ := hw (Real.exp X)
-    have hY0 : 0 < Y := by linarith
+    obtain ⟨Y, hY, hw⟩ := hw (Real.exp X)
+    have hY0 : 0 < Y := (Real.exp_pos X).trans_le hY
     refine ⟨Real.log Y, (Real.le_log_iff_exp_le hY0).2 hY, fun u hu => ?_⟩
     have := hw (Real.exp u) ⟨(Real.log_le_iff_le_exp hY0).1 hu.1, by
       rw [Real.rpow_def_of_pos hY0, mul_comm]
@@ -273,38 +287,19 @@ theorem riemannZeta_ne_zero_of_window {θ δ C : ℝ} (hθ : 1 / 2 ≤ θ) (hδ 
     rw [← Real.exp_mul, mul_comm u] at this
     linarith
 
-/-- An upper bound `C x ^ θ` with `θ ≥ 1 / 2` on arbitrarily late windows `[Y, Y ^ (1 + δ)]` rules
-out zeros of zeta to the right of `θ`. The converse is not asserted. -/
-theorem riemannZeta_ne_zero_of_le {θ δ C : ℝ} (hθ : 1 / 2 ≤ θ) (hδ : 0 < δ)
-    (h : ∀ X, ∃ Y ≥ X, 1 < Y ∧ ∀ x ∈ Icc Y (Y ^ (1 + δ)), liouvilleSum x ≤ C * x ^ θ) {ρ : ℂ}
-    (hρ : θ < ρ.re) : riemannZeta ρ ≠ 0 :=
-  riemannZeta_ne_zero_of_window hθ hδ (fun X => by
-    obtain ⟨Y, hY, hY1, hb⟩ := h X
-    exact ⟨Y, hY, hY1, 1, .inl rfl, fun x hx => by simpa using hb x hx⟩) hρ
-
-/-- A lower bound `- C x ^ θ` with `θ ≥ 1 / 2` on arbitrarily late windows `[Y, Y ^ (1 + δ)]` rules
-out zeros of zeta to the right of `θ`. The converse is not asserted. -/
-theorem riemannZeta_ne_zero_of_ge {θ δ C : ℝ} (hθ : 1 / 2 ≤ θ) (hδ : 0 < δ)
-    (h : ∀ X, ∃ Y ≥ X, 1 < Y ∧ ∀ x ∈ Icc Y (Y ^ (1 + δ)), -(C * x ^ θ) ≤ liouvilleSum x)
-    {ρ : ℂ} (hρ : θ < ρ.re) : riemannZeta ρ ≠ 0 :=
-  riemannZeta_ne_zero_of_window (C := C) hθ hδ (fun X => by
-    obtain ⟨Y, hY, hY1, hb⟩ := h X
-    exact ⟨Y, hY, hY1, -1, .inr rfl, fun x hx => by linarith [hb x hx]⟩) hρ
-
-/-- The Liouville window bound with `1 / 2 ≤ θ < 1 / 2 + a` gives the trace identity of
-`trace_eq_efFunctional_iff` at width `a`. The converse is not asserted. -/
-theorem trace_eq_efFunctional_of_window {θ δ C a : ℝ} (hθ : 1 / 2 ≤ θ) (hδ : 0 < δ)
-    (ha : 0 < a) (hθa : θ - 1 / 2 < a)
-    (h : ∀ X, ∃ Y ≥ X, 1 < Y ∧ ∃ ε : ℝ, (ε = 1 ∨ ε = -1) ∧
-      ∀ x ∈ Icc Y (Y ^ (1 + δ)), ε * liouvilleSum x ≤ C * x ^ θ)
-    (φ : TestFunction) : Trace.HasTrace (Trace.induced ha φ) φ.efFunctional :=
-  trace_eq_efFunctional_of_ne_zero ha hθa
-    (fun _ => riemannZeta_ne_zero_of_window hθ hδ h) φ
-
 /-! ### A one-sided short-interval mean
 
 `smoothSum h x` averages `liouvilleSum` over `[x, x + h]`. It differs from `liouvilleSum x` by at
 most `h + 1`, and its derivative is the short-interval increment `(L (x + h) - L x) / h`. -/
+
+/-- For arbitrarily large `Y` there are a width `0 < h ≤ Y ^ θ` and a sign `ε = ±1`, which may
+depend on `Y` but are fixed across its window, such that the integral from `Y` to `x` of the
+positive part of `ε (liouvilleSum (t + h) - liouvilleSum t) / h` is at most `C x ^ θ` for every
+`x ∈ [Y, Y ^ (1 + δ)]`. The integral is cumulative from `Y`, not over a block ending at `x`. -/
+def MeanBound (θ δ C : ℝ) : Prop :=
+  ∀ X, ∃ Y ≥ X, ∃ h : ℝ, 0 < h ∧ h ≤ Y ^ θ ∧ ∃ ε : ℝ, (ε = 1 ∨ ε = -1) ∧
+    ∀ x ∈ Icc Y (Y ^ (1 + δ)),
+      ∫ t in Y..x, max (ε * (liouvilleSum (t + h) - liouvilleSum t) / h) 0 ≤ C * x ^ θ
 
 /-- `(1 / h) ∫_x^{x + h} liouvilleSum`. -/
 noncomputable def smoothSum (h x : ℝ) : ℝ := (∫ t in x..x + h, liouvilleSum t) / h
@@ -314,42 +309,25 @@ lemma abs_liouvilleSum_le_abs (x : ℝ) : |liouvilleSum x| ≤ |x| := by
   · exact (abs_liouvilleSum_le hx).trans (le_abs_self x)
   · simp [liouvilleSum, Nat.floor_eq_zero.2 (hx.trans one_pos)]
 
-lemma intervalIntegrable_of_abs_le {f : ℝ → ℝ} {c d : ℝ} (hf : Measurable f) (hc : 0 ≤ c)
-    (hb : ∀ x, |f x| ≤ c * |x| + d) (a b : ℝ) : IntervalIntegrable f volume a b := by
-  refine (intervalIntegrable_const (c := c * (|a| + |b|) + d)).mono_fun
-    hf.aestronglyMeasurable ((ae_restrict_iff' measurableSet_uIoc).2 (.of_forall fun x hx => ?_))
-  have hx' : |x| ≤ |a| + |b| := by
-    have h1 : -(|a| + |b|) ≤ min a b :=
-      le_min (by linarith [neg_abs_le a, abs_nonneg b]) (by linarith [neg_abs_le b, abs_nonneg a])
-    have h2 : max a b ≤ |a| + |b| :=
-      max_le (by linarith [le_abs_self a, abs_nonneg b]) (by linarith [le_abs_self b, abs_nonneg a])
-    exact abs_le.2 ⟨by linarith [hx.1], by linarith [hx.2]⟩
+lemma intervalIntegrable_liouvilleSum (h a b : ℝ) :
+    IntervalIntegrable (fun x => liouvilleSum (x + h)) volume a b := by
+  refine (intervalIntegrable_const (c := |a| + |b| + |h|)).mono_fun
+    (measurable_liouvilleSum.comp (measurable_add_const h)).aestronglyMeasurable
+    ((ae_restrict_iff' measurableSet_uIoc).2 (.of_forall fun x hx => ?_))
+  have h1 : -(|a| + |b|) ≤ min a b :=
+    le_min (by linarith [neg_abs_le a, abs_nonneg b]) (by linarith [neg_abs_le b, abs_nonneg a])
+  have h2 : max a b ≤ |a| + |b| :=
+    max_le (by linarith [le_abs_self a, abs_nonneg b]) (by linarith [le_abs_self b, abs_nonneg a])
+  have hx' : |x| ≤ |a| + |b| := abs_le.2 ⟨by linarith [hx.1], by linarith [hx.2]⟩
   simp only [Real.norm_eq_abs]
-  refine (hb x).trans (le_trans ?_ (le_abs_self _))
-  gcongr
+  refine (abs_liouvilleSum_le_abs (x + h)).trans ((abs_add_le x h).trans (le_trans ?_
+    (le_abs_self _)))
+  linarith
 
 lemma intervalIntegrable_increment (ε h a b : ℝ) :
-    IntervalIntegrable (fun x => ε * (liouvilleSum (x + h) - liouvilleSum x) / h) volume a b := by
-  refine intervalIntegrable_of_abs_le (c := 2 * |ε| / |h|) (d := |ε| * |h| / |h|)
-    ((measurable_const.mul ((measurable_liouvilleSum.comp (measurable_add_const h)).sub
-      measurable_liouvilleSum)).div_const _) (by positivity) (fun x => ?_) a b
-  have h1 := abs_liouvilleSum_le_abs (x + h)
-  have h2 := abs_liouvilleSum_le_abs x
-  have h3 := abs_add_le x h
-  show |ε * (liouvilleSum (x + h) - liouvilleSum x) / h| ≤ _
-  rw [abs_div, abs_mul]
-  calc |ε| * |liouvilleSum (x + h) - liouvilleSum x| / |h|
-      ≤ |ε| * (2 * |x| + |h|) / |h| := by
-        gcongr
-        exact (abs_sub _ _).trans (by linarith)
-    _ = 2 * |ε| / |h| * |x| + |ε| * |h| / |h| := by ring
-
-lemma intervalIntegrable_liouvilleSum (h a b : ℝ) :
-    IntervalIntegrable (fun x => liouvilleSum (x + h)) volume a b :=
-  intervalIntegrable_of_abs_le (c := 1) (d := |h|)
-    (measurable_liouvilleSum.comp (measurable_add_const h)) zero_le_one
-    (fun x => show |liouvilleSum (x + h)| ≤ _ by
-      linarith [abs_liouvilleSum_le_abs (x + h), abs_add_le x h]) a b
+    IntervalIntegrable (fun x => ε * (liouvilleSum (x + h) - liouvilleSum x) / h) volume a b :=
+  (((intervalIntegrable_liouvilleSum h a b).sub
+    (by simpa using intervalIntegrable_liouvilleSum 0 a b)).const_mul ε).div_const h
 
 /-- The change of `smoothSum h` over `[u, v]` is the integral of the increment. -/
 lemma smoothSum_sub (h u v : ℝ) : smoothSum h v - smoothSum h u =
@@ -458,72 +436,65 @@ lemma window_of_mean {ε θ δ C Y h : ℝ} (hθ : 0 ≤ θ) (hδ : 0 < δ) (hY 
     have h3 := (abs_le.1 (hpt hx.1)).2
     linarith [hxθ hx.1, hC hx.1]
 
-/-- For `θ ≥ 1 / 2`, suppose that for arbitrarily large `Y` there are a width `0 < h ≤ Y ^ θ` and a
-sign `ε = ±1` with
-`∫_Y^x max (ε (liouvilleSum (t + h) - liouvilleSum t) / h) 0 dt ≤ C x ^ θ`
-for every `x ∈ [Y, Y ^ (1 + δ)]`. Then zeta has no zero with `Re s > θ`. The width and the sign
-may depend on `Y` but are fixed across its window. The hypothesis bounds the cumulative integral
-of the positive part of the short-interval increment from the left end of the window, at each
-point of the window. The converse is not asserted. -/
-theorem riemannZeta_ne_zero_of_mean {θ δ C : ℝ} (hθ : 1 / 2 ≤ θ) (hδ : 0 < δ)
-    (hI : ∀ X, ∃ Y ≥ X, 1 < Y ∧ ∃ h : ℝ, 0 < h ∧ h ≤ Y ^ θ ∧ ∃ ε : ℝ, (ε = 1 ∨ ε = -1) ∧
-      ∀ x ∈ Icc Y (Y ^ (1 + δ)),
-        ∫ t in Y..x, max (ε * (liouvilleSum (t + h) - liouvilleSum t) / h) 0 ≤ C * x ^ θ)
-    {ρ : ℂ} (hρ : θ < ρ.re) : riemannZeta ρ ≠ 0 :=
-  riemannZeta_ne_zero_of_window (C := |C| + 2) hθ (by positivity : 0 < δ / (2 + δ))
+/-- `MeanBound θ δ C` with `θ ≥ 1 / 2` rules out zeros of zeta to the right of `θ`, through
+`WindowBound θ (δ / (2 + δ)) (|C| + 2)`. The converse is not asserted, and the hypothesis is not
+expected for `θ` below about `2 / 3`. -/
+theorem riemannZeta_ne_zero_of_meanBound {θ δ C : ℝ} (hθ : 1 / 2 ≤ θ) (hδ : 0 < δ)
+    (hI : MeanBound θ δ C) {ρ : ℂ} (hρ : θ < ρ.re) : riemannZeta ρ ≠ 0 :=
+  riemannZeta_ne_zero_of_windowBound (C := |C| + 2) hθ (by positivity : 0 < δ / (2 + δ))
     (fun X => by
-      obtain ⟨Y, hY, hY1, h, hh, hhY, ε, hε, hw⟩ := hI X
-      obtain ⟨Z, hZ, ε', hε', hw'⟩ := window_of_mean (by linarith) hδ hY1 hh hhY hε hw
-      exact ⟨Z, hY.trans hZ, hY1.trans_le hZ, ε', hε', hw'⟩) hρ
+      obtain ⟨Y, hY, h, hh, hhY, ε, hε, hw⟩ := hI (max X 2)
+      obtain ⟨Z, hZ, hw'⟩ := window_of_mean (by linarith) hδ
+        (by linarith [le_max_right X 2] : 1 < Y) hh hhY hε hw
+      exact ⟨Z, (le_max_left X 2).trans (hY.trans hZ), hw'⟩) hρ
 
-/-- The mean hypothesis of `riemannZeta_ne_zero_of_mean` with `1 / 2 ≤ θ < 1 / 2 + a` gives the
-trace identity of `trace_eq_efFunctional_iff` at width `a`. The converse is not asserted. -/
-theorem trace_eq_efFunctional_of_mean {θ δ C a : ℝ} (hθ : 1 / 2 ≤ θ) (hδ : 0 < δ)
-    (ha : 0 < a) (hθa : θ - 1 / 2 < a)
-    (hI : ∀ X, ∃ Y ≥ X, 1 < Y ∧ ∃ h : ℝ, 0 < h ∧ h ≤ Y ^ θ ∧ ∃ ε : ℝ, (ε = 1 ∨ ε = -1) ∧
-      ∀ x ∈ Icc Y (Y ^ (1 + δ)),
-        ∫ t in Y..x, max (ε * (liouvilleSum (t + h) - liouvilleSum t) / h) 0 ≤ C * x ^ θ)
-    (φ : TestFunction) : Trace.HasTrace (Trace.induced ha φ) φ.efFunctional :=
-  trace_eq_efFunctional_of_ne_zero ha hθa
-    (fun _ => riemannZeta_ne_zero_of_mean hθ hδ hI) φ
+/-- `MeanBound` with the integral taken over each block `[y, 2 y]` starting in the window, rather
+than cumulatively from `Y`. -/
+def BlockMeanBound (θ δ C : ℝ) : Prop :=
+  ∀ X, ∃ Y ≥ X, ∃ h : ℝ, 0 < h ∧ h ≤ Y ^ θ ∧ ∃ ε : ℝ, (ε = 1 ∨ ε = -1) ∧
+    ∀ y ∈ Icc Y (Y ^ (1 + δ)),
+      ∫ t in y..2 * y, max (ε * (liouvilleSum (t + h) - liouvilleSum t) / h) 0 ≤ C * y ^ θ
 
-namespace Controls
-
-/-- The window hypothesis of `riemannZeta_ne_zero_of_window` holds at `θ = 1` with `C = 1`, for
-both signs and every `Y > 1`, since `|liouvilleSum x| ≤ x`; so it carries information only
-through `θ < 1`. -/
-theorem window_at_exponent_one (δ : ℝ) : ∀ X, ∃ Y ≥ X, 1 < Y ∧ ∀ ε : ℝ, (ε = 1 ∨ ε = -1) →
-    ∀ x ∈ Icc Y (Y ^ (1 + δ)), ε * liouvilleSum x ≤ 1 * x ^ (1 : ℝ) := by
+/-- The block form gives the cumulative one: the blocks `[2 ^ j Y, 2 ^ (j + 1) Y]` covering `[Y, x]`
+contribute a geometric series dominated by its last term. -/
+theorem BlockMeanBound.meanBound {θ δ C : ℝ} (hθ : 0 < θ) (hC : 0 ≤ C)
+    (hB : BlockMeanBound θ δ C) : MeanBound θ δ (C * 2 ^ θ / (2 ^ θ - 1)) := by
   intro X
-  refine ⟨max X 2, le_max_left _ _, by linarith [le_max_right X 2], fun ε hε x hx => ?_⟩
-  have := abs_le.1 (abs_liouvilleSum_le (by linarith [hx.1, le_max_right X 2] : (0 : ℝ) ≤ x))
-  rw [Real.rpow_one, one_mul]
-  rcases hε with rfl | rfl <;> linarith
-
-/-- The mean hypothesis of `riemannZeta_ne_zero_of_mean` holds at `θ = 1` with `h = 1` and
-`C = 2`, for both signs and every `Y > 1`, since `|liouvilleSum (t + 1) - liouvilleSum t| ≤ 2`. -/
-theorem mean_at_exponent_one (δ : ℝ) : ∀ X, ∃ Y ≥ X, 1 < Y ∧ ∃ h : ℝ, 0 < h ∧ h ≤ Y ^ (1 : ℝ) ∧
-    ∀ ε : ℝ, (ε = 1 ∨ ε = -1) → ∀ x ∈ Icc Y (Y ^ (1 + δ)),
-      ∫ t in Y..x, max (ε * (liouvilleSum (t + h) - liouvilleSum t) / h) 0 ≤ 2 * x ^ (1 : ℝ) := by
-  intro X
-  set Y := max X 2
-  have hY : 2 ≤ Y := le_max_right _ _
-  refine ⟨Y, le_max_left _ _, by linarith, 1, one_pos, by rw [Real.rpow_one]; linarith,
-    fun ε hε x hx => ?_⟩
-  have hg := intervalIntegrable_increment ε 1 Y x
-  rw [Real.rpow_one]
-  calc (∫ t in Y..x, max (ε * (liouvilleSum (t + 1) - liouvilleSum t) / 1) 0)
-      ≤ ∫ _ in Y..x, (2 : ℝ) := by
-        refine intervalIntegral.integral_mono_on hx.1 ⟨hg.1.pos_part, hg.2.pos_part⟩
-          intervalIntegrable_const fun t ht => max_le ?_ (by norm_num)
-        have := abs_le.1 (abs_liouvilleSum_sub_le (by linarith [ht.1] : (0 : ℝ) ≤ t)
-          (le_add_of_nonneg_right zero_le_one))
-        rw [div_one]
-        rcases hε with rfl | rfl <;> linarith
-    _ ≤ 2 * x := by
-        rw [intervalIntegral.integral_const, smul_eq_mul]
-        linarith
-
-end Controls
+  obtain ⟨Y, hY, h, hh, hhY, ε, hε, hb⟩ := hB (max X 1)
+  have hY1 : 1 ≤ Y := (le_max_right X 1).trans hY
+  refine ⟨Y, (le_max_left X 1).trans hY, h, hh, hhY, ε, hε, fun x hx => ?_⟩
+  set K := C * 2 ^ θ / (2 ^ θ - 1)
+  have h2 : 1 < (2 : ℝ) ^ θ := Real.one_lt_rpow one_lt_two hθ
+  have hKe : K * (2 ^ θ - 1) = C * 2 ^ θ := div_mul_cancel₀ _ (by linarith)
+  have hK : C ≤ K := by nlinarith
+  have hg (a b : ℝ) : IntervalIntegrable
+      (fun t => max (ε * (liouvilleSum (t + h) - liouvilleSum t) / h) 0) volume a b :=
+    ⟨(intervalIntegrable_increment ε h a b).1.pos_part,
+      (intervalIntegrable_increment ε h a b).2.pos_part⟩
+  have hblock (n : ℕ) : 2 ^ n * Y ≤ Y ^ (1 + δ) → ∫ t in Y..2 * (2 ^ n * Y),
+      max (ε * (liouvilleSum (t + h) - liouvilleSum t) / h) 0 ≤ K * (2 ^ n * Y) ^ θ := by
+    induction n with
+    | zero =>
+      intro hn
+      rw [pow_zero, one_mul] at hn ⊢
+      exact (hb Y ⟨le_rfl, hn⟩).trans (by gcongr)
+    | succ n ih =>
+      rw [show (2 : ℝ) ^ (n + 1) * Y = 2 * (2 ^ n * Y) by ring]
+      intro hn
+      have hz : Y ≤ 2 ^ n * Y := le_mul_of_one_le_left (by linarith) (one_le_pow₀ one_le_two)
+      have hz2 : (2 * (2 ^ n * Y)) ^ θ = 2 ^ θ * (2 ^ n * Y) ^ θ :=
+        Real.mul_rpow zero_le_two (by positivity)
+      rw [← intervalIntegral.integral_add_adjacent_intervals (hg _ _) (hg _ _), hz2]
+      have h1 := ih (by linarith)
+      have h3 := hb _ ⟨by linarith, hn⟩
+      rw [hz2] at h3
+      linear_combination h1 + h3 - (2 ^ n * Y) ^ θ * hKe
+  obtain ⟨n, hn1, hn2⟩ := exists_nat_pow_near ((one_le_div (by linarith)).2 hx.1) one_lt_two
+  rw [le_div_iff₀ (by linarith)] at hn1
+  rw [div_lt_iff₀ (by linarith), pow_succ, mul_comm _ (2 : ℝ), mul_assoc] at hn2
+  refine (intervalIntegral.integral_mono_interval le_rfl hx.1 hn2.le
+    (.of_forall fun _ => le_max_right _ _) (hg _ _)).trans
+    ((hblock n (hn1.trans hx.2)).trans ?_)
+  gcongr
 
 end Masullo.Liouville

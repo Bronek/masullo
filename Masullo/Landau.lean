@@ -388,21 +388,27 @@ lemma norm_principal_sub_le (a : ℕ → ℂ) (m k : ℕ) {e : ℂ} (he : e ≠ 
   rw [le_div_iff₀ (by positivity)]
   exact hc
 
+/-- Eventually the relative size `m / (k + 1) * ∑ ‖a j‖ / d ^ j` of the lower terms in
+`norm_principal_sub_le` is below any `q > 0`. -/
+lemma eventually_lower_le (a : ℕ → ℂ) (m : ℕ) {d q : ℝ} (hd : 0 ≤ d) (hq : 0 < q) :
+    ∀ᶠ k : ℕ in atTop, (m : ℝ) / (k + 1) * ∑ j ∈ Finset.range m, ‖a j‖ / d ^ j ≤ q := by
+  have hB : 0 ≤ ∑ j ∈ Finset.range m, ‖a j‖ / d ^ j := Finset.sum_nonneg fun j _ => by positivity
+  filter_upwards [(tendsto_const_div_atTop_nhds_zero_nat
+    ((m : ℝ) * ∑ j ∈ Finset.range m, ‖a j‖ / d ^ j)).eventually (gt_mem_nhds hq),
+    eventually_ge_atTop 1] with k hk hk1
+  have hk0 : (0 : ℝ) < k := by exact_mod_cast hk1
+  refine le_trans ?_ hk.le
+  rw [div_mul_eq_mul_div]
+  gcongr
+  linarith
+
 lemma eventually_le_norm_principal (a : ℕ → ℂ) (m : ℕ) {e : ℂ} (he : e ≠ 0) (ha : a m ≠ 0) :
     ∀ᶠ k : ℕ in atTop, ‖a m‖ / (2 * ‖e‖ ^ m) / ‖e‖ ^ (k + 1) ≤ ‖principal a m e k‖ := by
   have hd : 0 < ‖e‖ := norm_pos_iff.2 he
   have ha' : 0 < ‖a m‖ := norm_pos_iff.2 ha
+  filter_upwards [eventually_lower_le a m hd.le (by positivity : 0 < ‖a m‖ / (2 * ‖e‖ ^ m))]
+    with k hk'
   set B := ∑ j ∈ Finset.range m, ‖a j‖ / ‖e‖ ^ j
-  have hB : 0 ≤ B := Finset.sum_nonneg fun j _ => by positivity
-  have hpos : 0 < ‖a m‖ / (2 * ‖e‖ ^ m) := by positivity
-  filter_upwards [(tendsto_const_div_atTop_nhds_zero_nat ((m : ℝ) * B)).eventually
-    (gt_mem_nhds hpos), eventually_ge_atTop 1] with k hk hk1
-  have hk0 : (0 : ℝ) < k := by exact_mod_cast hk1
-  have hk' : (m : ℝ) / (k + 1) * B ≤ ‖a m‖ / (2 * ‖e‖ ^ m) := by
-    refine le_trans ?_ hk.le
-    rw [div_mul_eq_mul_div]
-    gcongr
-    linarith
   have h1 := norm_principal_sub_le a m k he
   have h2 := norm_sub_norm_le (a m * (k + m).choose m / e ^ (k + m + 1)) (principal a m e k)
   rw [norm_sub_rev] at h2
@@ -424,17 +430,9 @@ lemma eventually_le_norm_principal (a : ℕ → ℂ) (m : ℕ) {e : ℂ} (he : e
 lemma eventually_re_principal_nonpos (a : ℕ → ℂ) (m : ℕ) {d : ℝ} (hd : 0 < d)
     (ha : (a m).re < 0) : ∀ᶠ k : ℕ in atTop, (principal a m d k).re ≤ 0 := by
   have hn : ‖(d : ℂ)‖ = d := by simp [abs_of_pos hd]
+  filter_upwards [eventually_lower_le a m hd.le
+    (div_pos (by linarith) (by positivity) : 0 < -(a m).re / d ^ m)] with k hk'
   set B := ∑ j ∈ Finset.range m, ‖a j‖ / d ^ j
-  have hB : 0 ≤ B := Finset.sum_nonneg fun j _ => by positivity
-  have hpos : 0 < -(a m).re / d ^ m := div_pos (by linarith) (by positivity)
-  filter_upwards [(tendsto_const_div_atTop_nhds_zero_nat ((m : ℝ) * B)).eventually
-    (gt_mem_nhds hpos), eventually_ge_atTop 1] with k hk hk1
-  have hk0 : (0 : ℝ) < k := by exact_mod_cast hk1
-  have hk' : (m : ℝ) / (k + 1) * B ≤ -(a m).re / d ^ m := by
-    refine le_trans ?_ hk.le
-    rw [div_mul_eq_mul_div]
-    gcongr
-    linarith
   have h1 := norm_principal_sub_le a m k (e := d) (by exact_mod_cast hd.ne')
   rw [hn] at h1
   have h2 := re_le_norm (principal a m d k - a m * (k + m).choose m / (d : ℂ) ^ (k + m + 1))
@@ -452,6 +450,10 @@ lemma eventually_re_principal_nonpos (a : ℕ → ℂ) (m : ℕ) {d : ℝ} (hd :
 namespace ContinuesMero
 
 variable {H : ℂ → ℂ} {Z : Set ℂ} {θ : ℝ}
+
+lemma dist_pos_of_mem (h : ContinuesMero f H Z A c θ) {s ρ : ℂ} (hs : c < s.re) (hρ : ρ ∈ Z) :
+    0 < dist ρ s :=
+  dist_pos.2 fun e => by have := (h.re_mem ρ hρ).2; rw [e] at this; linarith
 
 lemma exists_coeff_sub_le (h : ContinuesMero f H Z A c θ) {s : ℂ} {p K : ℂ → ℂ} {P : ℕ → ℂ}
     {R r : ℝ} (hs : c < s.re) (hr : 0 < r) (hrR : r < R) (hK : DifferentiableOn ℂ K (ball s R))
@@ -490,7 +492,7 @@ lemma exists_coeff_sub_pole_le (h : ContinuesMero f H Z A c θ) {s ρ : ℂ} {m 
     (hH : ∀ᶠ z in 𝓝[≠] ρ, H z = g z / (z - ρ) ^ (m + 1)) (hlt : dist ρ s < s.re - θ)
     (huniq : ∀ z ∈ Z, z ≠ ρ → dist ρ s < dist z s) : ∃ a : ℕ → ℂ, a m = g ρ ∧
       ∃ R > dist ρ s, ∃ M, ∀ k, ‖coeff f k s - principal a m (s - ρ) k‖ ≤ M / R ^ k := by
-  have hne : ρ ≠ s := fun e => by have := (h.re_mem ρ hρ).2; rw [e] at this; linarith
+  have hne : ρ ≠ s := dist_pos.1 (h.dist_pos_of_mem hs hρ)
   obtain ⟨R, h1, h2, h3⟩ : ∃ R > dist ρ s, R ≤ s.re - θ ∧ ∀ z ∈ Z, z ≠ ρ → R ≤ dist z s := by
     rcases (Z \ {ρ}).eq_empty_or_nonempty with he | hn
     · exact ⟨_, hlt, le_rfl, fun z hz hzρ => absurd (he ▸ ⟨hz, hzρ⟩ : z ∈ (∅ : Set ℂ)) (by simp)⟩
@@ -577,10 +579,7 @@ theorem ContinuesMero.eq_empty_of_window {H : ℂ → ℂ} {Z : Set ℂ} {θ δ 
     obtain ⟨a, ha, R₁, hR₁, M₁, hM₁⟩ :=
       h.exists_coeff_sub_pole_le (by simpa) hρ hg hH (by simpa) huniq
     have ha0 : a m ≠ 0 := by rw [ha]; exact hg0
-    have hpos : 0 < dist ρ (σ + t * I) := dist_pos.2 fun e => by
-      have := (h.re_mem ρ hρ).2
-      rw [e, hre] at this
-      linarith
+    have hpos := h.dist_pos_of_mem (s := σ + t * I) (by simpa) hρ
     have hd : ‖σ + t * I - ρ‖ = dist ρ (σ + t * I) := by rw [dist_comm, dist_eq_norm]
     have he : σ + t * I - ρ ≠ 0 := by rw [← norm_pos_iff, hd]; exact hpos
     have ha' : 0 < ‖a m‖ := norm_pos_iff.2 ha0
@@ -659,10 +658,7 @@ theorem ContinuesMero.eq_empty_of_window {H : ℂ → ℂ} {Z : Set ℂ} {θ δ 
     have hσρ : (σ : ℂ) - ρ = (dist ρ σ : ℝ) := by
       conv_lhs => rw [hreal ρ hρ rfl]
       simp
-    have hpos : 0 < dist ρ σ := dist_pos.2 fun e => by
-      have := (h.re_mem ρ hρ).2
-      rw [e, ofReal_re] at this
-      linarith
+    have hpos := h.dist_pos_of_mem (s := σ) (by simpa) hρ
     refine key 0 ρ hρ (by simpa) (by simpa) R M (by simpa) ?_
     filter_upwards [eventually_re_principal_nonpos a m hpos (by rw [ha]; exact hgre)] with k hk
     have h1 := (re_le_norm _).trans (hM k)

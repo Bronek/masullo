@@ -60,8 +60,12 @@ gives the bound above on windows of ratio `√2` (`trace_width_of_mean` in `Masu
 The primes can be removed altogether. Let `L(x) = ∑_{n ≤ x} λ(n)` with `λ(n) = (-1)^Ω(n)` the
 Liouville function. For `θ ≥ 1/2`, a one-sided bound `L(x) ≤ C x^θ`, or `L(x) ≥ -C x^θ`, on
 `[Y, Y^(1+δ)]` for arbitrarily large `Y` rules out zeros with real part greater than `θ`
-(`riemannZeta_ne_zero_of_window` in `Masullo/Liouville.lean`), and so does a one-sided bound on
-the short-interval increments of `L` (`riemannZeta_ne_zero_of_mean`). Both hold at `θ = 1`.
+(`riemannZeta_ne_zero_of_windowBound` in `Masullo/Liouville.lean`). Its exponent is exact: on
+paper the Riemann hypothesis gives the bound for every `θ > 1/2`. Such zeros are also ruled out
+by a bound `C x^θ` on the integral from `Y` to each `x` in the window of the positive part of one
+sign of the increments `(L(t+h) - L(t))/h`, with `h ≤ Y^θ` and the sign fixed per window
+(`riemannZeta_ne_zero_of_meanBound`). Its exponent is not faithful: the bound is expected only
+for `θ` above about `2/3`, so it is a quasi-Riemann-hypothesis criterion. Both hold at `θ = 1`.
 
 A further condition is equivalent rather than sufficient. For a test function `φ` let `L_φ(t)` be
 Weil's functional at the translate of `φ` by `t` in the logarithmic variable. Fix `a ≥ 0` and
