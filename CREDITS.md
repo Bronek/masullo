@@ -63,7 +63,13 @@ For `Masullo/Dyadic.lean`, Codex proposed the two-scale difference and the tent 
 its multiplier and the residue signs for both bounds. Claude wrote the Lean; the proof that zeta has
 no zeros in `(0, 1)`, several shortenings and the control on windows of length zero are Codex's.
 
-## Reciprocal ordinates
+## Sign runs and reciprocal ordinates
+
+For `Masullo/Runs.lean`, OpenAI Codex proposed the fixed-ratio sign-run argument for the dyadic
+prime sum and the positive two-point averages that isolate a conjugate pair; related oscillation
+arguments are due to Kaczorowski and to Montgomery and Vorhauer. Claude formalised the implication
+from sign runs to a rightmost zero and its trace corollary. Codex reviewed the Lean and shortened
+several proofs.
 
 For `WeilExplicit/Density*.lean`, Codex supplied the Carlson-type mollified mean-square argument
 for the summability of reciprocal ordinates of the zeros to the right of `re s = σ > 1/2`. Claude
