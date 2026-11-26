@@ -29,6 +29,14 @@ is the sum over the finitely many zeros in the strip at distance at least `a` an
 `T`, up to an error of at most `C e^(t/2) / (1 + T²)`, where `t, T ≥ 0` and `C` depends on `φ` only
 (`exists_bound` in `Masullo/Tail.lean`).
 
+On average over modulations the trace identity holds at every positive width with a power saving,
+unconditionally. Let `φ^τ(x) = x^(iτ) φ(x)` and `κ = min(a/2, 1/8)²/3`. The mean over
+`τ ∈ [-T, T]` of the absolute difference between Weil's functional at `φ^τ` and the trace at width
+`a` is at most `C T^(-κ) log²(2T)` for `T ≥ 2`, with `C` depending on `a` and `φ`
+(`mean_modulate_le` in `Masullo/Modulation.lean`). It is a consequence of the zero-density estimate
+and excludes no zero: on paper, a single zero off the critical line contributes `O(1/T)` to the
+mean.
+
 One sufficient condition is arithmetic. Let `G(x) = ∑_{n ≤ x} Λ(n)(x/n - 1) - x log x + (1 + γ)x`,
 and fix real numbers `θ > 0`, `δ > 0` and `C`. Suppose there are arbitrarily large `Y > 1` for which
 `G(x) ≤ C x^θ` for every real `x` in `[Y, Y^(1+δ)]`. Then zeta has no zero with real part greater

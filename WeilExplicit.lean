@@ -28,3 +28,4 @@ import WeilExplicit.Contour
 import WeilExplicit.ExplicitFormula
 import WeilExplicit.Density
 import WeilExplicit.DensityControls
+import WeilExplicit.DensityWeighted
