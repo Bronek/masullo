@@ -62,10 +62,13 @@ def SieveBound {ι κ : Type*} (rows : Finset ι) (cols : Finset κ) (H : ι →
 /-- L. Goldmakher and B. Louvel, *A quadratic large sieve inequality over number fields*,
 Math. Proc. Cambridge Philos. Soc. 154 (2013), Theorem 1.1, pp. 194–195,
 doi:10.1017/S0305004112000370. Rows are evaluation ideals; columns index the characters.
-The implicit constant depends only on the number field, exceptional ideal, and exponent. -/
+The constant is taken per family. The print writes `≪_{k,c,ε}`, but its proof pays `|G|` in the
+duality step (§3), and a constant uniform over all families satisfying Definition 1 is false. -/
 def GoldmakherLouvel (K : Type) [Field K] [NumberField K] : Prop :=
-  ∀ (c : Ideal (𝓞 K)), c ≠ 0 → ∀ ε : ℝ, 0 < ε → ∃ C : ℝ, 0 ≤ C ∧
-    ∀ (χ : Ideal (𝓞 K) → Ideal (𝓞 K) →*₀ ℂ) (f : Ideal (𝓞 K) → Ideal (𝓞 K)), IsQuadraticHeckeFamily c χ f →
+  ∀ (c : Ideal (𝓞 K)), c ≠ 0 →
+    ∀ (χ : Ideal (𝓞 K) → Ideal (𝓞 K) →*₀ ℂ) (f : Ideal (𝓞 K) → Ideal (𝓞 K)),
+      IsQuadraticHeckeFamily c χ f →
+    ∀ ε : ℝ, 0 < ε → ∃ C : ℝ, 0 ≤ C ∧
     ∀ M N : ℝ, 1 ≤ M → 1 ≤ N →
       SieveBound (sieveIdeals c M) (sieveIdeals c N) (fun a b => χ b a)
         (C * (M * N) ^ ε * (M + N))
@@ -174,12 +177,12 @@ theorem quadraticSieve_of_goldmakherLouvel {symbol : Ideal 𝓔 → Ideal 𝓔 �
   obtain ⟨χ, f, hχ, hsymbol⟩ := hFamily
   intro ε hε
   have h72 : span {(72 : 𝓔)} ≠ 0 := by simp
-  obtain ⟨C, hC, hGL⟩ := hGL (span {72}) h72 ε hε
+  obtain ⟨C, hC, hGL⟩ := hGL (span {72}) h72 χ f hχ ε hε
   refine ⟨2 * (2 : ℝ) ^ ε * C, by positivity, ?_⟩
   intro M N hM hN rows cols hr hc
   have hr' := hr.trans sieveIdeals_subset
   have hc' := (hc.trans (Finset.filter_subset _ _)).trans sieveIdeals_subset
-  have h := (hGL χ f hχ M (2 * N) hM (by linarith)).restrict hr' hc'
+  have h := (hGL M (2 * N) hM (by linarith)).restrict hr' hc'
   intro z
   have heq (a) (ha : a ∈ rows) (b) (hb : b ∈ cols) : χ b a = symbol a b := by
     have har := hr' ha
