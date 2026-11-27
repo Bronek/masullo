@@ -136,13 +136,15 @@ lemma ConvAt.hasDerivAt {z : ℂ} (hu : ConvAt u z.re) (m : ℕ) :
       (Eventually.of_forall (hC z (by simp; positivity)))
   obtain ⟨C, hC⟩ := key (m + 1)
   refine ⟨hi, (hasDerivAt_integral_of_dominated_loc_of_deriv_le
+    (F := fun w (x : ℝ) => u x * ((x : ℂ) ^ m * exp (w * x)))
+    (F' := fun w (x : ℝ) => u x * ((x : ℂ) ^ (m + 1) * exp (w * x)))
     (Metric.ball_mem_nhds z (half_pos hc)) (Eventually.of_forall (hmeas m)) hi (hmeas (m + 1) z)
     (Eventually.of_forall fun x w hw => hC w ?_ x) (h.norm.const_mul C)
     (Eventually.of_forall fun x w _ => ?_)).2⟩
   · exact (abs_re_le_norm (w - z)).trans (mem_ball_iff_norm.1 hw).le
-  · have h := (((hasDerivAt_id w).mul_const (x : ℂ)).cexp.const_mul ((x : ℂ) ^ m)).const_mul (u x)
+  · have h := (((hasDerivAt_id' w).mul_const (x : ℂ)).cexp.const_mul ((x : ℂ) ^ m)).const_mul (u x)
     refine h.congr_deriv ?_
-    simp only [id, pow_succ]
+    simp only [pow_succ]
     ring
 
 lemma ConvAt.integrable {z : ℂ} (hu : ConvAt u z.re) :
@@ -418,12 +420,13 @@ lemma integrable_mul_shift (hg : MemLp g 2) (hf : MemLp f 2) (τ : ℝ) :
   have hi : Integrable (fun s => g s * f (s - τ)) := hg.integrable_mul (memLp_shift hf τ)
   refine ⟨hi, ?_⟩
   have h1 := eLpNorm_smul_le_mul_eLpNorm (p := 2) (q := 2) (r := 1)
-    (memLp_shift hf τ).1 hg.1
+    hg.aestronglyMeasurable (memLp_shift hf τ).aestronglyMeasurable
   have h2 : eLpNorm (fun s => f (s - τ)) 2 = eLpNorm f 2 :=
-    eLpNorm_comp_measurePreserving hf.1 (measurePreserving_sub_right volume τ)
-  rw [h2, eLpNorm_one_eq_lintegral_enorm] at h1
+    eLpNorm_comp_measurePreserving hf.aestronglyMeasurable (measurePreserving_sub_right volume τ)
+  rw [h2, eLpNorm_one_eq_lintegral_eNorm
+    (hg.aestronglyMeasurable.smul (memLp_shift hf τ).aestronglyMeasurable)] at h1
   rw [integral_norm_eq_lintegral_enorm hi.1, ← ENNReal.toReal_mul]
-  exact ENNReal.toReal_mono (ENNReal.mul_ne_top hg.2.ne hf.2.ne) h1
+  exact ENNReal.toReal_mono (ENNReal.mul_ne_top hg.ne hf.ne) h1
 
 /-- The weight `e^{a(|s| - |s - τ| - |τ|)}`, which is at most `1`. -/
 noncomputable def damp (a τ s : ℝ) : ℝ := Real.exp (a * (|s| - |s - τ| - |τ|))
@@ -443,8 +446,8 @@ noncomputable def bil (a : ℝ) (g f : ℝ → ℂ) (τ : ℝ) : ℂ := ∫ s, d
 
 lemma integrable_bil (ha : 0 ≤ a) (hg : MemLp g 2) (hf : MemLp f 2) (τ : ℝ) :
     Integrable fun s => (damp a τ s : ℂ) * (g s * f (s - τ)) := by
-  have hc : Continuous fun s => (damp a τ s : ℂ) :=
-    continuous_ofReal.comp ((continuous_damp a).comp (by fun_prop : Continuous fun s => (τ, s)))
+  have hc : Continuous fun s => (damp a τ s : ℂ) := by
+    unfold damp; fun_prop
   refine (integrable_mul_shift hg hf τ).1.mono
     (hc.aestronglyMeasurable.mul (integrable_mul_shift hg hf τ).1.1)
     (Eventually.of_forall fun s => ?_)
@@ -466,10 +469,10 @@ lemma exists_approx (hf : MemLp f 2) {δ : ℝ} (hδ : 0 < δ) : ∃ f' : ℝ �
   have h5 : (eLpNorm (f - f') 2).toReal ≤ δ := ENNReal.toReal_le_of_le_ofReal hδ.le h2
   refine ⟨f', h1, h3, h4, h5, ?_⟩
   have h6 : eLpNorm f' 2 ≤ eLpNorm f 2 + eLpNorm (f - f') 2 := by
-    have := eLpNorm_sub_le (μ := volume) (p := 2) hf.1 (hf.sub h4).1 (by norm_num)
+    have := eLpNorm_sub_le (μ := volume) (p := 2) (f := f) (g := f - f') (by norm_num)
     rwa [sub_sub_cancel] at this
-  have h7 := ENNReal.toReal_mono (ENNReal.add_ne_top.2 ⟨hf.2.ne, (hf.sub h4).2.ne⟩) h6
-  rw [ENNReal.toReal_add hf.2.ne (hf.sub h4).2.ne] at h7
+  have h7 := ENNReal.toReal_mono (ENNReal.add_ne_top.2 ⟨hf.ne, (hf.sub h4).ne⟩) h6
+  rw [ENNReal.toReal_add hf.ne (hf.sub h4).ne] at h7
   linarith
 
 lemma continuous_bil (a : ℝ) (hg : Continuous g) (hgc : HasCompactSupport g) (hf : Continuous f) :
@@ -587,8 +590,9 @@ include hd
 
 lemma crossBound (ha : 0 ≤ a) : ∃ K, CrossBound a y u K := by
   refine ⟨(eLpNorm (fun x => (Real.exp (-a * |x|) : ℂ) * y x) 2).toReal *
-    (eLpNorm (fun x => (Real.exp (a * |x|) : ℂ) * u x) 2).toReal, aesm_of_exp_mul hd.left.1,
-    aesm_of_exp_mul hd.right.1, fun τ => ?_, fun τ => ?_⟩
+    (eLpNorm (fun x => (Real.exp (a * |x|) : ℂ) * u x) 2).toReal,
+    aesm_of_exp_mul hd.left.aestronglyMeasurable,
+    aesm_of_exp_mul hd.right.aestronglyMeasurable, fun τ => ?_, fun τ => ?_⟩
   · simp only [cross_integrand a y u τ]
     exact (integrable_bil ha hd.left hd.right τ).const_mul _
   · simp only [cross_integrand a y u τ, norm_mul (Real.exp (a * |τ|) : ℂ), norm_real,
@@ -1013,7 +1017,7 @@ end Little
 
 lemma Dual.indicator (hd : Dual a y u) {s : Set ℝ} (hs : MeasurableSet s) :
     Dual a (s.indicator y) u where
-  left := (hd.left.indicator hs).ae_eq (Eventually.of_forall fun _ =>
+  left := (hd.left.indicator hs.nullMeasurableSet).ae_eq (Eventually.of_forall fun _ =>
     indicator_mul_right s (fun x : ℝ => (Real.exp (-a * |x|) : ℂ)) y)
   right := hd.right
 
@@ -1299,7 +1303,7 @@ lemma exists_divided (hh : Rapid h) {c : ℂ} (h0 : jet h 0 c = 0) :
   refine congrFun (AnalyticOnNhd.eq_of_eventuallyEq (z₀ := ((|c.re| + 1 : ℝ) : ℂ))
     (fun w _ => hl.analyticAt w) (fun w _ => hh.differentiable_jet.analyticAt w) ?_) z
   filter_upwards [(isOpen_lt (continuous_const (y := |c.re|)) continuous_re).mem_nhds
-    (show |c.re| < _ by simp)] with w hw
+    (show |c.re| < (((|c.re| + 1 : ℝ) : ℂ)).re by rw [ofReal_re]; linarith)] with w hw
   have hw' : |c.re| < w.re := hw
   have e1 : jet (fun x => g (-x)) 0 w = jet g 0 (-w) := by
     rw [jet_zero, jet_zero, ← integral_neg_eq_self]

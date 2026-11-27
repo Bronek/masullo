@@ -364,7 +364,7 @@ theorem zeroSumVanishes_iff (a : ℝ) :
     ZeroSumVanishes a ↔
       ¬ ∃ ρ : ℂ, riemannZeta ρ = 0 ∧ 0 < ρ.re ∧ ρ.re < 1 ∧ a ≤ |ρ.re - 1 / 2| := by
   refine ⟨fun h ⟨ρ, hρ⟩ => (zeroMult_pos hρ.1).ne' ?_, fun h φ => ?_⟩
-  · exact_mod_cast weight_eq_zero_of_hasSum (w := fun ρ => (zeroMult ρ : ℂ))
+  · exact_mod_cast weight_eq_zero_of_hasSum (S := outerZeros a) (w := fun ρ => (zeroMult ρ : ℂ))
       (fun _ h => ⟨h.1, h.2.1, h.2.2.1⟩) h hρ
   · have : IsEmpty (outerZeros a) := ⟨fun ρ => h ⟨ρ, ρ.2⟩⟩
     exact hasSum_empty

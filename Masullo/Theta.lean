@@ -276,7 +276,7 @@ lemma sub_one_mul_jet (hf : ThetaClass f) {s : ℂ} (hs : 0 < s.re) :
       ((differentiable_zetaNum s).mul (differentiableAt_mellin f hs)).differentiableWithinAt) hU
   refine h1.eqOn_of_preconnected_of_eventuallyEq h2 (convex_halfSpace_re_gt 0).isPreconnected
     (z₀ := 2) (by simp) ?_ hs
-  filter_upwards [(isOpen_lt continuous_const continuous_re).mem_nhds
+  filter_upwards [(isOpen_lt (f := fun _ : ℂ ↦ (1 : ℝ)) continuous_const continuous_re).mem_nhds
     (show (1 : ℝ) < (2 : ℂ).re by simp)] with w hw
   have hw1 : w ≠ 1 := by rintro rfl; simp at hw
   rw [zetaNum_of_ne hw1, jet_theta_of_one_lt f hw, mul_assoc]
@@ -311,7 +311,8 @@ lemma analyticOrderAt_jet (hf : ThetaClass f) {s : ℂ} (hs : 0 < s.re) :
   rw [h1, ← analyticOrderAt_mul (g := fun w => jet (theta f) 0 (w - 1 / 2)) (by fun_prop)
     ((by fun_prop : Differentiable ℂ _).analyticAt s)]
   refine analyticOrderAt_congr ?_
-  filter_upwards [(isOpen_lt continuous_const continuous_re).mem_nhds hs] with w hw
+  filter_upwards [(isOpen_lt (f := fun _ : ℂ ↦ (0 : ℝ)) continuous_const continuous_re).mem_nhds hs]
+    with w hw
   exact sub_one_mul_jet hf hw
 
 lemma analyticOrderAt_sub_one_ne_top (s : ℂ) : analyticOrderAt (fun w : ℂ => w - 1) s ≠ ⊤ := by

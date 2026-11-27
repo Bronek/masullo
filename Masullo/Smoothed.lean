@@ -194,7 +194,7 @@ private lemma false_of_zero {G : ℂ → ℂ} {β : ℝ}
   have hz₀ : z₀ ∈ U := ⟨show β < z₀.re by rw [hz₀re]; linarith [le_max_left β 1], by simp [z₀]⟩
   have heq := h1.eqOn_of_preconnected_of_eventuallyEq h2
     ((convex_halfSpace_re_gt β).inter (convex_halfSpace_im_gt 0)).isPreconnected hz₀ (by
-      filter_upwards [(isOpen_lt continuous_const continuous_re).mem_nhds
+      filter_upwards [(isOpen_lt (f := fun _ : ℂ ↦ (1 : ℝ)) continuous_const continuous_re).mem_nhds
         (show (1 : ℝ) < z₀.re by rw [hz₀re]; linarith [le_max_right β 1])] with s hs
       rw [hid s hs, mul_comm (LSeries b s), mul_assoc, mul_assoc, ← mul_assoc (LSeries b s),
         hL s hs, mul_one])

@@ -149,7 +149,7 @@ theorem order_hypothesis_needed {a c : ℝ} (hc : |c| < a) : ∃ (z₀ : ℂ) (h
         (Ioc (0 : ℝ) 1).indicator fun x : ℝ => (Real.exp (a * |x|) : ℂ) * exp (-z₀ * x) :=
       funext fun x =>
         (indicator_mul_right _ (fun x : ℝ => (Real.exp (a * |x|) : ℂ)) _).symm
-    rw [e, memLp_indicator_iff_restrict measurableSet_Ioc]
+    rw [e, memLp_indicator_iff_restrict measurableSet_Ioc.nullMeasurableSet]
     have hcont : Continuous fun x : ℝ => (Real.exp (a * |x|) : ℂ) * exp (-z₀ * x) := by fun_prop
     exact (memLp_two_iff_integrable_sq_norm hcont.aestronglyMeasurable).2
       ((hcont.norm.pow 2).integrableOn_Ioc)

@@ -123,7 +123,8 @@ theorem sum_card_divisors_sq_le (K : ℕ) (α : ℝ) :
   have hcard (n : ℕ) : n.divisorsAntidiagonal.card = n.divisors.card := by
     rw [← Nat.map_div_right_divisors, card_map]
   have hww (n : ℕ) : (w*w) n = n.divisors.card * w n := by
-    simp only [mul_apply, sum_congr rfl (fun p hp ↦ hmul hp), sum_const, nsmul_eq_mul, hcard]
+    simp only [ArithmeticFunction.mul_apply, sum_congr rfl (fun p hp ↦ hmul hp), sum_const,
+      nsmul_eq_mul, hcard]
   have nn (n : ℕ) : 0 ≤ (w*w) n := hww n ▸ mul_nonneg (Nat.cast_nonneg _) (hw n)
   have hI : Icc 1 K = Ioc 0 K := by ext; simp [Nat.one_le_iff_ne_zero, Nat.pos_iff_ne_zero]
   rw [hI]
@@ -132,7 +133,7 @@ theorem sum_card_divisors_sq_le (K : ℕ) (α : ℝ) :
   calc ∑ n ∈ Ioc 0 K, (n.divisors.card : ℝ)^2 * (n : ℝ)^(-α)
       ≤ ∑ n ∈ Ioc 0 K, ((w*w)*(w*w)) n := by
         refine sum_le_sum fun n h ↦ ?_
-        rw [← hn n h, mul_apply]
+        rw [← hn n h, ArithmeticFunction.mul_apply]
         calc (n.divisors.card : ℝ)^2 * w n
             = ∑ _p ∈ n.divisorsAntidiagonal, n.divisors.card * w n := by
                rw [sum_const, nsmul_eq_mul, hcard]; ring

@@ -575,7 +575,8 @@ theorem hasTrace_conv_of_diagonal {ι : Type*} {a c : ℝ} {τ : ℝ → H →L[
     rw [conv_resolvent hτ hc (hk.of_le (by norm_num)) hs _
       (good_of_compact hk1.continuous hs1), conv_resolvent hτ hc hk1 hs1 _
       (good_of_compact hk2.continuous hs2)]
-  have hRB : R ∘L B = B ∘L R := ContinuousLinearMap.ext fun u => conv_comm hτ _ _ u
+  have hRB : R ∘L B = B ∘L R := ContinuousLinearMap.ext fun u =>
+    conv_comm hτ (good_resolvent hc) (good_of_compact hk2.continuous hs2) u
   have hHS : Summable fun i => ‖compr U R (b i)‖ ^ 2 := by
     refine (hsum.mul_left (c - a)⁻¹).of_nonneg_of_le (fun _ => by positivity) fun i => ?_
     have h1 := resolvent_le hτ hc (b i : H)

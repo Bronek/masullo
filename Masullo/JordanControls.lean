@@ -26,6 +26,6 @@ theorem jordanSign_at_zero (δ : ℝ) : ∀ X, ∃ Y ≥ X, ∃ ε : ℝ, (ε = 
     ∀ x ∈ Icc Y (Y ^ (1 + δ)), ε * DirichletWindow.partialSum (jordan 0) x ≤ 0 := fun X =>
   ⟨max X 1, le_max_left _ _, -1, .inr rfl, fun x hx => by
     have h1 : 1 ≤ ⌊x⌋₊ := Nat.le_floor (by simpa using (le_max_right X 1).trans hx.1)
-    simp [DirichletWindow.partialSum, jordan_zero, one_apply, h1]⟩
+    simp [DirichletWindow.partialSum, jordan_zero, ArithmeticFunction.one_apply, h1]⟩
 
 end Masullo.Jordan.Controls

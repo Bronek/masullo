@@ -217,7 +217,8 @@ theorem integral_cpow_mul_approx {N : ℕ} (hN : 0 < N) {ρ : ℂ} (hρ : 0 < ρ
 
 lemma measurable_approx (N : ℕ) : Measurable (approx N) := by
   unfold approx
-  refine (measurable_const.add (Finset.measurable_sum _ fun k _ => ?_)).sub ?_
+  refine ((measurable_const : Measurable fun _ : ℝ => (1 : ℝ)).add
+    (Finset.measurable_sum _ fun k _ => ?_)).sub ?_
   · exact (measurable_fract.comp (by fun_prop)).const_mul _
   · exact (measurable_fract.comp (by fun_prop)).const_mul _
 

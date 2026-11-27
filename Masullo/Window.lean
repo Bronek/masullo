@@ -208,7 +208,7 @@ lemma exists_logDeriv_zetaNum (ρ : ℂ) : ∃ g, AnalyticAt ℂ g ρ ∧ g ρ �
     (hg.continuousAt.eventually_ne hg0).filter_mono nhdsWithin_le_nhds,
     hg.eventually_analyticAt.filter_mono nhdsWithin_le_nhds] with s hs hne hgs hga
   have hsρ : s - ρ ≠ 0 := sub_ne_zero.2 hne
-  have : zetaNum =ᶠ[𝓝 s] fun z => (z - ρ) ^ zeroMult ρ * g z := hs
+  have : zetaNum =ᶠ[𝓝 s] (fun z => (z - ρ) ^ zeroMult ρ) * g := hs
   rw [logDeriv_apply, this.deriv_eq, this.eq_of_nhds, ← logDeriv_apply,
     logDeriv_mul (f := fun z => (z - ρ) ^ zeroMult ρ) s (pow_ne_zero _ hsρ) hgs
       (by fun_prop) hga.differentiableAt,
@@ -217,7 +217,7 @@ lemma exists_logDeriv_zetaNum (ρ : ℂ) : ∃ g, AnalyticAt ℂ g ρ ∧ g ρ �
 
 lemma logDeriv_zetaNum {s : ℂ} (hs1 : s ≠ 1) (hz : riemannZeta s ≠ 0) :
     logDeriv zetaNum s = 1 / (s - 1) + logDeriv riemannZeta s := by
-  have : zetaNum =ᶠ[𝓝 s] fun z => (z - 1) * riemannZeta z :=
+  have : zetaNum =ᶠ[𝓝 s] (fun z => z - 1) * riemannZeta :=
     (eventually_ne_nhds hs1).mono fun z hz => zetaNum_of_ne hz
   rw [logDeriv_apply, this.deriv_eq, this.eq_of_nhds, ← logDeriv_apply,
     logDeriv_mul (f := fun z => z - 1) s (sub_ne_zero.2 hs1) hz

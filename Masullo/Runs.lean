@@ -574,11 +574,11 @@ lemma limit_bound (hq : ∀ j, 0 ≤ q j ∧ q j ≤ 1) (hd : ∀ j, 0 ≤ d j) 
       exact Real.exp_le_exp.2 (by nlinarith [ρ.2.2.2])
     have h2 : ‖∏ j ∈ F, factor (q j) (d j) ρ‖ ≤ Real.exp L := by
       refine (Finset.norm_prod_le _ _).trans ?_
-      refine (Finset.prod_le_prod (fun j _ => norm_nonneg _) fun j _ =>
+      refine (Finset.prod_le_prod₀ (fun j _ => norm_nonneg _) fun j _ =>
         norm_factor_le (hq j).1 (hq j).2 (hd j) ρ.2.2.2.le).trans ?_
       rw [← Real.exp_sum]
       exact Real.exp_le_exp.2 (hL F)
-    rw [norm_mul, norm_mul, norm_mul, norm_natCast]
+    rw [norm_mul, norm_mul, norm_mul, Complex.norm_natCast]
     have := norm_nonneg (lap (smooth b) ρ)
     have := norm_nonneg (cexp (ρ * t))
     have : (0 : ℝ) ≤ zeroMult ρ := Nat.cast_nonneg _
@@ -794,7 +794,7 @@ theorem both_signs {σ R θ C : ℝ} (hσ : 1 / 2 ≤ σ) (hR : 0 < R) (hθ : 0 
     have := hM ρ
     rw [HasProd, SummationFilter.unconditional_filter] at this
     refine le_of_tendsto' this.norm fun F => (Finset.norm_prod_le _ _).trans ?_
-    refine (Finset.prod_le_prod (fun j _ => norm_nonneg _) fun (j : J) _ =>
+    refine (Finset.prod_le_prod₀ (fun j _ => norm_nonneg _) fun (j : J) _ =>
       norm_factor_le (mass_mem _).1 (mass_mem _).2 (div_pos Real.pi_pos (hJ j j.2)).le
         ρ.2.2.2.le).trans ?_
     rw [← Real.exp_sum]

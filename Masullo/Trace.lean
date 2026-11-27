@@ -62,7 +62,7 @@ lemma weight_shift_le (ha : 0 < a) (y : ℝ) (f : ℝ → ℂ) (x : ℝ) :
 
 lemma memLp_shift (ha : 0 < a) (y : ℝ) {u : ℝ → ℂ} (hu : MemLp u 2 (wt a)) :
     MemLp (fun x => u (x - y)) 2 (wt a) :=
-  memLp_wt ((hu.1.mono_ac (absolutelyContinuous_wt a)).comp_measurePreserving
+  memLp_wt ((hu.aestronglyMeasurable.mono_ac (absolutelyContinuous_wt a)).comp_measurePreserving
     (measurePreserving_sub_right volume y))
     (((integrable_weight_mul_sq hu).comp_sub_right y).const_mul _) (weight_shift_le ha y u)
 
@@ -193,7 +193,7 @@ lemma conv_ae (ha : 0 < a) (hk : Good a k) (u : W a) :
       Dual a (s.indicator 1) f := fun s hs hfin f => by
     refine ⟨?_, (dual_of_mem ha 0 f).right⟩
     have h1 : MemLp (s.indicator fun _ => (1 : ℂ)) 2 volume :=
-      memLp_indicator_const 2 hs 1 (Or.inr hfin.ne)
+      memLp_indicator_const 2 hs.nullMeasurableSet 1 (Or.inr hfin.ne)
     refine h1.mono ?_ (Eventually.of_forall fun x => ?_)
     · exact (by fun_prop : Continuous fun x : ℝ => (Real.exp (-a * |x|) : ℂ)
         ).aestronglyMeasurable.mul ((aestronglyMeasurable_const (b := (1 : ℂ))).indicator hs)
@@ -287,7 +287,7 @@ instance : CompleteSpace (V a) := by unfold V; infer_instance
 abbrev Index (a : ℝ) := Σ ρ : innerZeros a, Fin (zeroMult ρ)
 
 instance : Countable (innerZeros a) :=
-  (countable_zeros.mono fun _ h => mem_riemannZetaZeros.2 h.1).to_subtype
+  (countable_zeros.mono (s₁ := innerZeros a) fun _ h => mem_riemannZetaZeros.2 h.1).to_subtype
 
 /-- A listing of the functionals in which those of one zero come in increasing order. -/
 noncomputable def code (i : Index a) : ℕ :=

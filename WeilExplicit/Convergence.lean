@@ -51,7 +51,7 @@ theorem integrable_archimedean {k : ℝ → ℂ} (hc : ContDiff ℝ 2 k) (hk : H
   · apply (ht.comp continuous_ofReal).mul
     apply continuous_ofReal.comp
     apply Continuous.sub _ continuous_const
-    apply continuous_re.comp
+    refine continuous_re.comp (f := fun r : ℝ ↦ (1/4+I*(r : ℂ)/2).digamma) ?_
     exact continuous_iff_continuousAt.mpr fun r ↦
       (analyticAt_digamma (hψ r)).continuousAt.comp (f := fun r : ℝ ↦ 1/4+I*(r : ℂ)/2) (by fun_prop)
   intro r
