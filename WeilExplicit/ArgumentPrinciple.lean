@@ -50,10 +50,10 @@ theorem rectIntegral_logDeriv {f H : ℂ → ℂ} (hf : Differentiable ℂ f) (h
     let P (w : ℂ) := ∏ p ∈ S, (w-p)^m p
     have hp (p) (h : p ∈ S) := pow_ne_zero (m p) (hnz hz h)
     have hd : Differentiable ℂ P := by dsimp [P]; fun_prop
-    rw [show f = fun w ↦ P w * g w from funext hfg,
+    rw [show f = P * g from funext hfg,
       logDeriv_mul z (Finset.prod_ne_zero_iff.mpr hp)
         (hn (rectBoundary_subset _ _ _ _ hz)) (hd z) (hg z),
-      show P = (fun w ↦ ∏ p ∈ S, (w-p)^m p) from rfl,
+      show P = ∏ p ∈ S, (fun w ↦ (w-p)^m p) by ext w; simp [P],
       logDeriv_prod (f := fun p w ↦ (w-p)^m p) hp (by intros; fun_prop),
       mul_add, Finset.mul_sum]
     congr 1

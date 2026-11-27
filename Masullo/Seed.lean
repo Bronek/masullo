@@ -187,7 +187,7 @@ theorem xi_eq_half_WeilExplicit (s : ℂ) : xi (s - 1 / 2) = 1 / 2 * WeilExplici
     (fun w _ => (hd.comp (differentiable_id.sub_const _)).analyticAt w)
     (fun w _ => (WeilExplicit.differentiable_xi.const_mul _).analyticAt w) ?_
   · exact congrFun h s
-  · filter_upwards [(isOpen_lt continuous_const continuous_re).mem_nhds
+  · filter_upwards [(isOpen_lt (f := fun _ : ℂ ↦ (0 : ℝ)) continuous_const continuous_re).mem_nhds
       (show (0 : ℝ) < (2 : ℂ).re by norm_num), eventually_ne_nhds (show (2 : ℂ) ≠ 1 by norm_num)]
       with w hw h1
     have h0 : w ≠ 0 := by rintro rfl; simp at hw

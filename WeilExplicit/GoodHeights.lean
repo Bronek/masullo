@@ -14,8 +14,10 @@ private theorem norm_logDeriv_zeta_le_reg {s : ℂ} (ht : 1 ≤ |s.im|) (hn : ri
   have h : s ≠ 1 := by intro h; norm_num [h] at ht
   have hreg := (logDeriv_congr_nhds
     ((eventually_ne_nhds h).mono fun _ hw ↦ zeta₁_eq_mul hw)).self_of_nhds
-  rw [logDeriv_mul (f := fun z : ℂ ↦ z - 1) (g := riemannZeta) s (sub_ne_zero.mpr h) hn
-    (by fun_prop) (differentiableAt_riemannZeta h)] at hreg
+  have hm := logDeriv_mul (f := fun z : ℂ ↦ z - 1) (g := riemannZeta) s (sub_ne_zero.mpr h) hn
+    (by fun_prop) (differentiableAt_riemannZeta h)
+  simp only [Pi.mul_def] at hm
+  rw [hm] at hreg
   have hnorm : 1 ≤ ‖s - 1‖ := ht.trans (by simpa using abs_im_le_norm (s - 1))
   have hterm : ‖logDeriv (fun z : ℂ ↦ z - 1) s‖ ≤ 1 := by
     simpa [logDeriv_apply] using inv_le_one_of_one_le₀ hnorm

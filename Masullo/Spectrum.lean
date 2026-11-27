@@ -55,8 +55,8 @@ lemma forall_jet_eq_zero_iff (z : ℂ) (m : ℕ) :
     refine (by exact_mod_cast m.lt_succ_self : (m : ℕ∞) < (m + 1 : ℕ)).trans_le
       ((natCast_le_analyticOrderAt_iff_iteratedDeriv_eq_zero hs.analyticAt).2 fun l hl => ?_)
     rw [hs.iteratedDeriv]
-    have h1 := congrArg (Polynomial.coeff · (m - l)) hP
-    simp only [P, Polynomial.finsetSum_coeff, Polynomial.coeff_monomial,
+    have h1 := congrArg (fun p : Polynomial ℂ => p.coeff (m - l)) hP
+    simp only [P, Polynomial.finsetSum_coeff, Polynomial.coeff_monomial_apply,
       Polynomial.coeff_zero] at h1
     rw [Finset.sum_eq_single_of_mem l (Finset.mem_range.2 hl) fun k hk hkl =>
       if_neg (by have := Finset.mem_range.1 hk; omega), if_pos rfl] at h1

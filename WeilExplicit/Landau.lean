@@ -69,15 +69,16 @@ theorem landau_disc {f : ℂ → ℂ} (hf : Differentiable ℂ f) {c x : ℂ}
   have hne (a : ℂ) (ha : a ∈ S) : (x - a) ^ m a ≠ 0 :=
     pow_ne_zero _ (sub_ne_zero.mpr (ne_of_mem_of_not_mem ha hxn).symm)
   have hP : logDeriv P x = ∑ a ∈ S, (m a : ℂ) / (x - a) := by
-    rw [show P = (fun z ↦ ∏ a ∈ S, (z - a) ^ m a) from rfl,
-      logDeriv_prod (f := fun a z ↦ (z - a) ^ m a) hne (by intros; fun_prop)]
+    have h := logDeriv_prod (f := fun a z ↦ (z - a) ^ m a) hne (by intros; fun_prop)
+    simp only [Finset.prod_fn] at h
+    rw [show P = (fun z ↦ ∏ a ∈ S, (z - a) ^ m a) from rfl, h]
     apply Finset.sum_congr rfl
     intro a _
     rw [logDeriv_fun_pow (f := fun z : ℂ ↦ z - a) (by fun_prop)]
     simp [logDeriv_apply, div_eq_mul_inv]
   change ‖logDeriv f x - ∑ a ∈ S, (m a : ℂ) / (x - a)‖ ≤
     3000 * (B + (∑ a ∈ S, (m a : ℝ)) * Real.log 24)
-  rw [show f = (fun z ↦ P z * g z) from funext hfg,
+  rw [show f = P * g from funext hfg,
     logDeriv_mul x (Finset.prod_ne_zero_iff.mpr hne) (hn x hx') (hdP x) (hg x), hP,
     add_sub_cancel_left]
   simp only [N, Nat.cast_sum] at hD

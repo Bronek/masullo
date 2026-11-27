@@ -56,7 +56,7 @@ noncomputable def jordan (τ : ℝ) : ArithmeticFunction ℝ := (μ : Arithmetic
 
 lemma jordan_prime_pow {τ : ℝ} {p : ℕ} (hp : p.Prime) (k : ℕ) :
     jordan τ (p ^ (k + 1)) = powNeg τ (p ^ (k + 1)) - powNeg τ (p ^ k) := by
-  rw [jordan, mul_apply, Nat.sum_divisorsAntidiagonal
+  rw [jordan, ArithmeticFunction.mul_apply, Nat.sum_divisorsAntidiagonal
     (fun a b => (μ : ArithmeticFunction ℝ) a * powNeg τ b), Nat.sum_divisors_prime_pow hp,
     Finset.sum_range_succ', Finset.sum_range_succ', Finset.sum_eq_zero fun i _ => by
       rw [intCoe_apply, moebius_apply_prime_pow hp (by omega), if_neg (by omega)]; simp]
@@ -68,7 +68,7 @@ lemma abs_jordan_le {τ : ℝ} (hτ : 0 ≤ τ) (n : ℕ) : |jordan τ n| ≤ 1 
   · simp
   have hm := isMultiplicative_moebius.intCast.mul (isMultiplicative_powNeg τ)
   rw [jordan, hm.multiplicative_factorization _ hn, Finsupp.prod, Finset.abs_prod]
-  refine Finset.prod_le_one (fun _ _ => abs_nonneg _) fun p hp => ?_
+  refine Finset.prod_le_one₀ (fun _ _ => abs_nonneg _) fun p hp => ?_
   have hp := Nat.prime_of_mem_primeFactors (Nat.support_factorization n ▸ hp)
   generalize n.factorization p = k
   rcases k with _ | k
@@ -96,7 +96,7 @@ lemma LSeries_jordan {τ : ℝ} (hτ : 0 ≤ τ) {s : ℂ} (hs : 1 < s.re) :
     exact LSeries_one_eq_riemannZeta hs'
   have e : (fun n => (jordan τ n : ℂ)) = (↗μ ⍟ fun n => (powNeg τ n : ℂ)) := by
     ext n
-    simp [LSeries.convolution_def, jordan, mul_apply, intCoe_apply]
+    simp [LSeries.convolution_def, jordan, ArithmeticFunction.mul_apply, intCoe_apply]
   have hmul := LSeries_one_mul_Lseries_moebius hs
   rw [LSeries_one_eq_riemannZeta hs] at hmul
   rw [e, LSeries_convolution' (LSeriesSummable_moebius_iff.2 hs)

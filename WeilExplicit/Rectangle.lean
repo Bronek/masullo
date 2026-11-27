@@ -89,8 +89,9 @@ private theorem segment_log {A D : ℂ} {a b : ℝ}
   apply intervalIntegral.integral_eq_sub_of_hasDerivAt
   · intro t ht
     have hd : HasDerivAt (fun z : ℂ ↦ log (A+z*D)) ((A+t*D)⁻¹ * D) (t:ℂ) := by
-      simpa [Function.comp_def] using (hasDerivAt_log (h t ht)).comp (t:ℂ)
-        (((hasDerivAt_id _).mul_const D).const_add A)
+      have := (hasDerivAt_log (h t ht)).comp (t:ℂ)
+        (((hasDerivAt_id' (t:ℂ)).mul_const D).const_add A)
+      simpa only [Function.comp_def, one_mul] using this
     simpa [mul_comm D] using hd.comp_ofReal
   · apply ContinuousOn.intervalIntegrable
     exact continuousOn_const.mul ((by fun_prop : Continuous fun t : ℝ ↦ A+t*D).continuousOn.inv₀

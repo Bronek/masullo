@@ -602,8 +602,8 @@ lemma exists_coeff_sub_pole_le (h : ContinuesMero f H Z A c θ) {s ρ : ℂ} {m 
       refine DifferentiableAt.congr_of_eventuallyEq
         (f := fun z => H z - ∑ j ∈ Finset.range (m + 1), a j / (z - ρ) ^ (j + 1)) ?_
         ((eventually_ne_nhds hzρ).mono fun w hw => Function.update_of_ne hw _ _)
-      exact hH'.sub (DifferentiableAt.fun_sum fun j _ => (differentiableAt_const _).div
-        (by fun_prop) (pow_ne_zero _ (sub_ne_zero.2 hzρ)))
+      exact hH'.sub (DifferentiableAt.fun_sum fun j _ => (differentiableAt_const (a j)).div
+        ((differentiableAt_id.sub_const ρ).pow (j + 1)) (pow_ne_zero _ (sub_ne_zero.2 hzρ)))
   · exact (eventually_ne_nhds hne.symm).mono fun w hw => Function.update_of_ne hw _ _
   · filter_upwards [ball_mem_nhds (0 : ℂ) (norm_pos_iff.2 (sub_ne_zero.2 hne.symm))] with w hw
     rw [mem_ball_zero_iff] at hw

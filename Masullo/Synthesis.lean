@@ -277,7 +277,7 @@ lemma absolutelyContinuous_wt (a : ℝ) : volume ≪ wt a :=
 
 lemma integrable_weight_mul_sq (hu : MemLp u 2 (wt a)) :
     Integrable fun x => 2 * Real.cosh (2 * a * x) * ‖u x‖ ^ 2 := by
-  have h := (memLp_two_iff_integrable_sq_norm hu.1).1 hu
+  have h := (memLp_two_iff_integrable_sq_norm hu.aestronglyMeasurable).1 hu
   rw [wt, integrable_withDensity_iff_integrable_smul' (by fun_prop)
     (Eventually.of_forall fun x => ENNReal.ofReal_lt_top)] at h
   refine h.congr (Eventually.of_forall fun x => ?_)
@@ -286,8 +286,8 @@ lemma integrable_weight_mul_sq (hu : MemLp u 2 (wt a)) :
 
 lemma dual_of_mem (ha : 0 < a) (v u : W a) :
     Dual a (fun x => ((2 * Real.cosh (2 * a * x) : ℝ) : ℂ) * conj (v x)) u := by
-  have hv := (Lp.memLp v).1.mono_ac (absolutelyContinuous_wt a)
-  have hu := (Lp.memLp u).1.mono_ac (absolutelyContinuous_wt a)
+  have hv := (Lp.memLp v).aestronglyMeasurable.mono_ac (absolutelyContinuous_wt a)
+  have hu := (Lp.memLp u).aestronglyMeasurable.mono_ac (absolutelyContinuous_wt a)
   constructor
   · have hm : AEStronglyMeasurable fun x : ℝ => (Real.exp (-a * |x|) : ℂ) *
         (((2 * Real.cosh (2 * a * x) : ℝ) : ℂ) * conj (v x)) :=

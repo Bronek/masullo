@@ -27,7 +27,9 @@ theorem logDeriv_gamma_factor {s : ℂ} (hs : 0 < s.re) :
   have hd := Complex.differentiableAt_Gamma (s/2) fun n h ↦ by simp [h] at hp; linarith
   have de : HasDerivAt e (Complex.log (π:ℂ)*(-1/2)) s := by
     simpa [e] using (((hasDerivAt_id s).neg.div_const 2).const_mul (Complex.log (π:ℂ)))
-  rw [he, logDeriv_mul (f := fun z ↦ exp (e z))
+  rw [he, show (fun z ↦ exp (e z) * Complex.Gamma (z/2)) =
+      (fun z ↦ exp (e z)) * (fun z ↦ Complex.Gamma (z/2)) from rfl,
+    logDeriv_mul (f := fun z ↦ exp (e z))
       (g := fun z ↦ Complex.Gamma (z/2)) s (Complex.exp_ne_zero _) (Gamma_ne_zero_of_re_pos hp)
     de.cexp.differentiableAt (hd.comp s (differentiableAt_id.div_const 2))]
   change logDeriv (Complex.exp ∘ e) s + logDeriv (Complex.Gamma ∘ (fun z : ℂ ↦ z/2)) s = _
@@ -40,8 +42,10 @@ theorem logDeriv_gamma_factor {s : ℂ} (hs : 0 < s.re) :
 /-- Where zeta is regular and nonzero on Re s > 0, its Gamma factor contributes additively. -/
 theorem logDeriv_completed_split {s : ℂ} (hs : 0 < s.re) (h₁ : s ≠ 1) (hn : riemannZeta s ≠ 0) :
     logDeriv completedRiemannZeta s = logDeriv Gammaℝ s + logDeriv riemannZeta s := by
-  have he : completedRiemannZeta =ᶠ[𝓝 s] fun z ↦ Gammaℝ z * riemannZeta z := by
-    filter_upwards [(isOpen_lt continuous_const continuous_re).mem_nhds hs] with z hz
+  have he : completedRiemannZeta =ᶠ[𝓝 s] Gammaℝ * riemannZeta := by
+    filter_upwards
+      [(isOpen_lt (f := fun _ : ℂ ↦ (0 : ℝ)) continuous_const continuous_re).mem_nhds hs]
+      with z hz
     exact completed_eq_gamma_mul hz
   rw [(logDeriv_congr_nhds he).self_of_nhds, logDeriv_mul s (Gammaℝ_ne_zero_of_re_pos hs) hn
     (analyticAt_Gammaℝ hs).differentiableAt (differentiableAt_riemannZeta h₁)]

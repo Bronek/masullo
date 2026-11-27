@@ -161,9 +161,11 @@ lemma Nonneg.efFunctional_im (h : φ.Nonneg) : φ.efFunctional.im = 0 := by
   have e3 : conj (1 / (2 * Real.pi) : ℂ) = 1 / (2 * Real.pi) := by simp [h2]
   simp only [efFunctional, map_add, map_sub, map_mul, conj_tsum, h.conj_hat, e1, e2, e3,
     conj_ofReal, h.conj_toFun, ← integral_conj]
-  congr 2
+  rw [add_right_inj]
+  refine congrArg (HMul.hMul _) ?_
   rw [← integral_neg_eq_self]
-  congr 1 with r
+  refine integral_congr_ae (Eventually.of_forall fun r => ?_)
+  dsimp only
   have e4 : (1 / 4 + I * ((-r : ℝ) : ℂ) / 2 : ℂ) = conj (1 / 4 + I * r / 2) := by
     simp [h2, h4]
   rw [e4, digamma_conj, conj_re]
@@ -177,7 +179,7 @@ lemma exists_nonneg_hat_ne_zero (z : ℂ) : ∃ φ : TestFunction, φ.Nonneg ∧
 every zero `ρ` in the critical strip, since there are countably many such zeros. -/
 theorem exists_nonneg_forall_hat_ne_zero :
     ∃ φ : TestFunction, φ.Nonneg ∧ ∀ ρ ∈ stripZeros, φ.hat (ρ - 1 / 2) ≠ 0 :=
-  (exists_nonneg_hat_ne_zero_on (((countable_zeros.mono fun _ hρ =>
+  (exists_nonneg_hat_ne_zero_on (((countable_zeros.mono (s₁ := stripZeros) fun _ hρ =>
     mem_riemannZetaZeros.2 hρ.1).image (· - 1 / 2)))).imp fun _ h =>
       ⟨h.1, fun _ hρ => h.2 _ (mem_image_of_mem _ hρ)⟩
 

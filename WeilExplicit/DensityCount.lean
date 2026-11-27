@@ -36,7 +36,8 @@ theorem measurable_mollified (δ T : ℝ) : Measurable (mollified δ T) :=
     (differentiableAt_mollified δ T hs).continuousAt.continuousWithinAt
 
 /-- The rectangle `[1/2 + δ, 2] × [T - 1, 2T + 1]` carrying the discs about zeros at height `T`. -/
-def densRect (δ T : ℝ) : Set ℂ := re ⁻¹' Icc (1 / 2 + δ) 2 ∩ im ⁻¹' Icc (T - 1) (2 * T + 1)
+noncomputable def densRect (δ T : ℝ) : Set ℂ :=
+  re ⁻¹' Icc (1 / 2 + δ) 2 ∩ im ⁻¹' Icc (T - 1) (2 * T + 1)
 
 theorem measurableSet_densRect (δ T : ℝ) : MeasurableSet (densRect δ T) :=
   (measurableSet_Icc.preimage Complex.measurable_re).inter

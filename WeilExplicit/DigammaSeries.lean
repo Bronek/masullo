@@ -122,7 +122,8 @@ theorem digamma_hasSum {s : ℂ} (hs : 0 < s.re) :
   have hΓ := differentiableAt_Gamma (s := s) (fun n h ↦ by simp [h] at hs; linarith)
   have hn := Gamma_ne_zero_of_re_pos hs
   have heq : (fun z ↦ exp (∑' n, logTerm n z)) =ᶠ[𝓝 s] fun z ↦ exp ((z-1)*γ) * Gamma z := by
-    filter_upwards [(isOpen_lt continuous_const continuous_re).mem_nhds hs] with z hz
+    filter_upwards [(isOpen_lt (f := fun _ : ℂ ↦ (0 : ℝ)) continuous_const continuous_re).mem_nhds
+      hs] with z hz
       using exp_logSeries hz
   have hD := ((logSeries_spec hs).2.cexp.congr_of_eventuallyEq heq.symm).deriv
   have hE := (((((hasDerivAt_id s).sub_const 1).mul_const γ).cexp).mul hΓ.hasDerivAt).deriv
@@ -211,7 +212,8 @@ theorem norm_digamma_le {s : ℂ} (hs : 1/4 ≤ s.re) :
 theorem analyticAt_digamma {z : ℂ} (hz : 0 < z.re) : AnalyticAt ℂ digamma z := by
   have hg : AnalyticAt ℂ Complex.Gamma z := by
     apply Complex.analyticAt_iff_eventually_differentiableAt.mpr
-    filter_upwards [(isOpen_lt continuous_const continuous_re).mem_nhds hz] with w hw
+    filter_upwards [(isOpen_lt (f := fun _ : ℂ ↦ (0 : ℝ)) continuous_const continuous_re).mem_nhds
+      hz] with w hw
     exact Complex.differentiableAt_Gamma w fun n h ↦ by simp [h] at hw; linarith
   exact hg.deriv.div hg (Gamma_ne_zero_of_re_pos hz)
 

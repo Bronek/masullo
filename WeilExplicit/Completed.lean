@@ -83,12 +83,13 @@ theorem logDeriv_completed_eq_xi {s : ℂ} (h₀ : s ≠ 0) (h₁ : s ≠ 1) (hn
   have he : xi =ᶠ[𝓝 s] (fun z ↦ (z*(z-1)) * completedRiemannZeta z) :=
     (eventually_ne_nhds h₀).and (eventually_ne_nhds h₁) |>.mono fun _ h ↦ xi_eq_completed h.1 h.2
   have hL : completedRiemannZeta s ≠ 0 := fun e ↦ hn (by rw [xi_eq_completed h₀ h₁, e, mul_zero])
-  rw [(logDeriv_congr_nhds he).self_of_nhds,
-    logDeriv_mul (f := fun z : ℂ ↦ z*(z-1)) (g := completedRiemannZeta)
+  have h1 := logDeriv_mul (f := fun z : ℂ ↦ z*(z-1)) (g := completedRiemannZeta)
       s (mul_ne_zero h₀ (sub_ne_zero.mpr h₁)) hL
-    (by fun_prop) (differentiableAt_completedZeta h₀ h₁),
-    logDeriv_mul (f := fun z : ℂ ↦ z) (g := fun z : ℂ ↦ z-1) s h₀ (sub_ne_zero.mpr h₁)
-      differentiableAt_id (differentiableAt_id.sub_const 1)]
+    (by fun_prop) (differentiableAt_completedZeta h₀ h₁)
+  have h2 := logDeriv_mul (f := fun z : ℂ ↦ z) (g := fun z : ℂ ↦ z-1) s h₀ (sub_ne_zero.mpr h₁)
+      differentiableAt_id (differentiableAt_id.sub_const 1)
+  simp only [Pi.mul_def] at h1 h2
+  rw [(logDeriv_congr_nhds he).self_of_nhds, h1, h2]
   simp [logDeriv_apply, one_div]
   ring
 
