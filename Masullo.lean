@@ -24,6 +24,10 @@ import Masullo.RunsControls
 import Masullo.Mean
 import Masullo.DirichletWindow
 import Masullo.DirichletWindowControls
+import Masullo.Jordan
+import Masullo.JordanControls
+import Masullo.ChebyshevWindow
+import Masullo.ChebyshevWindowControls
 import Masullo.Liouville
 import Masullo.LiouvilleControls
 import Masullo.BaezDuarte

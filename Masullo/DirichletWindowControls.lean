@@ -3,8 +3,9 @@ import Masullo.DirichletWindow
 /-!
 # Controls for the Dirichlet window criterion
 
-The Mertens window hypothesis at `θ = 1`, where the criterion says nothing, and its fixed-sign
-form, a one-sided bound with no sign to choose.
+The Mertens window hypothesis at `θ = 1`, where the criterion says nothing, its fixed-sign
+form, a one-sided bound with no sign to choose, and the restriction of a window bound to the perfect
+powers, which shows the sampled hypothesis is no stronger than the pointwise one.
 -/
 
 open Set
@@ -28,5 +29,10 @@ theorem riemannZeta_ne_zero_of_mertens_le {θ δ C : ℝ} (hθ : 0 ≤ θ) (hδ 
     {ρ : ℂ} (hρ : θ < ρ.re) : riemannZeta ρ ≠ 0 :=
   riemannZeta_ne_zero_of_mertensWindow hθ hδ (fun X =>
     let ⟨Y, hY, hb⟩ := h X; ⟨Y, hY, 1, .inl rfl, by simpa using hb⟩) hρ
+
+/-- A window bound restricts to the perfect `m`-th powers with the same constant. -/
+theorem powerWindowBound_of_windowBound {S : ℝ → ℝ} {m : ℕ} {θ δ C : ℝ}
+    (h : WindowBound S θ δ C) : PowerWindowBound S m θ δ C := fun X =>
+  let ⟨Y, hY, ε, hε, hw⟩ := h X; ⟨Y, hY, ε, hε, fun _ hj => hw _ hj⟩
 
 end Masullo.DirichletWindow.Controls

@@ -83,7 +83,16 @@ with `K` holomorphic on `re s > θ` and nonzero at the zeros of zeta there
 and Pintz (1986). The Liouville criterion is the instance `K(s) = ζ(2s)`; the Möbius case `K = 1`
 gives the same conclusion from a one-sided window bound on the Mertens function
 `M(x) = ∑_{n ≤ x} μ(n)` for every `θ ≥ 0` (`riemannZeta_ne_zero_of_mertensWindow`). It has the
-strength of the same zero-free strip.
+strength of the same zero-free strip. Sampling at perfect powers suffices: for `θ ≥ 1 - 1/m`, the
+bound at the `m`-th powers in each window gives it at every point of the window with a larger
+constant (`PowerWindowBound.windowBound`, `riemannZeta_ne_zero_of_mertensPowerWindow`); for the
+Mertens function at the squares with `θ = 1/2` the conclusion is the Riemann hypothesis. For the
+Jordan totient of order `-τ`, `b = μ * n^(-τ)` with `0 ≤ τ ≤ 1` and `K(s) = ζ(s + τ)`, a sign alone
+suffices: one sign of `∑_{n ≤ x} b(n)` on late windows rules out zeros with real part greater
+than `1 - τ` (`riemannZeta_ne_zero_of_jordanSign` in `Masullo/Jordan.lean`). On paper, eventual
+negativity for some `0 < τ < 1` is equivalent to a zero-free strip `re s > 1 - η`. Chebyshev's
+function fits the same argument: a window bound on `ψ(x) - x` with `θ ≥ 0` rules out zeros with
+real part greater than `θ` (`riemannZeta_ne_zero_of_psiWindow` in `Masullo/ChebyshevWindow.lean`).
 Möbius sums give another criterion, through Báez-Duarte's natural approximant. With `μ` the
 Möbius function, `g_N = ∑_{k ≤ N} μ(k)/k` and
 `E_N(x) = 1 + ∑_{k ≤ N} μ(k){1/(kx)} - N g_N {1/(Nx)}` for `0 < x ≤ 1`, `E_N` vanishes on

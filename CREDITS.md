@@ -81,6 +81,10 @@ For `Masullo/DirichletWindow.lean`, Codex proposed the window criterion for any 
 whose Dirichlet series is `K/ζ`, with the Mertens case and the Liouville criterion as instances,
 and checked it in Lean; the statement is a case of Kaczorowski and Pintz (1986). A Claude Fable
 subagent reviewed it and a Claude Opus subagent moved the Liouville criterion onto it.
+A Claude Fable subagent proposed sampling at perfect powers and the Jordan totient sign
+criterion (`Masullo/Jordan.lean`), Codex reviewed both, a further Fable subagent suggested the
+window on `ψ(x) - x` (`Masullo/ChebyshevWindow.lean`), and a Claude Opus subagent formalised all
+three.
 For `Masullo/BaezDuarte.lean`, Codex proposed the zero-exclusion test through Báez-Duarte's
 natural approximant, a Claude Fable subagent reviewed it, and Claude formalised it.
 For `Masullo/Modulation.lean` and `WeilExplicit/DensityWeighted.lean`, a Claude Fable subagent

@@ -185,18 +185,9 @@ lemma smoothSum_sub (h u v : ℝ) : smoothSum h v - smoothSum h u =
 
 lemma abs_liouvilleSum_sub_le {x t : ℝ} (hx : 0 ≤ x) (hxt : x ≤ t) :
     |liouvilleSum t - liouvilleSum x| ≤ t - x + 1 := by
-  have hf : ⌊x⌋₊ ≤ ⌊t⌋₊ := Nat.floor_le_floor hxt
-  have e : liouvilleSum t - liouvilleSum x =
-      ∑ n ∈ Finset.Ioc ⌊x⌋₊ ⌊t⌋₊, (liouville n : ℝ) := by
-    have hI (n : ℕ) : Finset.Icc 1 n = Finset.Ioc 0 n := Finset.Icc_add_one_left_eq_Ioc 0 n
-    rw [liouvilleSum, liouvilleSum, hI, hI,
-      ← Finset.sum_Ioc_consecutive _ (Nat.zero_le _) hf]
-    ring
-  rw [e]
-  refine (Finset.abs_sum_le_sum_abs _ _).trans ((Finset.sum_le_sum fun n _ =>
-    abs_liouville_le n).trans ?_)
-  rw [Finset.sum_const, Nat.card_Ioc, nsmul_eq_mul, mul_one, Nat.cast_sub hf]
-  linarith [Nat.floor_le (hx.trans hxt), Nat.lt_floor_add_one x]
+  have h := DirichletWindow.abs_partialSum_sub_le abs_liouville_le (Nat.floor_le_floor hxt)
+  simp only [DirichletWindow.partialSum, Nat.floor_natCast] at h
+  exact h.trans (by linarith [Nat.floor_le (hx.trans hxt), Nat.lt_floor_add_one x])
 
 lemma abs_smoothSum_sub_le {h x : ℝ} (hh : 0 < h) (hx : 0 ≤ x) :
     |smoothSum h x - liouvilleSum x| ≤ h + 1 := by

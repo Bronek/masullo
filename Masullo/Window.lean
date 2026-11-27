@@ -194,12 +194,38 @@ lemma analyticAt_continuation {s : ℂ} (h0 : s ≠ 0) (h : riemannZeta s ≠ 0)
     rw [dslope_of_ne _ hz, slope_def_field]
     rfl
 
+/-- Near each `ρ`, `logDeriv zetaNum s = zeroMult ρ / (s - ρ) + logDeriv g s` with `g` analytic
+and nonzero at `ρ`. -/
+lemma exists_logDeriv_zetaNum (ρ : ℂ) : ∃ g, AnalyticAt ℂ g ρ ∧ g ρ ≠ 0 ∧
+    ∀ᶠ s in 𝓝[≠] ρ, logDeriv zetaNum s = zeroMult ρ / (s - ρ) + logDeriv g s := by
+  obtain ⟨g, hg, hg0, hfac⟩ := (differentiable_zetaNum.analyticAt ρ).analyticOrderAt_eq_natCast.1
+    (analyticOrderAt_zetaNum ρ)
+  refine ⟨g, hg, hg0, ?_⟩
+  filter_upwards [hfac.eventually_nhds.filter_mono nhdsWithin_le_nhds, self_mem_nhdsWithin,
+    (hg.continuousAt.eventually_ne hg0).filter_mono nhdsWithin_le_nhds,
+    hg.eventually_analyticAt.filter_mono nhdsWithin_le_nhds] with s hs hne hgs hga
+  have hsρ : s - ρ ≠ 0 := sub_ne_zero.2 hne
+  have : zetaNum =ᶠ[𝓝 s] fun z => (z - ρ) ^ zeroMult ρ * g z := hs
+  rw [logDeriv_apply, this.deriv_eq, this.eq_of_nhds, ← logDeriv_apply,
+    logDeriv_mul (f := fun z => (z - ρ) ^ zeroMult ρ) s (pow_ne_zero _ hsρ) hgs
+      (by fun_prop) hga.differentiableAt,
+    logDeriv_fun_pow (by fun_prop)]
+  simp [logDeriv_apply, div_eq_mul_inv]
+
+lemma logDeriv_zetaNum {s : ℂ} (hs1 : s ≠ 1) (hz : riemannZeta s ≠ 0) :
+    logDeriv zetaNum s = 1 / (s - 1) + logDeriv riemannZeta s := by
+  have : zetaNum =ᶠ[𝓝 s] fun z => (z - 1) * riemannZeta z :=
+    (eventually_ne_nhds hs1).mono fun z hz => zetaNum_of_ne hz
+  rw [logDeriv_apply, this.deriv_eq, this.eq_of_nhds, ← logDeriv_apply,
+    logDeriv_mul (f := fun z => z - 1) s (sub_ne_zero.2 hs1) hz
+      (by fun_prop) (differentiableAt_riemannZeta hs1)]
+  simp [logDeriv_apply]
+
 lemma continuation_pole {ρ : ℂ} (h0 : ρ ≠ 0) (h : riemannZeta ρ = 0) :
     ∃ g, AnalyticAt ℂ g ρ ∧ ∀ᶠ s in 𝓝[≠] ρ,
       continuation s = zeroMult ρ / (ρ * (ρ - 1)) / (s - ρ) + g s := by
   have h1 : ρ ≠ 1 := fun e => riemannZeta_one_ne_zero (e ▸ h)
-  have hd := differentiable_zetaNum.analyticAt ρ
-  obtain ⟨g, hg, hg0, hfac⟩ := hd.analyticOrderAt_eq_natCast.1 (analyticOrderAt_zetaNum ρ)
+  obtain ⟨g, hg, hg0, hlog⟩ := exists_logDeriv_zetaNum ρ
   have hp : AnalyticAt ℂ (fun s : ℂ => (zeroMult ρ : ℂ) / (s * (s - 1))) ρ :=
     analyticAt_const.div (g := fun s : ℂ => s * (s - 1)) (by fun_prop)
       (mul_ne_zero h0 (sub_ne_zero.2 h1))
@@ -207,20 +233,11 @@ lemma continuation_pole {ρ : ℂ} (h0 : ρ ≠ 0) (h : riemannZeta ρ = 0) :
     ((1 + Real.eulerMascheroniConstant) * s - 1 - logDeriv g s) / (s * (s - 1)),
     (analyticAt_dslope_self hp).sub (((analyticAt_linear ρ).sub (hg.deriv.div hg hg0)).div
       (g := fun s : ℂ => s * (s - 1)) (by fun_prop) (mul_ne_zero h0 (sub_ne_zero.2 h1))), ?_⟩
-  filter_upwards [hfac.eventually_nhds.filter_mono nhdsWithin_le_nhds, self_mem_nhdsWithin,
+  filter_upwards [hlog, self_mem_nhdsWithin,
     (eventually_ne_nhds h1).filter_mono nhdsWithin_le_nhds,
-    (eventually_ne_nhds h0).filter_mono nhdsWithin_le_nhds,
-    (hg.continuousAt.eventually_ne hg0).filter_mono nhdsWithin_le_nhds,
-    hg.eventually_analyticAt.filter_mono nhdsWithin_le_nhds] with s hs hne hs1 hs0 hgs hga
+    (eventually_ne_nhds h0).filter_mono nhdsWithin_le_nhds] with s hlog hne hs1 hs0
   have hsρ : s - ρ ≠ 0 := sub_ne_zero.2 hne
   have hs1' : s - 1 ≠ 0 := sub_ne_zero.2 hs1
-  have hlog : logDeriv zetaNum s = zeroMult ρ / (s - ρ) + logDeriv g s := by
-    have : zetaNum =ᶠ[𝓝 s] fun z => (z - ρ) ^ zeroMult ρ * g z := hs
-    rw [logDeriv_apply, this.deriv_eq, this.eq_of_nhds, ← logDeriv_apply,
-      logDeriv_mul (f := fun z => (z - ρ) ^ zeroMult ρ) s (pow_ne_zero _ hsρ) hgs
-        (by fun_prop) hga.differentiableAt,
-      logDeriv_fun_pow (by fun_prop)]
-    simp [logDeriv_apply, div_eq_mul_inv]
   rw [continuation_of_ne hs1, num, hlog, dslope_of_ne _ hne, slope_def_field]
   field_simp
   ring
@@ -293,18 +310,11 @@ lemma laplace_windowSum {s : ℂ} (hs : 3 < s.re) :
     push_cast
     rw [one_mul]
     ring
-  have hlog : logDeriv zetaNum s = 1 / (s - 1) + logDeriv riemannZeta s := by
-    have : zetaNum =ᶠ[𝓝 s] fun z => (z - 1) * riemannZeta z :=
-      (eventually_ne_nhds hs1).mono fun z hz => zetaNum_of_ne hz
-    rw [logDeriv_apply, this.deriv_eq, this.eq_of_nhds, ← logDeriv_apply,
-      logDeriv_mul (f := fun z => z - 1) s (sub_ne_zero.2 hs1) hz
-        (by fun_prop) (differentiableAt_riemannZeta hs1)]
-    simp [logDeriv_apply]
   refine ⟨hi, ?_⟩
   simp only [e] at hS
   rw [integral_sub (by exact hi.add i2) (i1.const_mul _), integral_add hi i2, integral_const_mul,
     v1, v2, ofReal_zero, mul_zero, Complex.exp_zero] at hS
-  rw [eq_sub_of_add_eq (eq_add_of_sub_eq hS), num, hlog, logDeriv_apply]
+  rw [eq_sub_of_add_eq (eq_add_of_sub_eq hS), num, logDeriv_zetaNum hs1 hz, logDeriv_apply]
   have hs1' : s - 1 ≠ 0 := sub_ne_zero.2 hs1
   field_simp
   ring
