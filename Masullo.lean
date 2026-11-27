@@ -24,6 +24,7 @@ import Masullo.RunsControls
 import Masullo.Mean
 import Masullo.DirichletWindow
 import Masullo.DirichletWindowControls
+import Masullo.Smoothed
 import Masullo.Jordan
 import Masullo.JordanControls
 import Masullo.ChebyshevWindow
