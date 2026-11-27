@@ -1,5 +1,6 @@
 name = "masullo"
 defaultTargets = ["Masullo", "WeilExplicit"]
+allowNonModules = true
 
 [leanOptions]
 autoImplicit = false
