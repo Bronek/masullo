@@ -116,3 +116,5 @@ countably many bad exponents, and a Claude Opus subagent formalised it (`windowB
 Claude Fable proposed the width form of Bagchi's recurrence criterion (Steuding, *Value-Distribution
 of L-Functions*, Theorem 8.3), Codex corrected the counting in review, and a Claude Opus subagent
 formalised the sufficient direction (`trace_eq_efFunctional_of_selfRecurrent`).
+Claude Fable observed in review that measure `T^(1-δ)` of good shifts suffices, and a Claude Opus
+subagent generalised the proof (`trace_eq_efFunctional_of_sparselyRecurrent`).

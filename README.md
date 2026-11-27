@@ -87,12 +87,14 @@ hence the trace identity at every positive width `a > σ - 1/2`. The bound holds
 (`Controls.mellinBound_one`, constant 3); it is not proved here for any `σ < 1`, and no converse
 is formalised.
 
-Self-recurrence is another sufficient condition. Suppose that for every closed disc `K` in
-`θ < re s < 1` and every `ε > 0`, the shifts `τ ∈ [0, T]` with `‖ζ(s + iτ) - ζ(s)‖ < ε` on all of
-`K` have measure at least `cT` for some `c > 0` and arbitrarily large `T`. For `θ ≥ 1/2` this rules
-out zeros with real part greater than `θ`, hence the trace identity at every width `a > θ - 1/2`
-(`trace_eq_efFunctional_of_selfRecurrent` in `Masullo/Recurrence.lean`). The converse is Bagchi's
-theorem in Steuding's width form and is not formalised; the condition is not proved for any `θ < 1`.
+Recurrence is another sufficient condition. Suppose that for every closed disc `K` in
+`θ < re s < 1`, every `ε > 0` and every `δ > 0`, the shifts `τ ∈ [0, T]` with
+`‖ζ(s + iτ) - ζ(s)‖ < ε` on all of `K` have measure at least `T^(1-δ)` for arbitrarily large `T`.
+For `θ ≥ 1/2` this rules out zeros with real part greater than `θ`, hence the trace identity at
+every width `a > θ - 1/2` (`trace_eq_efFunctional_of_sparselyRecurrent` in
+`Masullo/Recurrence.lean`). Positive upper density, measure at least `cT` for some `c > 0`, is a
+special case (`trace_eq_efFunctional_of_selfRecurrent`); its converse is Bagchi's theorem in
+Steuding's width form and is not formalised. Neither condition is proved for any `θ < 1`.
 
 A further condition is equivalent rather than sufficient. For a test function `φ` let `L_φ(t)` be
 Weil's functional at the translate of `φ` by `t` in the logarithmic variable. Fix `a ≥ 0` and
