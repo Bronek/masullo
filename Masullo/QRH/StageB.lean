@@ -415,7 +415,8 @@ lemma smoothedSum_eq (hR0 : 0 ≤ R) (hR : ∀ x, W x ≠ 0 → x ≤ R) (hD : 0
   · refine summable_of_ne_finset_zero (s := Finset.range (⌊R * D⌋₊ + 1)) fun n hn => ?_
     rw [hW0 n (by simpa using hn), mul_zero, mul_zero]
 
-/-- (A) bounds the full sum `M_⊤(W, D)` by `D ^ β` for every `β > 11/12`. -/
+/-- (A) bounds the full sum `M_⊤(W, D)` by `C * D ^ β`, with `C` depending on `W` and `β`, for every
+`β > 11/12`. -/
 theorem norm_moebiusSum_top_le (h : MeanSquareA) {β : ℝ} (hβ : 11 / 12 < β) {W : ℝ → ℂ}
     (hW : ContDiff ℝ ∞ W) (hWc : HasCompactSupport W) (hW0 : tsupport W ⊆ Set.Ioi 0) :
     ∃ C, ∀ D : ℝ, 1 ≤ D → ‖moebiusSum ⊤ W D‖ ≤ C * D ^ β := by
