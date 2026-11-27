@@ -33,5 +33,6 @@ import Masullo.Liouville
 import Masullo.LiouvilleControls
 import Masullo.BaezDuarte
 import Masullo.BaezDuarteControls
+import Masullo.QRH.StageB
 
 #print RiemannHypothesis
