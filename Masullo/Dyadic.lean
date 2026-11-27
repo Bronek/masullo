@@ -99,25 +99,6 @@ lemma delay_continues (h : Continues f H Z κ A c θ) (hc : 0 ≤ c) {a : ℝ}
     field_simp
     ring
 
-lemma const_mul (h : Continues f H Z κ A c θ) {b : ℝ} (hb : b ≠ 0) :
-    Continues (fun u => b * f u) (fun s => b * H s) Z (fun ρ => b * κ ρ) (|b| * A) c θ where
-  measurable := h.measurable.const_mul b
-  growth u hu := by
-    rw [abs_mul, mul_assoc]
-    exact mul_le_mul_of_nonneg_left (h.growth u hu) (abs_nonneg b)
-  laplace s hs := by
-    rw [h.laplace s hs, ← integral_const_mul]
-    congr 1 with u
-    push_cast
-    ring
-  analytic s hs hZ := analyticAt_const.mul (h.analytic s hs hZ)
-  finite := h.finite
-  re_mem := h.re_mem
-  residue_ne_zero ρ hρ := mul_ne_zero (ofReal_ne_zero.2 hb) (h.residue_ne_zero ρ hρ)
-  pole ρ hρ := by
-    obtain ⟨k, hk, he⟩ := h.pole ρ hρ
-    exact ⟨fun s => b * k s, analyticAt_const.mul hk, he.mono fun s hs => by rw [hs]; ring⟩
-
 /-- `delay 1` and twice `delay 2`. -/
 noncomputable def dyadic (f : ℝ → ℝ) : ℝ → ℝ := delay 2 (delay 2 (delay 1 f))
 
@@ -248,23 +229,6 @@ lemma dyadicDiff_eq {x : ℝ} (hx : 0 < x) : dyadicDiff (4 * x) =
 
 /-! ### The criterion -/
 
-/-- Zeta has no zeros in `(0, 1)`. -/
-lemma riemannZeta_ofReal_ne_zero {b : ℝ} (hb : 0 < b) (h1 : b < 1) : riemannZeta (b : ℂ) ≠ 0 := by
-  rw [zeta_eq_fractional_part_integral (by simpa) (by exact_mod_cast h1.ne)]
-  have E : ∫ x : ℝ in Ioi 1, (x : ℂ) ^ (-(b : ℂ) - 1) * ((Int.fract x : ℝ) : ℂ) =
-      ((∫ x : ℝ in Ioi 1, x ^ (-b - 1) * Int.fract x : ℝ) : ℂ) := by
-    rw [← integral_complex_ofReal]
-    refine setIntegral_congr_fun measurableSet_Ioi fun x hx => ?_
-    push_cast
-    rw [ofReal_cpow (by linarith [mem_Ioi.1 hx] : 0 ≤ x)]
-    push_cast
-    rfl
-  rw [E, ← ofReal_mul, ← ofReal_one, ← ofReal_sub, ← ofReal_div, ← ofReal_sub, ofReal_ne_zero]
-  refine (sub_neg.2 ?_).ne
-  exact (div_neg_of_pos_of_neg hb (by linarith)).trans_le (mul_nonneg hb.le
-    (setIntegral_nonneg measurableSet_Ioi fun x hx =>
-      mul_nonneg (Real.rpow_nonneg (zero_le_one.trans (mem_Ioi.1 hx).le) _) (Int.fract_nonneg x)))
-
 /-- The sign of `ε` matters only if zeta has real zeros beyond `θ`. -/
 lemma ne_zero_of_dyadic_window {θ δ C ε : ℝ} (hθ : 0 ≤ θ) (hδ : 0 < δ) (hε : ε ≠ 0)
     (hβ : ∀ β : ℝ, θ < β → β < 1 → riemannZeta β = 0 → 0 < ε)
@@ -320,19 +284,6 @@ theorem riemannZeta_ne_zero_of_le_dyadicDiff {θ δ C : ℝ} (hθ : 0 ≤ θ) (h
   ne_zero_of_dyadic_window (ε := -1) hθ hδ (by norm_num)
     (fun _ h1 h2 h3 => (riemannZeta_ofReal_ne_zero (hθ.trans_lt h1) h2 h3).elim)
     (by simpa [neg_le] using h) hρ
-
-/-- If one of two signs is chosen for arbitrarily large `Y`, one of them is chosen for
-arbitrarily large `Y`. -/
-lemma cofinal_sign {P : ℝ → ℝ → Prop}
-    (h : ∀ X, ∃ Y ≥ X, ∃ e : ℝ, (e = 1 ∨ e = -1) ∧ P e Y) :
-    ∃ e : ℝ, (e = 1 ∨ e = -1) ∧ ∀ X, ∃ Y ≥ X, P e Y := by
-  by_contra hn
-  push Not at hn
-  obtain ⟨X₁, h₁⟩ := hn 1 (.inl rfl)
-  obtain ⟨X₂, h₂⟩ := hn (-1) (.inr rfl)
-  obtain ⟨Y, hY, e, he | he, hP⟩ := h (max X₁ X₂)
-  · exact h₁ Y (le_of_max_le_left hY) (he ▸ hP)
-  · exact h₂ Y (le_of_max_le_right hY) (he ▸ hP)
 
 /-- For fixed `θ ≥ 0`, `δ > 0` and `C`, suppose that for arbitrarily large `Y` there is a sign
 `ε = ±1`, which may depend on `Y`, with `ε dyadicDiff x ≥ -C x ^ θ` on all of

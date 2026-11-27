@@ -310,6 +310,27 @@ lemma Continues.toMero {H κ : ℂ → ℂ} {Z : Set ℂ} {θ : ℝ} (h : Contin
     obtain ⟨g, hg, hgρ, hH⟩ := h.exists_pole hρ
     exact ⟨0, g, hg, hgρ ▸ h.residue_ne_zero ρ hρ, hH⟩
 
+/-- Scaling `f` by `b ≠ 0` scales the transform and the residues by `b`. -/
+lemma Continues.const_mul {H κ : ℂ → ℂ} {Z : Set ℂ} {θ : ℝ} (h : Continues f H Z κ A c θ)
+    {b : ℝ} (hb : b ≠ 0) :
+    Continues (fun u => b * f u) (fun s => b * H s) Z (fun ρ => b * κ ρ) (|b| * A) c θ where
+  measurable := h.measurable.const_mul b
+  growth u hu := by
+    rw [abs_mul, mul_assoc]
+    exact mul_le_mul_of_nonneg_left (h.growth u hu) (abs_nonneg b)
+  laplace s hs := by
+    rw [h.laplace s hs, ← integral_const_mul]
+    congr 1 with u
+    push_cast
+    ring
+  analytic s hs hZ := analyticAt_const.mul (h.analytic s hs hZ)
+  finite := h.finite
+  re_mem := h.re_mem
+  residue_ne_zero ρ hρ := mul_ne_zero (ofReal_ne_zero.2 hb) (h.residue_ne_zero ρ hρ)
+  pole ρ hρ := by
+    obtain ⟨k, hk, he⟩ := h.pole ρ hρ
+    exact ⟨fun s => b * k s, analyticAt_const.mul hk, he.mono fun s hs => by rw [hs]; ring⟩
+
 /-- Adding `C / (s - θ)` to `g s / (s - ρ) ^ (m + 1)`, with `θ < re ρ`, keeps the order and the
 leading coefficient of the pole. -/
 lemma exists_pole_add {H g : ℂ → ℂ} {ρ : ℂ} {m : ℕ} {θ : ℝ} (C : ℂ) (hρ : θ < ρ.re)

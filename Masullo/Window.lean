@@ -5,9 +5,12 @@ import Masullo.Trace
 # The window criterion
 
 `windowSum x` is a smoothed prime counting function minus its main term. A one-sided bound
-`windowSum x ≤ C x ^ θ` on windows `[Y, Y ^ (1 + δ)]` with `Y` arbitrarily large rules out zeros of
-zeta in `Re s > θ`. The implication is one-way: no converse is stated, and the bound is not asserted
-for any `θ < 1`.
+`windowSum x ≤ C x ^ θ`, or `-C x ^ θ ≤ windowSum x`, on windows `[Y, Y ^ (1 + δ)]` with `Y`
+arbitrarily large rules out zeros of zeta in `Re s > θ`. The side may change with `Y`
+(`riemannZeta_ne_zero_of_signed_windowSum`). The residues at real zeros would be negative for the
+upper bound and positive for the lower one; the argument needs neither sign, since zeta has no
+zeros in `(0, 1)`. The implications are one-way: no converse is stated, and neither bound is
+asserted for any `θ < 1`.
 
 The generic argument is `Masullo.Landau.Continues.eq_empty_of_window`. In the transform at `1`,
 `-x log x` cancels the double pole and `(1 + γ) x` the simple pole that remains.
@@ -353,6 +356,36 @@ lemma residue_re_neg {ρ : ℂ} (hr : 0 < ρ.re) (hz : riemannZeta ρ = 0) (hi :
   refine div_neg_of_pos_of_neg (by exact_mod_cast zeroMult_pos hz) (mul_neg_of_pos_of_neg hr ?_)
   exact sub_neg.2 (by simpa using re_lt_one_of_zero hz)
 
+/-- Zeta has no zeros in `(0, 1)`. -/
+lemma riemannZeta_ofReal_ne_zero {b : ℝ} (hb : 0 < b) (h1 : b < 1) : riemannZeta (b : ℂ) ≠ 0 := by
+  rw [zeta_eq_fractional_part_integral (by simpa) (by exact_mod_cast h1.ne)]
+  have E : ∫ x : ℝ in Ioi 1, (x : ℂ) ^ (-(b : ℂ) - 1) * ((Int.fract x : ℝ) : ℂ) =
+      ((∫ x : ℝ in Ioi 1, x ^ (-b - 1) * Int.fract x : ℝ) : ℂ) := by
+    rw [← integral_complex_ofReal]
+    refine setIntegral_congr_fun measurableSet_Ioi fun x hx => ?_
+    push_cast
+    rw [ofReal_cpow (by linarith [mem_Ioi.1 hx] : 0 ≤ x)]
+    push_cast
+    rfl
+  rw [E, ← ofReal_mul, ← ofReal_one, ← ofReal_sub, ← ofReal_div, ← ofReal_sub, ofReal_ne_zero]
+  refine (sub_neg.2 ?_).ne
+  exact (div_neg_of_pos_of_neg hb (by linarith)).trans_le (mul_nonneg hb.le
+    (setIntegral_nonneg measurableSet_Ioi fun x hx =>
+      mul_nonneg (Real.rpow_nonneg (zero_le_one.trans (mem_Ioi.1 hx).le) _) (Int.fract_nonneg x)))
+
+/-- If one of two signs is chosen for arbitrarily large `Y`, one of them is chosen for
+arbitrarily large `Y`. -/
+lemma cofinal_sign {P : ℝ → ℝ → Prop}
+    (h : ∀ X, ∃ Y ≥ X, ∃ e : ℝ, (e = 1 ∨ e = -1) ∧ P e Y) :
+    ∃ e : ℝ, (e = 1 ∨ e = -1) ∧ ∀ X, ∃ Y ≥ X, P e Y := by
+  by_contra hn
+  push Not at hn
+  obtain ⟨X₁, h₁⟩ := hn 1 (.inl rfl)
+  obtain ⟨X₂, h₂⟩ := hn (-1) (.inr rfl)
+  obtain ⟨Y, hY, e, he | he, hP⟩ := h (max X₁ X₂)
+  · exact h₁ Y (le_of_max_le_left hY) (he ▸ hP)
+  · exact h₂ Y (le_of_max_le_right hY) (he ▸ hP)
+
 /-- A one-sided power bound `F x ≤ C x ^ θ` on `[Y, Y ^ (1 + δ)]` is, in the variable `u = log x`,
 the bound `-F (e ^ u) ≥ -C e ^ (θ u)` on `[log Y, (1 + δ) log Y]`. -/
 lemma window_exp {F : ℝ → ℝ} {θ δ C : ℝ}
@@ -367,13 +400,39 @@ lemma window_exp {F : ℝ → ℝ} {θ δ C : ℝ}
   rw [← Real.exp_mul, mul_comm u] at this
   linarith
 
+/-- **Signed window criterion.** For fixed `θ ≥ 0`, `δ > 0` and `C`, suppose that for arbitrarily
+large `Y` there is a sign `ε = ±1`, which may depend on `Y`, with `ε windowSum x ≤ C x ^ θ` on all
+of `[Y, Y ^ (1 + δ)]`. Then zeta has no zeros to the right of `θ`. The converse is not asserted. -/
+theorem riemannZeta_ne_zero_of_signed_windowSum {θ δ C : ℝ} (hθ : 0 ≤ θ) (hδ : 0 < δ)
+    (h : ∀ X, ∃ Y ≥ X, ∃ ε : ℝ, (ε = 1 ∨ ε = -1) ∧
+      ∀ x ∈ Icc Y (Y ^ (1 + δ)), ε * windowSum x ≤ C * x ^ θ)
+    {ρ : ℂ} (hρ : θ < ρ.re) : riemannZeta ρ ≠ 0 := by
+  obtain ⟨ε, hε, hw⟩ := cofinal_sign h
+  replace hε : ε ≠ 0 := by rcases hε with rfl | rfl <;> norm_num
+  have hZ := ((continues hθ).const_mul hε).eq_empty_of_window hθ ?_ hδ
+    (by simpa using window_exp (F := fun x => ε * windowSum x) hw)
+  · exact fun h0 => (hZ ▸ ⟨hρ, h0⟩ : ρ ∈ (∅ : Set ℂ)).elim
+  · rintro ρ ⟨hr, hz⟩ hi
+    lift ρ to ℝ using hi
+    exact (riemannZeta_ofReal_ne_zero (by simpa using hθ.trans_lt hr)
+      (by simpa using re_lt_one_of_zero hz) hz).elim
+
 /-- **Window criterion.** A one-sided power bound with exponent `θ ≥ 0` on arbitrarily late windows
 `[Y, Y ^ (1 + δ)]` rules out zeros of zeta to the right of `θ`. The converse is not asserted. -/
 theorem riemannZeta_ne_zero_of_window {θ δ C : ℝ} (hθ : 0 ≤ θ) (hδ : 0 < δ)
     (h : ∀ X, ∃ Y ≥ X, ∀ x ∈ Icc Y (Y ^ (1 + δ)), windowSum x ≤ C * x ^ θ) {ρ : ℂ}
-    (hρ : θ < ρ.re) : riemannZeta ρ ≠ 0 := fun h0 =>
-  ((continues hθ).eq_empty_of_window hθ (fun _ hρ hi => residue_re_neg (hθ.trans_lt hρ.1) hρ.2 hi)
-    hδ (window_exp h) ▸ ⟨hρ, h0⟩ : ρ ∈ (∅ : Set ℂ)).elim
+    (hρ : θ < ρ.re) : riemannZeta ρ ≠ 0 :=
+  riemannZeta_ne_zero_of_signed_windowSum hθ hδ (fun X => (h X).imp fun _ ⟨hY, hw⟩ =>
+    ⟨hY, 1, .inl rfl, by simpa using hw⟩) hρ
+
+/-- The lower-side window criterion: `-C x ^ θ ≤ windowSum x` with `θ ≥ 0` on arbitrarily late
+windows `[Y, Y ^ (1 + δ)]` rules out zeros of zeta to the right of `θ`. The converse is not
+asserted. -/
+theorem riemannZeta_ne_zero_of_le_window {θ δ C : ℝ} (hθ : 0 ≤ θ) (hδ : 0 < δ)
+    (h : ∀ X, ∃ Y ≥ X, ∀ x ∈ Icc Y (Y ^ (1 + δ)), -(C * x ^ θ) ≤ windowSum x) {ρ : ℂ}
+    (hρ : θ < ρ.re) : riemannZeta ρ ≠ 0 :=
+  riemannZeta_ne_zero_of_signed_windowSum hθ hδ (fun X => (h X).imp fun _ ⟨hY, hw⟩ =>
+    ⟨hY, -1, .inr rfl, by simpa [neg_le] using hw⟩) hρ
 
 /-- A zero in the critical strip at distance more than `a` from the critical line yields a zero
 `ρ'` in the strip with `a < ρ'.re - 1 / 2`, by the reflection `ρ ↦ 1 - ρ`. -/

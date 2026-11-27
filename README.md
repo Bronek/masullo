@@ -44,7 +44,9 @@ and fix real numbers `θ ≥ 0`, `δ > 0` and `C`. Suppose there are arbitrarily
 `G(x) ≤ C x^θ` for every real `x` in `[Y, Y^(1+δ)]`. Then zeta has no zero with real part greater
 than `θ` (`riemannZeta_ne_zero_of_window` in `Masullo/Window.lean`), so the trace identity holds
 for every test function at every positive width `a > θ - 1/2` (`trace_eq_efFunctional_of_ne_zero`).
-No such bound with `θ < 1` is proved here.
+The lower bound `G(x) ≥ -C x^θ` on such windows gives the same conclusion
+(`riemannZeta_ne_zero_of_le_window`), and so does either bound with the side chosen for each window
+(`riemannZeta_ne_zero_of_signed_windowSum`). No such bound with `θ < 1` is proved here.
 
 A variant needs no main term. Let `R(y) = max(1/y - 1, 0)`, `w(y) = R(y) - 3R(2y) + 2R(4y)`, which
 is nonnegative, `P(X) = ∑_{n ≤ X} Λ(n) w(n/X)` and `D(X) = P(2X) - 2P(X)`. If `D(x) ≤ C x^θ` on such

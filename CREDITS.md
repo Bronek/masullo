@@ -97,6 +97,9 @@ proved `Runs.ne_zero_of_dyadic_window`; Claude added it, with
 `Landau.ContinuesMero.eq_empty_of_window_ge` and the removal of duplicated lemmas.
 Codex audited the library for shorter shared proofs, among them one bump for Mellin nonvanishing
 and the signed power-window theorem for every `θ ≥ 0`, and a Claude Opus subagent carried them out.
+A Claude Fable subagent, reviewing the width forms of the Robin and Nicolas criteria, observed
+that `Masullo/Window.lean` lacked the lower and signed bounds, and a Claude Opus subagent added
+them.
 
 For `WeilExplicit/Density*.lean`, Codex supplied the Carlson-type mollified mean-square argument
 for the summability of reciprocal ordinates of the zeros to the right of `re s = σ > 1/2`. Claude
