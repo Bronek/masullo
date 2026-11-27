@@ -77,6 +77,13 @@ by a bound `C x^θ` on the integral from `Y` to each `x` in the window of the po
 sign of the increments `(L(t+h) - L(t))/h`, with `h ≤ Y^θ` and the sign fixed per window
 (`riemannZeta_ne_zero_of_meanBound`). Its exponent is not faithful: the bound is expected only
 for `θ` above about `2/3`, so it is a quasi-Riemann-hypothesis criterion. Both hold at `θ = 1`.
+The same window argument applies to any `b` with `|b(n)| ≤ 1` whose Dirichlet series is `K/ζ`,
+with `K` holomorphic on `re s > θ` and nonzero at the zeros of zeta there
+(`riemannZeta_ne_zero_of_windowBound` in `Masullo/DirichletWindow.lean`), a case of Kaczorowski
+and Pintz (1986). The Liouville criterion is the instance `K(s) = ζ(2s)`; the Möbius case `K = 1`
+gives the same conclusion from a one-sided window bound on the Mertens function
+`M(x) = ∑_{n ≤ x} μ(n)` for every `θ ≥ 0` (`riemannZeta_ne_zero_of_mertensWindow`). It has the
+strength of the same zero-free strip.
 Möbius sums give another criterion, through Báez-Duarte's natural approximant. With `μ` the
 Möbius function, `g_N = ∑_{k ≤ N} μ(k)/k` and
 `E_N(x) = 1 + ∑_{k ≤ N} μ(k){1/(kx)} - N g_N {1/(Nx)}` for `0 < x ≤ 1`, `E_N` vanishes on

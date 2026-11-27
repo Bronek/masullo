@@ -1,4 +1,4 @@
-import Masullo.Dyadic
+import Masullo.DirichletWindow
 
 /-!
 # The Liouville window criterion
@@ -10,10 +10,9 @@ zeta in `Re s > θ` (`riemannZeta_ne_zero_of_windowBound`). The exponent is exac
 Riemann hypothesis gives `|liouvilleSum x| ≤ C x ^ θ` for every `θ > 1 / 2`. That direction is not
 formalised.
 
-The Laplace transform of `liouvilleSum (e ^ u)` is `ζ(2s) / (s ζ(s))`, from the Euler product of
-`∑ λ(n) n ^ (-s)`. Its poles in `Re s > 1 / 2` are the zeros of zeta, of their full multiplicity, so
-the generic argument is `Masullo.Landau.ContinuesMero.eq_empty_of_window`. Zeta has no zeros in
-`(0, 1)`, so no sign condition at real poles arises.
+The Euler product of `∑ λ(n) n ^ (-s)` gives `ζ(2s) / ζ(s)`, so the window criterion is the
+instance `K s = ζ(2s)` of `Masullo.DirichletWindow.riemannZeta_ne_zero_of_windowBound`; `θ ≥ 1 / 2`
+keeps the pole of `ζ(2s)` at `1 / 2` and the zeros of `ζ(2s)` out of the half-plane.
 
 `MeanBound θ δ C` bounds short-interval increments instead. For arbitrarily large `Y` there are a
 width `0 < h ≤ Y ^ θ` and a sign `ε = ±1`, both fixed for the window, such that the integral from
@@ -39,8 +38,6 @@ open MeasureTheory Complex Set Filter Topology Metric
 open ArithmeticFunction (liouville liouville_apply liouville_apply_one liouville_apply_mul)
 
 namespace Masullo.Liouville
-
-open Landau Window Spectrum WeilExplicit
 
 /-- `∑_{n ≤ x} λ(n)`. -/
 noncomputable def liouvilleSum (x : ℝ) : ℝ := ∑ n ∈ Finset.Icc 1 ⌊x⌋₊, (liouville n : ℝ)
@@ -99,57 +96,13 @@ lemma LSeries_liouville {s : ℂ} (hs : 1 < s.re) :
   congr 1
   ring
 
-/-! ### The Laplace transform -/
+/-! ### The window criterion -/
 
 lemma measurable_liouvilleSum : Measurable liouvilleSum :=
-  (measurable_from_nat (f := fun N : ℕ => ∑ n ∈ Finset.Icc 1 N, (liouville n : ℝ))).comp
-    Nat.measurable_floor
+  DirichletWindow.measurable_partialSum (b := fun n => (liouville n : ℝ))
 
-lemma abs_liouvilleSum_le {x : ℝ} (hx : 0 ≤ x) : |liouvilleSum x| ≤ x := by
-  refine (Finset.abs_sum_le_sum_abs _ _).trans ?_
-  refine (Finset.sum_le_sum fun n _ => abs_liouville_le n).trans ?_
-  simpa using Nat.floor_le hx
-
-lemma cpow_ofReal_exp (u : ℝ) (w : ℂ) : ((Real.exp u : ℝ) : ℂ) ^ w = cexp (u * w) := by
-  rw [cpow_def_of_ne_zero (by exact_mod_cast (Real.exp_pos u).ne'), ← ofReal_log
-    (Real.exp_pos u).le, Real.log_exp]
-
-/-- The Laplace transform of `liouvilleSum (e ^ u)` is `ζ(2s) / (s ζ(s))` for `Re s > 1`. -/
-lemma integral_liouvilleSum {s : ℂ} (hs : 1 < s.re) :
-    ∫ u in Ioi (0 : ℝ), (liouvilleSum (Real.exp u) : ℂ) * cexp (-(s * u)) =
-      riemannZeta (2 * s) / riemannZeta s / s := by
-  have hO : (fun n => ∑ k ∈ Finset.Icc 1 n, ‖(liouville k : ℂ)‖) =O[atTop]
-      fun n => (n : ℝ) ^ (1 : ℝ) := by
-    refine Asymptotics.IsBigO.of_bound 1 (.of_forall fun n => ?_)
-    rw [Real.rpow_one, one_mul, Real.norm_of_nonneg (Finset.sum_nonneg fun _ _ => norm_nonneg _),
-      Real.norm_natCast]
-    calc _ ≤ ∑ k ∈ Finset.Icc 1 n, (1 : ℝ) := Finset.sum_le_sum fun k _ => norm_liouville_le k
-      _ = n := by simp
-  have h := LSeries_eq_mul_integral' (fun n => (liouville n : ℂ)) zero_le_one (by simpa) hO
-  have e := integral_comp_exp_Ioi
-    (fun y : ℝ => (∑ k ∈ Finset.Icc 1 ⌊y⌋₊, (liouville k : ℂ)) * (y : ℂ) ^ (-(s + 1))) 0
-  rw [Real.exp_zero] at e
-  rw [← e, LSeries_liouville hs] at h
-  rw [h, mul_div_cancel_left₀ _ (ne_zero_of_one_lt_re hs)]
-  refine setIntegral_congr_fun measurableSet_Ioi fun u _ => ?_
-  rw [real_smul, cpow_ofReal_exp, liouvilleSum, ofReal_exp]
-  push_cast
-  rw [mul_left_comm, ← Complex.exp_add]
-  ring_nf
-
-/-! ### The continuation -/
-
-/-- The continuation of the Laplace transform of `-ε liouvilleSum (e ^ u)`. -/
-noncomputable def continuation (ε : ℝ) (s : ℂ) : ℂ :=
-  -(ε * (riemannZeta (2 * s) * (s - 1) / (s * zetaNum s)))
-
-lemma continuation_eq {ε : ℝ} {s : ℂ} (hs : 1 < s.re) :
-    continuation ε s = -(ε * (riemannZeta (2 * s) / riemannZeta s / s)) := by
-  have hs1 : s - 1 ≠ 0 := sub_ne_zero.2 fun e => by simp [e] at hs
-  have hz := riemannZeta_ne_zero_of_one_le_re hs.le
-  have h0 := ne_zero_of_one_lt_re hs
-  rw [continuation, zetaNum_of_ne (sub_ne_zero.1 hs1)]
-  field_simp
+lemma abs_liouvilleSum_le {x : ℝ} (hx : 0 ≤ x) : |liouvilleSum x| ≤ x :=
+  DirichletWindow.abs_partialSum_le abs_liouville_le hx
 
 lemma analyticAt_riemannZeta_two {s : ℂ} (h : 2 * s ≠ 1) :
     AnalyticAt ℂ (fun z => riemannZeta (2 * z)) s := by
@@ -161,86 +114,19 @@ lemma analyticAt_riemannZeta_two {s : ℂ} (h : 2 * s ≠ 1) :
 lemma two_mul_ne_one {θ : ℝ} (hθ : 1 / 2 ≤ θ) {s : ℂ} (hs : θ < s.re) : 2 * s ≠ 1 :=
   fun e => by have := congrArg re e; simp at this; linarith
 
-lemma analyticAt_continuation {θ ε : ℝ} (hθ : 1 / 2 ≤ θ) {s : ℂ} (hs : θ < s.re)
-    (h : riemannZeta s ≠ 0) : AnalyticAt ℂ (continuation ε) s := by
-  have h0 : s ≠ 0 := fun e => by simp [e] at hs; linarith
-  exact (analyticAt_const.mul (((analyticAt_riemannZeta_two (two_mul_ne_one hθ hs)).mul
-    (by fun_prop : AnalyticAt ℂ (fun z : ℂ => z - 1) s)).div
-    (analyticAt_id.mul (differentiable_zetaNum.analyticAt s))
-    (mul_ne_zero h0 (zetaNum_ne_zero h)))).fun_neg
-
-lemma continues {θ ε : ℝ} (hθ : 1 / 2 ≤ θ) (hε : ε ≠ 0) :
-    ContinuesMero (fun u => -(ε * liouvilleSum (Real.exp u))) (continuation ε)
-      {ρ | θ < ρ.re ∧ riemannZeta ρ = 0} |ε| 1 θ where
-  measurable := by
-    have := measurable_liouvilleSum.comp Real.measurable_exp
-    unfold Function.comp at this
-    fun_prop
-  growth u hu := by
-    rw [abs_neg, abs_mul, one_mul]
-    exact mul_le_mul_of_nonneg_left (abs_liouvilleSum_le (Real.exp_pos u).le) (abs_nonneg ε)
-  laplace s hs := by
-    rw [continuation_eq hs, ← integral_liouvilleSum hs, ← integral_const_mul, ← integral_neg]
-    congr 1 with u
-    push_cast
-    ring
-  analytic s hs hZ := analyticAt_continuation hθ hs fun h => hZ ⟨hs, h⟩
-  finite s r := ((isCompact_closedBall s r).inter_riemannZetaZeros_finite).subset
-    fun ρ h => ⟨h.2, h.1.2⟩
-  re_mem ρ h := ⟨h.1, (re_lt_one_of_zero h.2).le⟩
-  pole ρ h := by
-    have h0 : ρ ≠ 0 := fun e => by have := h.1; simp [e] at this; linarith
-    have h1 : ρ ≠ 1 := fun e => riemannZeta_one_ne_zero (e ▸ h.2)
-    have hz2 : riemannZeta (2 * ρ) ≠ 0 :=
-      riemannZeta_ne_zero_of_one_le_re (by simp; linarith [h.1])
-    obtain ⟨g, hg, hg0, hfac⟩ := (differentiable_zetaNum.analyticAt ρ).analyticOrderAt_eq_natCast.1
-      (analyticOrderAt_zetaNum ρ)
-    obtain ⟨n, hn⟩ := Nat.exists_eq_succ_of_ne_zero (zeroMult_pos h.2).ne'
-    refine ⟨n, fun s => -(ε * (riemannZeta (2 * s) * (s - 1) / (s * g s))),
-      (analyticAt_const.mul (((analyticAt_riemannZeta_two (two_mul_ne_one hθ h.1)).mul
-        (by fun_prop : AnalyticAt ℂ (fun z : ℂ => z - 1) ρ)).div (analyticAt_id.mul hg)
-          (mul_ne_zero h0 hg0))).fun_neg, neg_ne_zero.2 (mul_ne_zero (ofReal_ne_zero.2 hε)
-        (div_ne_zero (mul_ne_zero hz2 (sub_ne_zero.2 h1)) (mul_ne_zero h0 hg0))), ?_⟩
-    filter_upwards [hfac.filter_mono nhdsWithin_le_nhds, self_mem_nhdsWithin,
-      (eventually_ne_nhds h0).filter_mono nhdsWithin_le_nhds,
-      (hg.continuousAt.eventually_ne hg0).filter_mono nhdsWithin_le_nhds] with s hs hne hs0 hgs
-    have hsρ : s - ρ ≠ 0 := sub_ne_zero.2 hne
-    rw [continuation, hs, hn, smul_eq_mul]
-    field_simp
-
-
-/-! ### The window criterion -/
-
 /-- For arbitrarily large `Y` there is a sign `ε = ±1`, which may depend on `Y`, with
 `ε liouvilleSum x ≤ C x ^ θ` for all `x ∈ [Y, Y ^ (1 + δ)]`. -/
-def WindowBound (θ δ C : ℝ) : Prop :=
-  ∀ X, ∃ Y ≥ X, ∃ ε : ℝ, (ε = 1 ∨ ε = -1) ∧
-    ∀ x ∈ Icc Y (Y ^ (1 + δ)), ε * liouvilleSum x ≤ C * x ^ θ
+def WindowBound (θ δ C : ℝ) : Prop := DirichletWindow.WindowBound liouvilleSum θ δ C
 
 /-- `WindowBound θ δ C` with `θ ≥ 1 / 2` rules out zeros of zeta to the right of `θ`. The converse
 is not asserted. -/
 theorem riemannZeta_ne_zero_of_windowBound {θ δ C : ℝ} (hθ : 1 / 2 ≤ θ) (hδ : 0 < δ)
-    (h : WindowBound θ δ C) {ρ : ℂ} (hρ : θ < ρ.re) : riemannZeta ρ ≠ 0 := by
-  -- one sign occurs for arbitrarily large `Y`
-  obtain ⟨ε, hε, hw⟩ : ∃ ε : ℝ, ε ≠ 0 ∧ ∀ X, ∃ Y ≥ X,
-      ∀ x ∈ Icc Y (Y ^ (1 + δ)), ε * liouvilleSum x ≤ C * x ^ θ := by
-    by_contra hne
-    push Not at hne
-    obtain ⟨X₁, hX₁⟩ := hne 1 one_ne_zero
-    obtain ⟨X₂, hX₂⟩ := hne (-1) (by norm_num)
-    obtain ⟨Y, hY, ε, hε, hb⟩ := h (max X₁ X₂)
-    rcases hε with rfl | rfl
-    · obtain ⟨x, hx, hlt⟩ := hX₁ Y (le_of_max_le_left hY)
-      exact (hb x hx).not_gt hlt
-    · obtain ⟨x, hx, hlt⟩ := hX₂ Y (le_of_max_le_right hY)
-      exact (hb x hx).not_gt hlt
-  have hZ := (continues hθ hε).eq_empty_of_window_ge (by linarith) ?_ hδ
-    (window_exp (F := fun x => ε * liouvilleSum x) hw)
-  · exact fun h0 => (hZ ▸ ⟨hρ, h0⟩ : ρ ∈ (∅ : Set ℂ)).elim
-  · rintro ρ ⟨hr, hz⟩ hi
-    lift ρ to ℝ using hi
-    exact (riemannZeta_ofReal_ne_zero (by simp at hr; linarith)
-      (by simpa using re_lt_one_of_zero hz) hz).elim
+    (h : WindowBound θ δ C) {ρ : ℂ} (hρ : θ < ρ.re) : riemannZeta ρ ≠ 0 :=
+  DirichletWindow.riemannZeta_ne_zero_of_windowBound (b := fun n => (liouville n : ℝ))
+    (K := fun s => riemannZeta (2 * s)) (by linarith) hδ abs_liouville_le
+    (fun s hs => by simpa using LSeries_liouville hs)
+    (fun s hs => analyticAt_riemannZeta_two (two_mul_ne_one hθ hs))
+    (fun s hs _ => riemannZeta_ne_zero_of_one_le_re (by simp; linarith)) h hρ
 
 /-! ### A one-sided short-interval mean
 

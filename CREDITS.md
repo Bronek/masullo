@@ -77,6 +77,10 @@ For `Masullo/Liouville.lean`, Codex proposed restating the gap through one-sided
 summatory Liouville function and its short-interval increments; a Claude Fable subagent proposed
 proving it with Landau's argument extended to poles of finite order (`Landau.ContinuesMero`);
 Claude formalised both.
+For `Masullo/DirichletWindow.lean`, Codex proposed the window criterion for any bounded sequence
+whose Dirichlet series is `K/ζ`, with the Mertens case and the Liouville criterion as instances,
+and checked it in Lean; the statement is a case of Kaczorowski and Pintz (1986). A Claude Fable
+subagent reviewed it and a Claude Opus subagent moved the Liouville criterion onto it.
 For `Masullo/BaezDuarte.lean`, Codex proposed the zero-exclusion test through Báez-Duarte's
 natural approximant, a Claude Fable subagent reviewed it, and Claude formalised it.
 For `Masullo/Modulation.lean` and `WeilExplicit/DensityWeighted.lean`, a Claude Fable subagent

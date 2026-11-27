@@ -22,6 +22,8 @@ import Masullo.Probe
 import Masullo.ProbeControls
 import Masullo.RunsControls
 import Masullo.Mean
+import Masullo.DirichletWindow
+import Masullo.DirichletWindowControls
 import Masullo.Liouville
 import Masullo.LiouvilleControls
 import Masullo.BaezDuarte
