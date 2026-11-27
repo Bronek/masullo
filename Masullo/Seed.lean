@@ -1,4 +1,5 @@
 import Masullo.Theta
+import WeilExplicit.Completed
 
 /-!
 # The Riemann xi function as the transform of a theta function
@@ -178,88 +179,60 @@ lemma xi_eq_completed {s : ℂ} (hs : 0 < s.re) (hs1 : s ≠ 1) :
   rw [xi_eq hs hs1, zetaNum_of_ne hs1, arch_eq h0, riemannZeta_def_of_ne_zero h0]
   field_simp [Gammaℝ_ne_zero_of_re_pos hs]
 
-lemma xi_neg (z : ℂ) : xi (-z) = xi z := by
+/-- The transform of the theta function of the seed is half of `WeilExplicit.xi`, shifted. -/
+theorem xi_eq_half_WeilExplicit (s : ℂ) : xi (s - 1 / 2) = 1 / 2 * WeilExplicit.xi s := by
   have hd := thetaClass_seed.rapid.differentiable_jet
-  have h := AnalyticOnNhd.eq_of_eventuallyEq (f := fun z => xi (-z)) (g := xi) (z₀ := 0)
-    (fun w _ => (hd.comp differentiable_neg).analyticAt w) (fun w _ => hd.analyticAt w) ?_
-  · exact congrFun h z
-  · filter_upwards [Metric.ball_mem_nhds (0 : ℂ) (show (0 : ℝ) < 1 / 2 by norm_num)] with w hw
-    have h1 := (abs_re_le_norm w).trans_lt (mem_ball_zero_iff.1 hw)
-    rw [abs_lt] at h1
-    have hne : ∀ s : ℂ, s.re < 1 → s ≠ 1 := by rintro s hs rfl; simp at hs
-    have e1 := xi_eq_completed (s := 1 / 2 + w) (by norm_num; linarith)
-      (hne _ (by norm_num; linarith))
-    have e2 := xi_eq_completed (s := 1 - (1 / 2 + w)) (by norm_num; linarith)
-      (hne _ (by norm_num; linarith))
-    rw [completedRiemannZeta_one_sub] at e2
-    rw [show -w = 1 - (1 / 2 + w) - 1 / 2 by ring, e2]
-    rw [add_sub_cancel_left] at e1
-    rw [e1]
+  have h := AnalyticOnNhd.eq_of_eventuallyEq (f := fun s => xi (s - 1 / 2))
+    (g := fun s => 1 / 2 * WeilExplicit.xi s) (z₀ := 2)
+    (fun w _ => (hd.comp (differentiable_id.sub_const _)).analyticAt w)
+    (fun w _ => (WeilExplicit.differentiable_xi.const_mul _).analyticAt w) ?_
+  · exact congrFun h s
+  · filter_upwards [(isOpen_lt continuous_const continuous_re).mem_nhds
+      (show (0 : ℝ) < (2 : ℂ).re by norm_num), eventually_ne_nhds (show (2 : ℂ) ≠ 1 by norm_num)]
+      with w hw h1
+    have h0 : w ≠ 0 := by rintro rfl; simp at hw
+    rw [xi_eq_completed hw h1, WeilExplicit.xi_eq_completed h0 h1]
     ring
+
+lemma analyticOrderAt_xi_shift (s : ℂ) :
+    analyticOrderAt xi (s - 1 / 2) = analyticOrderAt WeilExplicit.xi s := by
+  rw [← analyticOrderAt_comp_of_deriv_ne_zero (f := xi) (g := fun w : ℂ => w - 1 / 2) (z₀ := s)
+      (by fun_prop) (by simp),
+    analyticOrderAt_congr (g := (fun _ => (1 / 2 : ℂ)) * WeilExplicit.xi)
+      (Eventually.of_forall xi_eq_half_WeilExplicit),
+    analyticOrderAt_mul analyticAt_const (WeilExplicit.differentiable_xi.analyticAt s),
+    analyticAt_const.analyticOrderAt_eq_zero.2 (by norm_num), zero_add]
+
+lemma xi_neg (z : ℂ) : xi (-z) = xi z := by
+  rw [show -z = 1 - (z + 1 / 2) - 1 / 2 by ring, xi_eq_half_WeilExplicit,
+    WeilExplicit.xi_one_sub, ← xi_eq_half_WeilExplicit, add_sub_cancel_right]
 
 /-- The transform of the theta function of the seed is the Riemann `ξ` function. -/
 theorem xi_eq_riemann {s : ℂ} (hs0 : s ≠ 0) (hs1 : s ≠ 1) :
     xi (s - 1 / 2) = s * (s - 1) / 2 * completedRiemannZeta s := by
-  rcases lt_or_ge 0 s.re with hs | hs
-  · exact xi_eq_completed hs hs1
-  · have h := xi_eq_completed (s := 1 - s) (by simp; linarith)
-      (fun h => hs0 (by linear_combination -h))
-    rw [completedRiemannZeta_one_sub] at h
-    rw [← xi_neg, show -(s - 1 / 2) = 1 - s - 1 / 2 by ring, h]
-    ring
+  rw [xi_eq_half_WeilExplicit, WeilExplicit.xi_eq_completed hs0 hs1]
+  ring
 
 /-- In the half-plane `Re s > 0`, the order of `ξ` is the multiplicity of the zeta zero. -/
 lemma analyticOrderAt_xi {s : ℂ} (hs : 0 < s.re) : analyticOrderAt xi (s - 1 / 2) = zeroMult s := by
-  have h := analyticOrderAt_jet thetaClass_seed hs
-  have hA : AnalyticAt ℂ arch s := by
-    refine DifferentiableOn.analyticAt (s := {s : ℂ | 0 < s.re}) (fun w hw => ?_)
-      ((isOpen_lt continuous_const continuous_re).mem_nhds hs)
-    have h1 : DifferentiableAt ℂ Gamma (w / 2 + 1) := by
-      refine differentiableAt_Gamma _ fun m hm => ?_
-      have := congrArg re hm
-      rw [show w / 2 = ((1 / 2 : ℝ) : ℂ) * w by push_cast; ring, add_re, re_ofReal_mul,
-          one_re] at this
-      simp at this
-      have hw' : 0 < w.re := hw
-      have := Nat.cast_nonneg (α := ℝ) m
-      linarith
-    have h2 : DifferentiableAt ℂ (fun w : ℂ => (1 / (Real.pi : ℂ)) ^ (w / 2)) w :=
-      (differentiableAt_id.div_const 2).const_cpow (.inl one_div_pi_ne)
-    exact (h2.mul (h1.comp w (by fun_prop : DifferentiableAt ℂ (fun w : ℂ => w / 2 + 1) w)))
-      |>.differentiableWithinAt
-  have hM : analyticOrderAt (mellin seed) s = analyticOrderAt (fun w : ℂ => w - 1) s := by
-    rw [analyticOrderAt_congr (g := (fun w : ℂ => w - 1) * arch),
-      analyticOrderAt_mul (by fun_prop) hA,
-      hA.analyticOrderAt_eq_zero.2 (arch_ne_zero hs), add_zero]
-    filter_upwards [(isOpen_lt continuous_const continuous_re).mem_nhds hs] with w hw
-    exact mellin_seed hw
-  rw [hM, analyticOrderAt_zetaNum, add_comm] at h
-  exact WithTop.add_right_cancel (analyticOrderAt_sub_one_ne_top s) h
+  rw [analyticOrderAt_xi_shift]
+  by_cases h : s ∈ stripZeros
+  · rw [WeilExplicit.xi_order_eq h]
+    exact (Nat.cast_analyticOrderNatAt (WeilExplicit.zeta_order_ne_top
+      (by rintro rfl; exact absurd h.2.2 (by simp)))).symm
+  · have hz : riemannZeta s ≠ 0 := fun hz =>
+      h ⟨hz, hs, not_le.1 fun h1 => riemannZeta_ne_zero_of_one_le_re h1 hz⟩
+    rw [analyticOrderAt_eq_zero.2 (.inr (mt WeilExplicit.xi_eq_zero_iff.1 h))]
+    simp [WeilExplicit.zeroMult, analyticOrderNatAt, analyticOrderAt_eq_zero.2 (.inr hz)]
 
 /-- The order of `ξ` at `z` is the multiplicity of the zero `1/2 + z`, if it lies in the strip. -/
 lemma lt_analyticOrderAt_xi {z : ℂ} {m : ℕ} (hm : m < analyticOrderAt xi z) :
     m < zeroMult (1 / 2 + z) ∧ 1 / 2 + z ∈ stripZeros := by
-  have key : ∀ s : ℂ, 0 < s.re → (m : ℕ∞) < analyticOrderAt xi (s - 1 / 2) →
-      m < zeroMult s ∧ riemannZeta s = 0 ∧ s.re < 1 := fun s hs h => by
-    rw [analyticOrderAt_xi hs] at h
-    have h1 : m < zeroMult s := by exact_mod_cast h
-    have hz : riemannZeta s = 0 :=
-      apply_eq_zero_of_analyticOrderNatAt_ne_zero (Nat.ne_zero_of_lt h1)
-    exact ⟨h1, hz, not_le.1 fun h => riemannZeta_ne_zero_of_one_le_re h hz⟩
-  have hre : (1 / 2 + z).re = 1 / 2 + z.re := by norm_num
-  rcases lt_or_ge (-1 / 2) z.re with hz | hz
-  · have h0 : 0 < (1 / 2 + z).re := by rw [hre]; linarith
-    obtain ⟨h1, h2, h3⟩ := key (1 / 2 + z) h0 (by rwa [add_sub_cancel_left])
-    exact ⟨h1, h2, h0, h3⟩
-  · have e : analyticOrderAt xi z = analyticOrderAt xi (-z) := by
-      have h := analyticOrderAt_comp_of_deriv_ne_zero (f := xi) (g := fun w : ℂ => -w) (z₀ := z)
-        (by fun_prop) (by simp)
-      rw [← h]
-      exact analyticOrderAt_congr (Eventually.of_forall fun w => (xi_neg w).symm)
-    obtain ⟨-, -, h3⟩ := key (1 / 2 - z) (by norm_num; linarith)
-      (by rw [show 1 / 2 - z - 1 / 2 = -z by ring, ← e]; exact hm)
-    norm_num at h3
-    linarith
+  rw [← add_sub_cancel_left (1 / 2 : ℂ) z] at hm
+  have hs := WeilExplicit.xi_eq_zero_iff.1 (apply_eq_zero_of_analyticOrderAt_ne_zero
+    (pos_of_gt (analyticOrderAt_xi_shift _ ▸ hm)).ne')
+  rw [analyticOrderAt_xi hs.2.1] at hm
+  exact ⟨by exact_mod_cast hm, hs⟩
 
 lemma theta_translate (t : ℝ) : ∃ f, ThetaClass f ∧ ∀ x, theta f x = theta seed (x - t) := by
   have hi := thetaClass_seed.integral

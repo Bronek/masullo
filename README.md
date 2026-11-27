@@ -23,7 +23,7 @@ distance is measured from the critical line. For every `a > 0`:
 | Scaling by a test function is trace class on `W a / V a`, with trace the sum over those zeros | `exists_hasTrace_induced` in `Masullo/Trace.lean` |
 | That trace is Weil's functional for every test function iff no zero has distance at least `a` | `trace_eq_efFunctional_iff` in `Masullo/Trace.lean` |
 
-At `a = 1/2` the trace is Weil's functional unconditionally (`hasTrace_induced_half`).
+At `a ≥ 1/2` the trace is Weil's functional unconditionally (`hasTrace_of_half_le`).
 At any width, the difference between Weil's functional at the translate of `φ` by `t` and the trace
 is the sum over the finitely many zeros in the strip at distance at least `a` and height at most
 `T`, up to an error of at most `C e^(t/2) / (1 + T²)`, where `t, T ≥ 0` and `C` depends on `φ` only
@@ -50,9 +50,9 @@ A variant needs no main term. Let `R(y) = max(1/y - 1, 0)`, `w(y) = R(y) - 3R(2y
 is nonnegative, `P(X) = ∑_{n ≤ X} Λ(n) w(n/X)` and `D(X) = P(2X) - 2P(X)`. If `D(x) ≤ C x^θ` on such
 windows, or if `D(x) ≥ -C x^θ` on them, the same conclusions hold
 (`riemannZeta_ne_zero_of_dyadicDiff_le` and `riemannZeta_ne_zero_of_le_dyadicDiff` in
-`Masullo/Dyadic.lean`). For `θ ≥ 1/2` the side may also change with `Y`: it suffices that one of the
-two bounds holds on each such window (`ne_zero_of_dyadic_window` in `Masullo/Runs.lean`, through
-the explicit formula). Both bounds hold at `θ = 1`; neither is proved for any `θ < 1`.
+`Masullo/Dyadic.lean`). The side may also change with `Y`: it suffices that one of the two bounds
+holds on each such window (`riemannZeta_ne_zero_of_signed_window`), since one side then occurs on
+arbitrarily late windows. Both bounds hold at `θ = 1`; neither is proved for any `θ < 1`.
 
 Fixed-ratio windows also suffice, at the cost of the exact exponent. If there are `R > 1`,
 `θ < 1` and arbitrarily large `Y` such that `D(x) ≥ -C x^θ` on all of `[Y, RY]`, or

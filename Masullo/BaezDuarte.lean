@@ -1,4 +1,5 @@
 import Masullo.Window
+import WeilExplicit.DensityTail
 
 /-!
 # Báez-Duarte's natural approximant
@@ -94,17 +95,6 @@ theorem approx_eq_zero {N : ℕ} (hN : 0 < N) {x : ℝ} (hx : 1 / N < x) (hx1 : 
 
 /-! ### The Mellin transform -/
 
-private lemma integrableOn_cpow_mul_fract {a : ℝ} (ha : 0 < a) {s : ℂ} (hs : 0 < s.re) :
-    IntegrableOn (fun y : ℝ => (y : ℂ) ^ (-s - 1) * ((Int.fract y : ℝ) : ℂ)) (Ioi a) := by
-  apply (integrableOn_Ioi_rpow_of_lt (by linarith : -s.re - 1 < -1) ha).mono'
-  · exact (Measurable.mul (by fun_prop : Measurable fun y : ℝ => (y : ℂ) ^ (-s - 1))
-      (Complex.measurable_ofReal.comp measurable_fract)).aestronglyMeasurable
-  · filter_upwards [ae_restrict_mem measurableSet_Ioi] with y hy
-    have hy0 : 0 < y := ha.trans hy
-    rw [norm_mul, norm_cpow_eq_rpow_re_of_pos hy0, sub_re, neg_re, one_re, Complex.norm_real,
-      Real.norm_eq_abs, abs_of_nonneg (Int.fract_nonneg y)]
-    exact mul_le_of_le_one_right (Real.rpow_nonneg hy0.le _) (Int.fract_lt_one y).le
-
 private lemma integrableOn_cpow {s : ℂ} (hs : 0 < s.re) :
     IntegrableOn (fun x : ℝ => (x : ℂ) ^ (s - 1)) (Ioc 0 1) :=
   (intervalIntegrable_iff_integrableOn_Ioc_of_le zero_le_one).1
@@ -172,8 +162,8 @@ theorem integral_cpow_mul_fract {α : ℝ} (hα : 0 < α) (hα1 : α ≤ 1) {s :
   have hs1' : s - 1 ≠ 0 := sub_ne_zero.2 hs1
   have hs1'' : -s + 1 ≠ 0 := fun h => hs1' (by linear_combination -h)
   rw [h1, mellin_comp_mul_left (fun t => H t⁻¹) s (inv_pos.2 hα), mellin_comp_inv, h2, hpow,
-    ← intervalIntegral.integral_interval_add_Ioi (integrableOn_cpow_mul_fract hα hs)
-      (integrableOn_cpow_mul_fract one_pos hs), h3,
+    ← intervalIntegral.integral_interval_add_Ioi (WeilExplicit.integrableOn_tail hs hα)
+      (WeilExplicit.integrableOn_tail hs one_pos), h3,
     WeilExplicit.zeta_eq_fractional_part_integral hs hs1, smul_eq_mul, mul_add, mul_div_assoc',
     mul_sub, mul_one, hpow']
   field_simp

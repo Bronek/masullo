@@ -9,8 +9,8 @@ combination of four scales that cancels both `X` and `X log X`, so that no main 
 subtracted. A one-sided bound `dyadicDiff X ≤ C X ^ θ`, or `- C X ^ θ ≤ dyadicDiff X`, on windows
 `[Y, Y ^ (1 + δ)]` with `Y` arbitrarily large rules out zeros of zeta in `Re s > θ`. The
 implications are one-way: no converse is stated, and neither bound is asserted for any `θ < 1`.
-For `θ ≥ 1/2` both are contained in `Masullo.Runs.ne_zero_of_dyadic_window`, which goes through
-the explicit formula instead.
+The side may also change with `Y`: it suffices that one of the two bounds holds on each window
+(`riemannZeta_ne_zero_of_signed_window`), since one side then occurs on arbitrarily late windows.
 
 On the Laplace transform in `u = log (2 X)` the combination multiplies by
 `(1 - 2 ^ (-s)) (1 - 2 ^ (1 - s)) ^ 2`, which has no zeros in `0 < Re s < 1` and is positive at
@@ -218,20 +218,25 @@ lemma sum_ramp {x k : ℝ} (hx : 0 < x) (hk : 1 ≤ k) :
     rw [sub_nonpos, div_le_one h4]
     exact h5.le
 
+/-- `∑_{n ≤ y} Λ(n) (y / n - 1)`. -/
+noncomputable def _root_.Masullo.Mean.rampSum (y : ℝ) : ℝ :=
+  ∑ n ∈ Finset.Icc 1 ⌊y⌋₊, Λ n * (y / n - 1)
+
+lemma dyadicSum_eq_rampSum {y : ℝ} (hy : 0 < y) :
+    dyadicSum y = Mean.rampSum y - 3 * Mean.rampSum (y / 2) + 2 * Mean.rampSum (y / 4) := by
+  have h1 := sum_ramp hy le_rfl
+  have h2 := sum_ramp hy one_le_two
+  have h4 := sum_ramp hy (by norm_num : (1 : ℝ) ≤ 4)
+  simp only [one_mul, div_one] at h1
+  rw [Mean.rampSum, Mean.rampSum, Mean.rampSum, ← h1, ← h2, ← h4, dyadicSum, Finset.mul_sum,
+    Finset.mul_sum, ← Finset.sum_sub_distrib, ← Finset.sum_add_distrib]
+  exact Finset.sum_congr rfl fun n _ => by rw [weight]; ring
+
 lemma dyadicSum_eq {x : ℝ} (hx : 0 < x) : dyadicSum x =
     windowSum x - 3 * windowSum (x / 2) + 2 * windowSum (x / 4) + x * Real.log 2 / 2 := by
-  have h1 := sum_ramp hx le_rfl
-  have h2 := sum_ramp hx one_le_two
-  have h4 := sum_ramp hx (by norm_num : (1 : ℝ) ≤ 4)
-  simp only [one_mul, div_one] at h1
-  have e : dyadicSum x = ∑ n ∈ Finset.Icc 1 ⌊x⌋₊, Λ n * ramp (n / x) -
-      3 * ∑ n ∈ Finset.Icc 1 ⌊x⌋₊, Λ n * ramp (2 * (n / x)) +
-      2 * ∑ n ∈ Finset.Icc 1 ⌊x⌋₊, Λ n * ramp (4 * (n / x)) := by
-    rw [dyadicSum, Finset.mul_sum, Finset.mul_sum, ← Finset.sum_sub_distrib,
-      ← Finset.sum_add_distrib]
-    exact Finset.sum_congr rfl fun n _ => by rw [weight]; ring
-  rw [e, h1, h2, h4, windowSum, windowSum, windowSum, Real.log_div hx.ne' (by norm_num),
-    Real.log_div hx.ne' (by norm_num), show (4 : ℝ) = 2 ^ 2 by norm_num, Real.log_pow]
+  rw [dyadicSum_eq_rampSum hx, Mean.rampSum, Mean.rampSum, Mean.rampSum, windowSum, windowSum,
+    windowSum, Real.log_div hx.ne' (by norm_num), Real.log_div hx.ne' (by norm_num),
+    show (4 : ℝ) = 2 ^ 2 by norm_num, Real.log_pow]
   push_cast
   ring
 
@@ -315,5 +320,30 @@ theorem riemannZeta_ne_zero_of_le_dyadicDiff {θ δ C : ℝ} (hθ : 0 ≤ θ) (h
   ne_zero_of_dyadic_window (ε := -1) hθ hδ (by norm_num)
     (fun _ h1 h2 h3 => (riemannZeta_ofReal_ne_zero (hθ.trans_lt h1) h2 h3).elim)
     (by simpa [neg_le] using h) hρ
+
+/-- If one of two signs is chosen for arbitrarily large `Y`, one of them is chosen for
+arbitrarily large `Y`. -/
+lemma cofinal_sign {P : ℝ → ℝ → Prop}
+    (h : ∀ X, ∃ Y ≥ X, ∃ e : ℝ, (e = 1 ∨ e = -1) ∧ P e Y) :
+    ∃ e : ℝ, (e = 1 ∨ e = -1) ∧ ∀ X, ∃ Y ≥ X, P e Y := by
+  by_contra hn
+  push Not at hn
+  obtain ⟨X₁, h₁⟩ := hn 1 (.inl rfl)
+  obtain ⟨X₂, h₂⟩ := hn (-1) (.inr rfl)
+  obtain ⟨Y, hY, e, he | he, hP⟩ := h (max X₁ X₂)
+  · exact h₁ Y (le_of_max_le_left hY) (he ▸ hP)
+  · exact h₂ Y (le_of_max_le_right hY) (he ▸ hP)
+
+/-- For fixed `θ ≥ 0`, `δ > 0` and `C`, suppose that for arbitrarily large `Y` there is a sign
+`ε = ±1`, which may depend on `Y`, with `ε dyadicDiff x ≥ -C x ^ θ` on all of
+`[Y, Y ^ (1 + δ)]`. Then zeta has no zeros to the right of `θ`. The converse is not asserted. -/
+theorem riemannZeta_ne_zero_of_signed_window {θ δ C : ℝ} (hθ : 0 ≤ θ) (hδ : 0 < δ)
+    (h : ∀ X, ∃ Y ≥ X, ∃ ε : ℝ, (ε = 1 ∨ ε = -1) ∧
+      ∀ x ∈ Icc Y (Y ^ (1 + δ)), -(C * x ^ θ) ≤ ε * dyadicDiff x)
+    {ρ : ℂ} (hρ : θ < ρ.re) : riemannZeta ρ ≠ 0 := by
+  obtain ⟨e, he, hw⟩ := cofinal_sign h
+  rcases he with rfl | rfl
+  · exact riemannZeta_ne_zero_of_le_dyadicDiff hθ hδ (by simpa using hw) hρ
+  · exact riemannZeta_ne_zero_of_dyadicDiff_le hθ hδ (by simpa using hw) hρ
 
 end Masullo.Window

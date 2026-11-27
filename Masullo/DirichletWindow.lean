@@ -155,19 +155,8 @@ theorem riemannZeta_ne_zero_of_windowBound {θ δ C : ℝ} (hθ : 0 ≤ θ) (hδ
     (hK : ∀ s : ℂ, θ < s.re → AnalyticAt ℂ K s)
     (hne : ∀ s : ℂ, θ < s.re → riemannZeta s = 0 → K s ≠ 0)
     (h : WindowBound (partialSum b) θ δ C) {ρ : ℂ} (hρ : θ < ρ.re) : riemannZeta ρ ≠ 0 := by
-  -- one sign occurs for arbitrarily large `Y`
-  obtain ⟨ε, hε, hw⟩ : ∃ ε : ℝ, ε ≠ 0 ∧ ∀ X, ∃ Y ≥ X,
-      ∀ x ∈ Icc Y (Y ^ (1 + δ)), ε * partialSum b x ≤ C * x ^ θ := by
-    by_contra hne
-    push Not at hne
-    obtain ⟨X₁, hX₁⟩ := hne 1 one_ne_zero
-    obtain ⟨X₂, hX₂⟩ := hne (-1) (by norm_num)
-    obtain ⟨Y, hY, ε, hε, hb⟩ := h (max X₁ X₂)
-    rcases hε with rfl | rfl
-    · obtain ⟨x, hx, hlt⟩ := hX₁ Y (le_of_max_le_left hY)
-      exact (hb x hx).not_gt hlt
-    · obtain ⟨x, hx, hlt⟩ := hX₂ Y (le_of_max_le_right hY)
-      exact (hb x hx).not_gt hlt
+  obtain ⟨ε, hε, hw⟩ := cofinal_sign h
+  replace hε : ε ≠ 0 := by rcases hε with rfl | rfl <;> norm_num
   have hZ := (continues hθ hε hb hL hK hne).eq_empty_of_window_ge (by linarith) ?_ hδ
     (window_exp (F := fun x => ε * partialSum b x) hw)
   · exact fun h0 => (hZ ▸ ⟨hρ, h0⟩ : ρ ∈ (∅ : Set ℂ)).elim

@@ -18,20 +18,13 @@ theorem integral_small_of_small_T {a : ℝ} (ha : 0 < a) (φ : TestFunction) (s 
     (hs : ∀ τ, HasTrace (induced ha (φ.modulate τ)) (s τ)) (ε : ℝ) (hε : 0 < ε) :
     ∃ T : ℝ, 0 < T ∧ ∫ τ in -T..T, ‖(φ.modulate τ).efFunctional - s τ‖ ≤ ε := by
   have hg := continuous_modulate_sub ha φ s hs
-  obtain ⟨C, hC⟩ := (isCompact_Icc (a := (-1 : ℝ)) (b := 1)).exists_bound_of_continuousOn
-    hg.continuousOn
-  have hC0 : 0 ≤ C := (norm_nonneg _).trans (hC 0 ⟨by norm_num, by norm_num⟩)
-  refine ⟨min 1 (ε / (2 * C + 2)), lt_min one_pos (by positivity), ?_⟩
-  set T := min 1 (ε / (2 * C + 2))
-  have hT1 : T ≤ 1 := min_le_left _ _
-  have hT2 : T ≤ ε / (2 * C + 2) := min_le_right _ _
-  have hT0 : 0 < T := lt_min one_pos (by positivity)
-  have h := intervalIntegral.integral_mono_on (μ := volume) (by linarith : -T ≤ T)
-    (hg.intervalIntegrable _ _) (intervalIntegrable_const (c := C)) fun τ hτ => by
-      have := hC τ ⟨by linarith [hτ.1], by linarith [hτ.2]⟩
-      rwa [norm_norm] at this
-  rw [intervalIntegral.integral_const, smul_eq_mul] at h
-  rw [le_div_iff₀ (by positivity)] at hT2
-  nlinarith
+  have hP := intervalIntegral.continuous_primitive (μ := volume) (hg.intervalIntegrable ·  ·) 0
+  have hF : Continuous fun T : ℝ => ∫ τ in -T..T, ‖(φ.modulate τ).efFunctional - s τ‖ :=
+    (hP.sub (hP.comp continuous_neg)).congr fun T =>
+      intervalIntegral.integral_interval_sub_left (hg.intervalIntegrable _ _)
+        (hg.intervalIntegrable _ _)
+  obtain ⟨T, h1, h2⟩ := ((((hF.tendsto 0).eventually (gt_mem_nhds (by simpa using hε))).filter_mono
+    nhdsWithin_le_nhds).and (self_mem_nhdsWithin (s := Ioi 0))).exists
+  exact ⟨T, h2, h1.le⟩
 
 end Masullo.Trace.Controls

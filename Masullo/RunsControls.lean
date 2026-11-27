@@ -20,6 +20,7 @@ open scoped Real
 namespace Masullo.Runs.Controls
 
 open Window
+open Window.Controls (abs_dyadicDiff_le)
 
 /-- Every window of ratio one is a single point, where `dyadicDiff` has a sign. -/
 theorem bound_at_ratio_one {θ C : ℝ} (hC : 0 ≤ C) : ∀ Y₀, ∃ Y ≥ Y₀,
@@ -38,19 +39,13 @@ theorem bound_at_exponent_one (R : ℝ) : ∀ Y₀, ∃ Y ≥ Y₀,
     (∀ x ∈ Icc Y (R * Y), -((2 * (Real.log 4 + 4)) * x ^ (1 : ℝ)) ≤ dyadicDiff x) ∨
     (∀ x ∈ Icc Y (R * Y), dyadicDiff x ≤ (2 * (Real.log 4 + 4)) * x ^ (1 : ℝ)) := fun Y₀ =>
   ⟨max Y₀ 1, le_max_left _ _, .inr fun x hx => by
-    have h1 := (le_max_right Y₀ 1).trans hx.1
-    have h2 := Window.Controls.dyadicSum_le (X := 2 * x) (by linarith)
-    rw [Real.rpow_one, dyadicDiff]
-    linarith [Window.Controls.dyadicSum_nonneg x]⟩
+    simpa using le_of_abs_le (abs_dyadicDiff_le (by linarith [(le_max_right Y₀ 1).trans hx.1]))⟩
 
 /-- The lower bound with `θ = 1` holds on every window, with the sign `ε = 1`. -/
 theorem dyadic_window_at_exponent_one (δ : ℝ) : ∀ X, ∃ Y ≥ X, ∃ ε : ℝ, (ε = 1 ∨ ε = -1) ∧
     ∀ x ∈ Icc Y (Y ^ (1 + δ)), -((2 * (Real.log 4 + 4)) * x ^ (1 : ℝ)) ≤ ε * dyadicDiff x :=
   fun X => ⟨max X 1, le_max_left _ _, 1, .inl rfl, fun x hx => by
-    have h1 := (le_max_right X 1).trans hx.1
-    have h2 := Window.Controls.dyadicSum_le (X := x) (by linarith)
-    rw [Real.rpow_one, dyadicDiff, one_mul]
-    linarith [Window.Controls.dyadicSum_nonneg (2 * x)]⟩
+    simpa using neg_le_of_abs_le (abs_dyadicDiff_le (by linarith [(le_max_right X 1).trans hx.1]))⟩
 
 /-- The factor attached to `β + iγ` cancels `β + 3iγ`. -/
 theorem factor_odd_multiple {β γ : ℝ} (hγ : 0 < γ) :

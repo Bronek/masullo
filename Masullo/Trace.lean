@@ -423,10 +423,8 @@ section TestFunctions
 variable {a : ℝ} {φ : TestFunction}
 
 lemma jet_pull (φ : TestFunction) (z : ℂ) : jet φ.pull 0 z = φ.hat z := by
-  rw [← TestFunction.transform_pull, jet_zero, WeilExplicit.transform]
-  refine integral_congr_ae (Eventually.of_forall fun u => ?_)
-  simp only
-  rw [mul_div_cancel₀ _ I_ne_zero]
+  rw [jet_zero, TestFunction.hat, Spectrum.mellin_eq_integral]
+  rfl
 
 /-- Convolution by `φ` in the logarithmic variable, on `W a`. -/
 noncomputable def scaling (ha : 0 < a) (φ : TestFunction) : W a →L[ℂ] W a :=
@@ -465,19 +463,6 @@ theorem hasSum_diagonal (ha : 0 < a) (φ : TestFunction) {κ : Type*}
   obtain ⟨t, h1, h2⟩ := exists_hasTrace_induced ha φ
   exact h2.tsum_eq ▸ h1.hasSum b
 
-/-- At `a = 1/2` the trace is the functional of Weil's explicit formula. The value of the zero sum
-is that of `TestFunction.hasSum_full`. -/
-theorem hasTrace_induced_half (φ : TestFunction) :
-    HasTrace (induced (a := 1 / 2) (by norm_num) φ) φ.efFunctional := by
-  obtain ⟨t, h1, h2⟩ := exists_hasTrace_induced (a := 1 / 2) (by norm_num) φ
-  have e : innerZeros (1 / 2) = stripZeros := by
-    ext ρ
-    refine ⟨fun h => ⟨h.1, h.2.1, h.2.2.1⟩, fun h => ⟨h.1, h.2.1, h.2.2, ?_⟩⟩
-    rw [abs_lt]
-    constructor <;> linarith [h.2.1, h.2.2]
-  rw [e] at h2
-  exact h2.unique φ.hasSum_full ▸ h1
-
 /-- The trace at width `a` is the explicit formula functional for every test function iff there are
 no zeros in the critical strip at distance at least `a` from the critical line. This is
 `innerExpansion_iff` with the zero sum replaced by the trace; neither side is asserted, and it adds
@@ -489,6 +474,17 @@ theorem trace_eq_efFunctional_iff (ha : 0 < a) :
   refine forall_congr' fun φ => ?_
   obtain ⟨t, h1, h2⟩ := exists_hasTrace_induced ha φ
   exact ⟨fun h => h1.unique h ▸ h2, fun h => h2.unique h ▸ h1⟩
+
+/-- At every width `a ≥ 1/2` the trace is the functional of Weil's explicit formula. -/
+theorem hasTrace_of_half_le {a : ℝ} (ha : 1 / 2 ≤ a) (φ : TestFunction) :
+    HasTrace (induced (by linarith : 0 < a) φ) φ.efFunctional :=
+  (trace_eq_efFunctional_iff _).2 (fun ⟨_, h0, h1, h2, h3⟩ =>
+    ((abs_sub_half_lt_half ⟨h0, h1, h2⟩).trans_le ha).not_ge h3) φ
+
+/-- At `a = 1/2` the trace is the functional of Weil's explicit formula. -/
+theorem hasTrace_induced_half (φ : TestFunction) :
+    HasTrace (induced (a := 1 / 2) (by norm_num) φ) φ.efFunctional :=
+  hasTrace_of_half_le le_rfl φ
 
 /-- Equality of the traces at the one pair of widths `a` and `1 / 2`, for every test function, is
 equivalent to there being no zeros in the critical strip at distance at least `a` from the critical
@@ -517,25 +513,9 @@ theorem weights_unique (ha : 0 < a) {n : ℂ → ℂ} {t : TestFunction → ℂ}
     fun φ => by
       obtain ⟨s, h1, h2⟩ := exists_hasTrace_induced ha φ
       exact h1.unique (ht φ) ▸ h2
-  refine ⟨fun h ρ hρ => ?_, fun h φ => (hz φ).congr_fun fun ρ => by rw [h ρ ρ.2]⟩
-  obtain ⟨φ, hφ⟩ := TestFunction.exists_hat_ne_zero (ρ - 1 / 2)
-  have key := eq_zero_of_hasSum_exp (l := fun ρ : innerZeros a => (ρ : ℂ) - 1 / 2)
-    (c := fun ρ => (n ρ - zeroMult ρ) * φ.hat ((ρ : ℂ) - 1 / 2)) (B := 1 / 2)
-    (fun x y e => Subtype.ext (sub_left_injective e))
-    (fun ρ => by
-      have := ρ.2.2.2.1
-      norm_num
-      linarith)
-    (fun z => by
-      obtain ⟨r, hr, hiso⟩ := exists_isolating_radius (z + 1 / 2)
-      refine ⟨r, hr, fun ρ hne => ?_⟩
-      have := hiso ρ ρ.2.1 fun e => hne (by rw [e]; ring)
-      rwa [show z - ((ρ : ℂ) - 1 / 2) = z + 1 / 2 - ρ by ring])
-    (fun x hx => by
-      have := (h (φ.translate x hx)).sub (hz (φ.translate x hx))
-      simp_rw [TestFunction.hat_translate, sub_self] at this
-      exact this.congr_fun fun ρ => by ring) ⟨ρ, hρ⟩
-  exact sub_eq_zero.1 ((mul_eq_zero.1 key).resolve_right hφ)
+  refine ⟨fun h ρ hρ => sub_eq_zero.1 ?_, fun h φ => (hz φ).congr_fun fun ρ => by rw [h ρ ρ.2]⟩
+  exact weight_eq_zero_of_hasSum (w := fun ρ => n ρ - zeroMult ρ) (innerZeros_subset a)
+    (fun φ => by simpa only [sub_self, sub_mul] using (h φ).sub (hz φ)) hρ
 
 end TestFunctions
 

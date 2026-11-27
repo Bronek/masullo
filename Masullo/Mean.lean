@@ -34,9 +34,6 @@ local notation "ψ" => Chebyshev.psi
 noncomputable def psiDiff (x : ℝ) : ℝ :=
   ψ (2 * x) - 5 * ψ x + 8 * ψ (x / 2) - 4 * ψ (x / 4)
 
-/-- `∑_{n ≤ y} Λ(n) (y / n - 1)`. -/
-noncomputable def rampSum (y : ℝ) : ℝ := ∑ n ∈ Finset.Icc 1 ⌊y⌋₊, Λ n * (y / n - 1)
-
 /-- `∫_1^y ψ t / t ^ 2`. -/
 noncomputable def psiInt (y : ℝ) : ℝ := ∫ t in 1..y, ψ t / t ^ 2
 
@@ -85,17 +82,8 @@ lemma rampSum_eq {y : ℝ} (hy : 1 ≤ y) : rampSum y = y * psiInt y := by
 /-- `dyadicDiff` is the same four-scale combination of `rampSum` as `psiDiff` is of `ψ`. -/
 lemma dyadicDiff_eq_rampSum {x : ℝ} (hx : 0 < x) : dyadicDiff x =
     rampSum (2 * x) - 5 * rampSum x + 8 * rampSum (x / 2) - 4 * rampSum (x / 4) := by
-  have e {y : ℝ} (hy : 0 < y) :
-      dyadicSum y = rampSum y - 3 * rampSum (y / 2) + 2 * rampSum (y / 4) := by
-    have h1 := sum_ramp hy le_rfl
-    have h2 := sum_ramp hy one_le_two
-    have h4 := sum_ramp hy (by norm_num : (1 : ℝ) ≤ 4)
-    simp only [one_mul, div_one] at h1
-    rw [rampSum, rampSum, rampSum, ← h1, ← h2, ← h4, dyadicSum, Finset.mul_sum, Finset.mul_sum,
-      ← Finset.sum_sub_distrib, ← Finset.sum_add_distrib]
-    exact Finset.sum_congr rfl fun n _ => by rw [weight]; ring
-  rw [dyadicDiff, e (by positivity), e hx, show 2 * x / 2 = x by ring,
-    show 2 * x / 4 = x / 2 by ring]
+  rw [dyadicDiff, dyadicSum_eq_rampSum (by positivity), dyadicSum_eq_rampSum hx,
+    show 2 * x / 2 = x by ring, show 2 * x / 4 = x / 2 by ring]
   ring
 
 lemma dyadicDiff_div {x : ℝ} (hx : 4 ≤ x) : dyadicDiff x / x =

@@ -27,36 +27,6 @@ namespace Masullo
 
 namespace TestFunction
 
-/-- The tilt `x ↦ x ^ w φ(x)`. -/
-noncomputable def tilt (φ : TestFunction) (w : ℂ) : TestFunction where
-  toFun t := φ.toFun t * exp (w * (Real.log t : ℂ))
-  contDiff := by
-    rw [contDiff_iff_contDiffAt]
-    intro t
-    by_cases ht : t ∈ tsupport φ.toFun
-    · have ht0 : t ≠ 0 := by
-        have : (1 : ℝ) < t := φ.tsupport_subset ht
-        linarith
-      have h2 : ContDiffAt ℝ ∞ (fun t => ((Real.log t : ℝ) : ℂ)) t :=
-        ofRealCLM.contDiff.contDiffAt.comp t (Real.contDiffAt_log.2 ht0)
-      exact φ.contDiff.contDiffAt.mul (contDiffAt_const.mul h2).cexp
-    · have : φ.toFun =ᶠ[𝓝 t] fun _ => 0 := notMem_tsupport_iff_eventuallyEq.1 ht
-      refine contDiffAt_const (c := (0 : ℂ)).congr_of_eventuallyEq ?_
-      filter_upwards [this] with x hx
-      simp [hx]
-  hasCompactSupport := φ.hasCompactSupport.mul_right
-  tsupport_subset := (tsupport_mul_subset_left).trans φ.tsupport_subset
-
-/-- Tilting by `w` shifts the transform by `w`. -/
-lemma hat_tilt (φ : TestFunction) (w z : ℂ) : (φ.tilt w).hat z = φ.hat (z + w) := by
-  unfold hat mellin
-  refine setIntegral_congr_fun measurableSet_Ioi fun t ht => ?_
-  have ht' : (t : ℂ) ≠ 0 := ofReal_ne_zero.2 (ne_of_gt ht)
-  simp only [tilt, smul_eq_mul]
-  rw [show z + w - 1 = z - 1 + w by ring, cpow_add _ _ ht', cpow_def_of_ne_zero ht' w,
-    ← ofReal_log (le_of_lt ht)]
-  ring_nf
-
 /-- The modulation `x ↦ x ^ (iτ) φ(x)`. -/
 noncomputable def modulate (φ : TestFunction) (τ : ℝ) : TestFunction := φ.tilt (I * τ)
 
@@ -69,36 +39,9 @@ lemma hat_modulate (φ : TestFunction) (τ : ℝ) (z : ℂ) :
     (φ.modulate τ).hat z = φ.hat (z + I * τ) :=
   φ.hat_tilt _ z
 
-/-- The transform is entire. -/
-lemma differentiable_hat (φ : TestFunction) : Differentiable ℂ φ.hat := by
-  have h := (WeilExplicit.differentiable_transform φ.pull_contDiff.continuous
-    φ.pull_hasCompactSupport).comp (differentiable_id.div_const I)
-  exact (funext fun z => (transform_pull φ z).symm : φ.hat = _) ▸ h
-
-lemma continuous_hat (φ : TestFunction) : Continuous φ.hat :=
-  φ.differentiable_hat.continuous
-
 end TestFunction
 
 namespace Trace
-
-/-- Zeros in the critical strip at distance at least `a` from the critical line. -/
-def exterior (a : ℝ) : Set ℂ := {ρ | ρ ∈ stripZeros ∧ a ≤ |ρ.re - 1 / 2|}
-
-/-- Weil's functional minus the trace at width `a` is the sum over the exterior zeros. -/
-lemma hasSum_exterior {a : ℝ} (ha : 0 < a) {φ : TestFunction} {s : ℂ}
-    (hs : HasTrace (induced ha φ) s) :
-    HasSum ((exterior a).indicator fun ρ : ℂ => (zeroMult ρ : ℂ) * φ.hat (ρ - 1 / 2))
-      (φ.efFunctional - s) := by
-  have h := hasSum_remainder (T := -1) ha hs
-  have e1 : (finite_outerZerosUpTo a (-1)).toFinset = ∅ := by
-    rw [Finite.toFinset_eq_empty, eq_empty_iff_forall_notMem]
-    exact fun ρ hρ => by linarith [hρ.2.2, abs_nonneg ρ.im]
-  have e2 : {ρ : ℂ | ρ ∈ stripZeros ∧ a ≤ |ρ.re - 1 / 2| ∧ -1 < |ρ.im|} = exterior a := by
-    ext ρ
-    simp only [exterior, mem_ofPred_eq]
-    exact ⟨fun h => ⟨h.1, h.2.1⟩, fun h => ⟨h.1, h.2, by linarith [abs_nonneg ρ.im]⟩⟩
-  rwa [e1, Finset.sum_empty, sub_zero, e2] at h
 
 /-- At the modulation by `τ`, the sum over the exterior zeros of `φ̂(ρ - 1/2 + iτ)`. -/
 lemma hasSum_exterior_modulate {a : ℝ} (ha : 0 < a) (φ : TestFunction) (τ : ℝ) {s : ℂ}
@@ -116,6 +59,21 @@ private lemma one_add_normSq_le (z : ℂ) (τ : ℝ) :
 
 private lemma normSq_div_I (z : ℂ) : normSq (z / I) = normSq z := by simp
 
+/-- Quartic decay of the transform at the modulated zeros in the strip. -/
+private lemma exists_modulated_hat_bound (φ : TestFunction) :
+    ∃ M : ℝ, 0 ≤ M ∧ ∀ {ρ : ℂ}, ρ ∈ stripZeros → ∀ τ : ℝ,
+      ‖(zeroMult ρ : ℂ) * φ.hat (ρ - 1 / 2 + I * τ)‖ ≤
+        zeroMult ρ * (M / (1 + normSq (ρ - 1 / 2 + I * τ)) ^ 2) := by
+  obtain ⟨M, hM, hφ⟩ := φ.exists_hat_bound
+  refine ⟨M, hM, fun {ρ} hρ τ => ?_⟩
+  rw [norm_mul, norm_natCast]
+  refine mul_le_mul_of_nonneg_left (hφ _ ?_) (Nat.cast_nonneg _)
+  have h1 := hρ.2.1
+  have h2 := hρ.2.2
+  simp only [add_re, sub_re, mul_re, I_re, I_im, ofReal_re, ofReal_im, abs_le]
+  norm_num
+  constructor <;> linarith
+
 /-- **The discrepancy is continuous in the modulation.** For `0 < a`, a test function `φ` and trace
 values `s τ` at width `a` of the modulations of `φ`, the map
 `τ ↦ ‖Weil's functional at φ.modulate τ - s τ‖` is continuous. -/
@@ -123,28 +81,11 @@ theorem continuous_modulate_sub {a : ℝ} (ha : 0 < a) (φ : TestFunction) (s : 
     (hs : ∀ τ, HasTrace (induced ha (φ.modulate τ)) (s τ)) :
     Continuous fun τ => ‖(φ.modulate τ).efFunctional - s τ‖ := by
   classical
-  obtain ⟨M, hM, hφ⟩ := φ.exists_hat_bound
-  let w (ρ : ℂ) := (zeroMult ρ : ℝ) / (1 + normSq ((ρ - 1 / 2) / I))
-  have hw (ρ : ℂ) : 0 ≤ w ρ :=
-    div_nonneg (Nat.cast_nonneg _) (add_nonneg zero_le_one (normSq_nonneg _))
-  have hb := (hasSum_subtype_iff_indicator (f := w)).1
-    WeilExplicit.summable_zeroMult_div_one_add_normSq.hasSum
-  set W := ∑' ρ : stripZeros, w ρ
+  obtain ⟨M, hM, hhat⟩ := exists_modulated_hat_bound φ
   let f (τ : ℝ) (ρ : ℂ) : ℂ :=
     (exterior a).indicator (fun ρ : ℂ => (zeroMult ρ : ℂ) * φ.hat (ρ - 1 / 2 + I * τ)) ρ
   have hF (τ : ℝ) : (φ.modulate τ).efFunctional - s τ = ∑' ρ, f τ ρ :=
     (hasSum_exterior_modulate ha φ τ (hs τ)).tsum_eq.symm
-  have hre {ρ : ℂ} (hρ : ρ ∈ stripZeros) (τ : ℝ) : |(ρ - 1 / 2 + I * τ).re| ≤ 1 / 2 := by
-    have h1 := hρ.2.1
-    have h2 := hρ.2.2
-    simp only [add_re, sub_re, mul_re, I_re, I_im, ofReal_re, ofReal_im, abs_le]
-    norm_num
-    constructor <;> linarith
-  have hhat {ρ : ℂ} (hρ : ρ ∈ stripZeros) (τ : ℝ) :
-      ‖(zeroMult ρ : ℂ) * φ.hat (ρ - 1 / 2 + I * τ)‖ ≤
-        zeroMult ρ * (M / (1 + normSq (ρ - 1 / 2 + I * τ)) ^ 2) := by
-    rw [norm_mul, norm_natCast]
-    exact mul_le_mul_of_nonneg_left (hφ _ (hre hρ τ)) (Nat.cast_nonneg _)
   have hns (ρ : ℂ) (τ : ℝ) : 0 < 1 + normSq (ρ - 1 / 2 + I * τ) := by
     linarith [normSq_nonneg (ρ - 1 / 2 + I * τ)]
   have hpos (x : ℝ) (hx : 1 ≤ x) : M / x ^ 2 ≤ M / x :=
@@ -152,8 +93,9 @@ theorem continuous_modulate_sub {a : ℝ} (ha : 0 < a) (φ : TestFunction) (s : 
   have hcont (T : ℝ) (hT : 0 ≤ T) :
       ContinuousOn (fun τ => ‖(φ.modulate τ).efFunctional - s τ‖) (uIcc (-T) T) := by
     simp only [hF]
-    refine (continuousOn_tsum (u := fun ρ => 2 * (1 + T ^ 2) * M * stripZeros.indicator w ρ)
-      (fun ρ => ?_) (hb.summable.mul_left _) fun ρ τ hτ => ?_).norm
+    refine (continuousOn_tsum
+      (u := fun ρ => 2 * (1 + T ^ 2) * M * stripZeros.indicator zeroWeight ρ) (fun ρ => ?_)
+      (hasSum_zeroWeight.summable.mul_left _) fun ρ τ hτ => ?_).norm
     · simp only [f, indicator_apply]
       split_ifs
       · exact (continuous_const.mul (φ.continuous_hat.comp (by fun_prop))).continuousOn
@@ -165,7 +107,7 @@ theorem continuous_modulate_sub {a : ℝ} (ha : 0 < a) (φ : TestFunction) (s : 
       · refine (hhat h1.1 τ).trans ?_
         have hp := one_add_normSq_le (ρ - 1 / 2) τ
         have hq := hns ρ τ
-        simp only [w, normSq_div_I]
+        simp only [zeroWeight, normSq_div_I]
         have hN := normSq_nonneg (ρ - 1 / 2)
         have hN' := normSq_nonneg (ρ - 1 / 2 + I * τ)
         calc (zeroMult ρ : ℝ) * (M / (1 + normSq (ρ - 1 / 2 + I * τ)) ^ 2)
@@ -183,7 +125,7 @@ theorem continuous_modulate_sub {a : ℝ} (ha : 0 < a) (φ : TestFunction) (s : 
       all_goals
         rw [norm_zero]
         first
-          | exact mul_nonneg (by positivity) (hw ρ)
+          | exact mul_nonneg (by positivity) (zeroWeight_nonneg ρ)
           | exact le_of_eq (mul_zero _).symm
   refine continuous_iff_continuousAt.2 fun τ => ?_
   have h := hcont (|τ| + 1) (by positivity)
@@ -210,30 +152,12 @@ theorem mean_modulate_le {a : ℝ} (ha : 0 < a) (φ : TestFunction) :
     have : min (a / 2) (1 / 8) ≤ 1 / 8 := min_le_right _ _
     have h0 : 0 < min (a / 2) (1 / 8) := lt_min (by linarith) (by norm_num)
     simp only [κ]; nlinarith
-  obtain ⟨M, hM, hφ⟩ := φ.exists_hat_bound
+  obtain ⟨M, hM, hhat⟩ := exists_modulated_hat_bound φ
   obtain ⟨A, hA, hcount⟩ := WeilExplicit.exterior_mult_le ha
-  let w (ρ : ℂ) := (zeroMult ρ : ℝ) / (1 + normSq ((ρ - 1 / 2) / I))
-  have hw (ρ : ℂ) : 0 ≤ w ρ :=
-    div_nonneg (Nat.cast_nonneg _) (add_nonneg zero_le_one (normSq_nonneg _))
-  have hb := (hasSum_subtype_iff_indicator (f := w)).1
-    WeilExplicit.summable_zeroMult_div_one_add_normSq.hasSum
-  set W := ∑' ρ : stripZeros, w ρ
-  have hW : 0 ≤ W := tsum_nonneg fun _ => hw _
+  set W := ∑' ρ : stripZeros, zeroWeight ρ
+  have hW : 0 ≤ W := tsum_nonneg fun _ => zeroWeight_nonneg _
   refine ⟨9 * Real.pi * M * A + 8 * M * W, by positivity, fun T hT s hs => ?_⟩
   have hT0 : 0 < T := by linarith
-  have hre {ρ : ℂ} (hρ : ρ ∈ stripZeros) (τ : ℝ) : |(ρ - 1 / 2 + I * τ).re| ≤ 1 / 2 := by
-    have h1 := hρ.2.1
-    have h2 := hρ.2.2
-    simp only [add_re, sub_re, mul_re, I_re, I_im, ofReal_re, ofReal_im, abs_le]
-    norm_num
-    constructor <;> linarith
-  have hhat {ρ : ℂ} (hρ : ρ ∈ stripZeros) (τ : ℝ) :
-      ‖(zeroMult ρ : ℂ) * φ.hat (ρ - 1 / 2 + I * τ)‖ ≤
-        zeroMult ρ * (M / (1 + normSq (ρ - 1 / 2 + I * τ)) ^ 2) := by
-    rw [norm_mul, norm_natCast]
-    exact mul_le_mul_of_nonneg_left (hφ _ (hre hρ τ)) (Nat.cast_nonneg _)
-  have hns (ρ : ℂ) (τ : ℝ) : 0 < 1 + normSq (ρ - 1 / 2 + I * τ) := by
-    linarith [normSq_nonneg (ρ - 1 / 2 + I * τ)]
   have hpos (x : ℝ) (hx : 1 ≤ x) : M / x ^ 2 ≤ M / x :=
     div_le_div_of_nonneg_left hM (by linarith) (by nlinarith)
   have hint : IntervalIntegrable (fun τ => ‖(φ.modulate τ).efFunctional - s τ‖) volume (-T) T :=
@@ -251,7 +175,8 @@ theorem mean_modulate_le {a : ℝ} (ha : 0 < a) (φ : TestFunction) :
     have hτ' : |τ| ≤ T := abs_le.2 hτ
     have hr := hasSum_remainder (T := 2 * T) ha (hs τ)
     simp only [TestFunction.hat_modulate] at hr
-    have key := HasSum.norm_le_of_bounded hr (hb.mul_left (8 * M / (1 + T ^ 2))) fun ρ => by
+    have key := HasSum.norm_le_of_bounded hr (hasSum_zeroWeight.mul_left (8 * M / (1 + T ^ 2)))
+      fun ρ => by
       by_cases hρ : ρ ∈ stripZeros ∧ a ≤ |ρ.re - 1 / 2| ∧ 2 * T < |ρ.im|
       · rw [indicator_of_mem (by exact hρ), indicator_of_mem hρ.1]
         refine (hhat hρ.1 τ).trans ?_
@@ -281,7 +206,7 @@ theorem mean_modulate_le {a : ℝ} (ha : 0 < a) (φ : TestFunction) :
           simp only [sub_re, sub_im]
           norm_num
           ring
-        simp only [w, e1, e2]
+        simp only [zeroWeight, e1, e2]
         have hX : (1 + T ^ 2) * (1 + ((ρ.re - 1 / 2) ^ 2 + ρ.im ^ 2)) ≤
             8 * (1 + ((ρ.re - 1 / 2) ^ 2 + (ρ.im + τ) ^ 2)) ^ 2 := by
           have h1 : 1 + T ^ 2 ≤ 1 + ((ρ.re - 1 / 2) ^ 2 + (ρ.im + τ) ^ 2) := by
@@ -300,7 +225,7 @@ theorem mean_modulate_le {a : ℝ} (ha : 0 < a) (φ : TestFunction) :
             mul_le_mul_of_nonneg_left key2 (Nat.cast_nonneg _)
           _ = _ := by ring
       · rw [indicator_of_notMem (by exact hρ), norm_zero]
-        exact mul_nonneg (by positivity) (indicator_nonneg (fun ρ _ => hw ρ) _)
+        exact mul_nonneg (by positivity) (indicator_nonneg (fun ρ _ => zeroWeight_nonneg ρ) _)
     set D := ∑ ρ ∈ S, (zeroMult ρ : ℂ) * φ.hat (ρ - 1 / 2 + I * τ)
     have hD : ‖D‖ ≤ ∑ ρ ∈ S, M * zeroMult ρ * (1 + (τ + ρ.im) ^ 2)⁻¹ := by
       refine (norm_sum_le _ _).trans (Finset.sum_le_sum fun ρ hρ => ?_)
@@ -409,26 +334,15 @@ theorem trace_eq_of_integral_small {a : ℝ} (ha : 0 < a) (φ : TestFunction) (s
     s τ₀ = (φ.modulate τ₀).efFunctional := by
   by_contra hne
   have hg := continuous_modulate_sub ha φ s hs
-  have hδ : 0 < ‖(φ.modulate τ₀).efFunctional - s τ₀‖ :=
+  have hx : 0 < ‖(φ.modulate τ₀).efFunctional - s τ₀‖ :=
     norm_pos_iff.2 fun h0 => hne (sub_eq_zero.1 h0).symm
-  set δ := ‖(φ.modulate τ₀).efFunctional - s τ₀‖
-  obtain ⟨r, hr, hball⟩ := Metric.eventually_nhds_iff_ball.1
-    (hg.continuousAt.eventually (lt_mem_nhds (show δ / 2 < δ by linarith)))
-  obtain ⟨r', hr2⟩ : ∃ r', r' = r / 2 := ⟨_, rfl⟩
-  have hr' : 0 < r' := by rw [hr2]; positivity
-  obtain ⟨T, hT, hle⟩ := h (r' * δ / 2) (by positivity) (|τ₀| + r)
-  have hlo : -T ≤ τ₀ - r' := by linarith [neg_abs_le τ₀]
-  have hhi : τ₀ + r' ≤ T := by linarith [le_abs_self τ₀]
-  have hint := fun u v : ℝ => (hg.intervalIntegrable (μ := volume) u v)
-  have h1 := intervalIntegral.integral_mono_interval hlo (by linarith) hhi
-    (Eventually.of_forall fun τ => norm_nonneg _) (hint _ _)
-  have h2 := intervalIntegral.integral_mono_on (μ := volume) (by linarith : τ₀ - r' ≤ τ₀ + r')
-    (intervalIntegrable_const (c := δ / 2)) (hint _ _) fun τ hτ => by
-      refine (hball τ ?_).le
-      rw [Metric.mem_ball, Real.dist_eq, abs_lt]
-      constructor <;> linarith [hτ.1, hτ.2]
-  rw [intervalIntegral.integral_const, smul_eq_mul] at h2
-  nlinarith
+  have hR : -(|τ₀| + 1) < |τ₀| + 1 := by linarith [abs_nonneg τ₀]
+  have hpos := intervalIntegral.integral_pos hR hg.continuousOn (fun _ _ => norm_nonneg _)
+    ⟨τ₀, ⟨by linarith [neg_abs_le τ₀], by linarith [le_abs_self τ₀]⟩, hx⟩
+  obtain ⟨T, hT, hle⟩ := h _ (half_pos hpos) (|τ₀| + 1)
+  have := intervalIntegral.integral_mono_interval (by linarith) hR.le hT
+    (Eventually.of_forall fun _ => norm_nonneg _) (hg.intervalIntegrable (μ := volume) (-T) T)
+  linarith
 
 /-- **Markov's inequality.** With `C` and `κ` as in `mean_modulate_le`, the set of `τ ∈ (-T, T]`
 where the difference has absolute value at least `ε` has measure at most

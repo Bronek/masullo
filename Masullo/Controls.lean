@@ -56,21 +56,7 @@ theorem tsum_variant_fails :
     exact zero_ne_one (tendsto_nhds_unique h1 tendsto_const_nhds)
 
 /-- The Mellin transform of a test function is continuous. -/
-lemma continuous_hat (φ : TestFunction) : Continuous φ.hat := by
-  have hloc : LocallyIntegrableOn φ.toFun (Ioi 0) :=
-    φ.contDiff.continuous.locallyIntegrable.locallyIntegrableOn _
-  have htop : φ.toFun =ᶠ[atTop] fun _ => 0 := by
-    obtain ⟨R, hR⟩ := φ.hasCompactSupport.isCompact.bddAbove
-    filter_upwards [eventually_gt_atTop R] with t ht
-    exact image_eq_zero_of_notMem_tsupport fun h => absurd (hR h) (not_le.2 ht)
-  have hbot : φ.toFun =ᶠ[𝓝[>] 0] fun _ => 0 := by
-    filter_upwards [mem_nhdsWithin_of_mem_nhds (Iio_mem_nhds (zero_lt_one (α := ℝ)))] with t ht
-    exact image_eq_zero_of_notMem_tsupport fun h =>
-      lt_asymm (mem_Iio.1 ht) (mem_Ioi.1 (φ.tsupport_subset h))
-  refine continuous_iff_continuousAt.2 fun z => ?_
-  exact (mellin_differentiableAt_of_isBigO_rpow hloc
-    (htop.trans_isBigO (Asymptotics.isBigO_zero _ _)) (lt_add_one z.re)
-    (hbot.trans_isBigO (Asymptotics.isBigO_zero _ _)) (sub_one_lt z.re)).continuousAt
+lemma continuous_hat (φ : TestFunction) : Continuous φ.hat := φ.continuous_hat
 
 /-- The translates of one test function by multiples of a fixed step do not separate all points:
 a nonzero weighting of two points, at neither of which the Mellin transform vanishes, annihilates
@@ -79,31 +65,22 @@ theorem discrete_translates_fail :
     ∃ (φ : TestFunction) (x : ℝ) (hx : 0 < x) (l w : Fin 2 → ℂ), Function.Injective l ∧
       (∀ i, w i ≠ 0) ∧ (∀ i, φ.hat (l i) ≠ 0) ∧
       ∀ k : ℕ, HasSum (fun i => w i * (φ.translate (k * x) (by positivity)).hat (l i)) 0 := by
-  obtain ⟨φ, hφ⟩ := TestFunction.exists_hat_ne_zero 0
-  have hlim : Tendsto (fun x : ℝ => ((2 * Real.pi / x : ℝ) : ℂ) * I) atTop (𝓝 0) := by
-    have h := (tendsto_const_nhds (x := 2 * Real.pi)).div_atTop (tendsto_id (α := ℝ))
-    simpa using ((continuous_ofReal.tendsto 0).comp h).mul_const I
-  have hev := hlim.eventually ((continuous_hat φ).continuousAt.eventually_ne hφ)
-  obtain ⟨x, hx1, hx⟩ := (hev.and (eventually_gt_atTop 0)).exists
-  have hq : ((2 * Real.pi / x : ℝ) : ℂ) * I ≠ 0 :=
-    mul_ne_zero (ofReal_ne_zero.2 (by positivity)) I_ne_zero
-  set q : ℂ := ((2 * Real.pi / x : ℝ) : ℂ) * I with hqdef
-  refine ⟨φ, x, hx, ![0, q], ![φ.hat q, -φ.hat 0], ?_, ?_, ?_, ?_⟩
+  obtain ⟨φ, -, hφ⟩ :=
+    TestFunction.exists_nonneg_hat_ne_zero_on ((countable_singleton (0 : ℂ)).insert I)
+  refine ⟨φ, 2 * Real.pi, by positivity, ![0, I], ![φ.hat I, -φ.hat 0], ?_, ?_, ?_, ?_⟩
   · intro i j
-    fin_cases i <;> fin_cases j <;> simp [hq, hq.symm]
+    fin_cases i <;> fin_cases j <;> simp [I_ne_zero, I_ne_zero.symm]
   · intro i
-    fin_cases i <;> simp [hφ, hx1]
+    fin_cases i <;> simp [hφ]
   · intro i
-    fin_cases i <;> simp [hφ, hx1]
+    fin_cases i <;> simp [hφ]
   · intro k
-    have e : exp (((k * x : ℝ) : ℂ) * q) = 1 := by
-      rw [← exp_nat_mul_two_pi_mul_I k, hqdef]
-      congr 1
-      have : (x : ℂ) ≠ 0 := ofReal_ne_zero.2 hx.ne'
+    have e : exp (((k * (2 * Real.pi) : ℝ) : ℂ) * I) = 1 := by
+      rw [← exp_nat_mul_two_pi_mul_I k]
       push_cast
-      field_simp
-    have hs := hasSum_fintype fun i => (![φ.hat q, -φ.hat 0] : Fin 2 → ℂ) i *
-      (φ.translate (k * x) (by positivity)).hat ((![0, q] : Fin 2 → ℂ) i)
+      ring_nf
+    have hs := hasSum_fintype fun i => (![φ.hat I, -φ.hat 0] : Fin 2 → ℂ) i *
+      (φ.translate (k * (2 * Real.pi)) (by positivity)).hat ((![0, I] : Fin 2 → ℂ) i)
     convert hs using 1
     symm
     simp only [Fin.sum_univ_two, TestFunction.hat_translate, Matrix.cons_val_zero,
@@ -113,9 +90,8 @@ theorem discrete_translates_fail :
 /-- The inner expansion holds at widths above `1/2`, where it carries no information. -/
 theorem innerExpansion_of_half_lt {a : ℝ} (ha : 1 / 2 < a) : InnerExpansion a := by
   rw [innerExpansion_iff]
-  rintro ⟨ρ, -, h0, h1, h⟩
-  have : |ρ.re - 1 / 2| ≤ 1 / 2 := abs_le.2 ⟨by linarith, by linarith⟩
-  linarith
+  rintro ⟨ρ, hz, h0, h1, h⟩
+  exact ((abs_sub_half_lt_half ⟨hz, h0, h1⟩).trans ha).not_ge h
 
 /-- Transform of a modulated indicator of `(0, 1]`. -/
 lemma jet_window (c z : ℂ) (h : z ≠ c) :

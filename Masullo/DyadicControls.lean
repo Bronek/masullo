@@ -26,23 +26,23 @@ lemma dyadicSum_le {X : ℝ} (hX : 0 < X) : dyadicSum X ≤ (Real.log 4 + 4) * X
   refine Finset.sum_le_sum fun _ _ =>
     mul_le_of_le_one_right vonMangoldt_nonneg (weight_le_one _)
 
+lemma abs_dyadicDiff_le {x : ℝ} (hx : 0 < x) : |dyadicDiff x| ≤ 2 * (Real.log 4 + 4) * x := by
+  have h1 := dyadicSum_le hx
+  have h2 := dyadicSum_le (X := 2 * x) (by linarith)
+  rw [abs_le, dyadicDiff]
+  constructor <;> linarith [dyadicSum_nonneg x, dyadicSum_nonneg (2 * x)]
+
 /-- The upper dyadic bound holds at `θ = 1`, where zero-freeness is already unconditional. -/
 theorem dyadicDiff_le_window : ∀ X, ∃ Y ≥ X, ∀ x ∈ Icc Y (Y ^ (1 + (1 : ℝ))),
     dyadicDiff x ≤ (2 * (Real.log 4 + 4)) * x ^ (1 : ℝ) := fun X =>
-  ⟨max X 2, le_max_left _ _, fun x hx => by
-    have h1 := (le_max_right X 2).trans hx.1
-    have h2 := dyadicSum_le (X := 2 * x) (by linarith)
-    rw [Real.rpow_one, dyadicDiff]
-    linarith [dyadicSum_nonneg x]⟩
+  ⟨max X 1, le_max_left _ _, fun x hx => by
+    simpa using le_of_abs_le (abs_dyadicDiff_le (by linarith [(le_max_right X 1).trans hx.1]))⟩
 
 /-- The lower dyadic bound holds at `θ = 1`. -/
 theorem le_dyadicDiff_window : ∀ X, ∃ Y ≥ X, ∀ x ∈ Icc Y (Y ^ (1 + (1 : ℝ))),
     -((2 * (Real.log 4 + 4)) * x ^ (1 : ℝ)) ≤ dyadicDiff x := fun X =>
-  ⟨max X 2, le_max_left _ _, fun x hx => by
-    have h1 := (le_max_right X 2).trans hx.1
-    have h2 := dyadicSum_le (X := x) (by linarith)
-    rw [Real.rpow_one, dyadicDiff]
-    linarith [dyadicSum_nonneg (2 * x)]⟩
+  ⟨max X 1, le_max_left _ _, fun x hx => by
+    simpa using neg_le_of_abs_le (abs_dyadicDiff_le (by linarith [(le_max_right X 1).trans hx.1]))⟩
 
 /-- If zeta has a zero in `Re s > θ`, the upper bound with `C = 0` still holds at arbitrarily late
 points: windows of length zero do not suffice. -/

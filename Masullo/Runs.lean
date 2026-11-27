@@ -12,9 +12,10 @@ the critical strip has real part at most `max θ (1/2)` (`exists_rightmost_of_bo
 on the zeros is that those to the right of each line `re s = σ > 1/2` have summable reciprocal
 ordinates (`WeilExplicit.summable_inv_im_of_half_lt`). For `θ < 1` the bound gives the trace
 identity for all tests at a positive width below `1/2` (`trace_width_of_bound`). Sign runs are
-the case `C = 0`. On windows `[Y, Y ^ (1 + δ)]` the same argument gives the exact exponent: for
-`θ ≥ 1/2`, a bound `ε dyadicDiff x ≥ -C x ^ θ` with a sign `ε = ±1` that may depend on `Y` rules
-out zeros to the right of `θ` (`ne_zero_of_dyadic_window`).
+the case `C = 0`. On windows `[Y, Y ^ (1 + δ)]` the exponent is exact: for `θ ≥ 1/2`, a bound
+`ε dyadicDiff x ≥ -C x ^ θ` with a sign `ε = ±1` that may depend on `Y` rules out zeros to the
+right of `θ` (`ne_zero_of_dyadic_window`, a case of
+`Window.riemannZeta_ne_zero_of_signed_window`).
 
 The proof feeds Weil's explicit formula a smoothed version of the kernel of `dyadicDiff` in
 the logarithmic variable, then averages over the shifts of products of two-point probability
@@ -1000,7 +1001,6 @@ theorem exists_rightmost_of_bound {R θ C : ℝ} (hR : 1 < R)
   have hsum := hv.comp_injective (i := i) hi
   have hle := tsum_comp_le_tsum_of_inj hv (fun j => (one_div_pos.2 j.1.2.2.2).le) hi
   have hW := (lt_div_iff₀' (by positivity : (0 : ℝ) < 3 * π)).1 (hle.trans_lt hF)
-  set σ := p.re
   obtain ⟨ρ, hρ, hl⟩ := hcon p hpZ
   obtain ⟨ρ₀, h₀, hmin⟩ := exists_min_im (upper_nonempty hρ hl) hsum
   obtain ⟨Y₀, hY₀⟩ := both_signs hσ2.le (by linarith) (le_max_right θ 0)
@@ -1038,38 +1038,12 @@ theorem trace_width_of_bound {R θ C : ℝ} (hR : 1 < R) (hθ : θ < 1)
 
 /-- Let `θ ≥ 1/2`. If for arbitrarily large `Y` there is a sign `ε = ±1`, which may depend on `Y`,
 with `ε dyadicDiff x ≥ -C x ^ θ` on all of `[Y, Y ^ (1 + δ)]`, then zeta has no zeros to the right
-of `θ`. For `θ ≥ 1/2` this contains both one-sided criteria of `Masullo/Dyadic.lean`. The converse
+of `θ`. This is the case `θ ≥ 1/2` of `Window.riemannZeta_ne_zero_of_signed_window`. The converse
 is not asserted. -/
 theorem ne_zero_of_dyadic_window {θ δ C : ℝ} (hθ : 1 / 2 ≤ θ) (hδ : 0 < δ)
     (h : ∀ X, ∃ Y ≥ X, ∃ ε : ℝ, (ε = 1 ∨ ε = -1) ∧
       ∀ x ∈ Icc Y (Y ^ (1 + δ)), -(C * x ^ θ) ≤ ε * dyadicDiff x) {ρ : ℂ}
-    (hρ : θ < ρ.re) : riemannZeta ρ ≠ 0 := by
-  intro hz
-  have hs : ρ ∈ stripZeros := ⟨hz, by linarith, re_lt_one_of_zero hz⟩
-  set σ := (θ + ρ.re) / 2 with hσdef
-  have hσ : 1 / 2 < σ := by linarith
-  have hσρ : σ < ρ.re := by linarith
-  have hsum : Summable fun z : upper σ => 1 / (z : ℂ).im :=
-    (summable_inv_im_of_half_lt hσ).comp_injective
-      (i := fun z : upper σ => (⟨z, z.2.1, z.2.2.1.le, z.2.2.2⟩ :
-        {ρ : ℂ | ρ ∈ stripZeros ∧ σ ≤ ρ.re ∧ 0 < ρ.im}))
-      (fun _ _ e => Subtype.ext (Subtype.mk.inj e))
-  obtain ⟨ρ₀, h₀, hmin⟩ := exists_min_im (upper_nonempty hs hσρ) hsum
-  obtain ⟨R, hR, hW⟩ : ∃ R : ℝ, 0 < R ∧
-      3 * π * ∑' z : upper σ, 1 / (z : ℂ).im < Real.log R :=
-    ⟨Real.exp (3 * π * ∑' z : upper σ, 1 / (z : ℂ).im + 1), Real.exp_pos _, by simp⟩
-  obtain ⟨Y₀, hY₀⟩ := both_signs hσ.le hR (by linarith : (0 : ℝ) ≤ θ) (by linarith : θ ≤ σ)
-    (le_max_right C 0) h₀ hmin hsum hW
-  obtain ⟨Y, hY, ε, hε, hw⟩ := h (max (max Y₀ 1) (R ^ (1 / δ)))
-  have hY1 : 1 ≤ Y := (le_max_right _ _).trans ((le_max_left _ _).trans hY)
-  have hRY : R * Y ≤ Y ^ (1 + δ) := by
-    have h2 := Real.rpow_le_rpow (by positivity) ((le_max_right _ _).trans hY) hδ.le
-    rw [← Real.rpow_mul hR.le, one_div_mul_cancel hδ.ne', Real.rpow_one] at h2
-    rw [Real.rpow_add (by linarith), Real.rpow_one, mul_comm]
-    gcongr
-  refine hY₀ Y ((le_max_left _ _).trans ((le_max_left _ _).trans hY)) ε hε fun x hx => ?_
-  have h3 := hw x ⟨hx.1, hx.2.trans hRY⟩
-  have hx0 : 0 ≤ x ^ θ := Real.rpow_nonneg (by linarith [hx.1]) _
-  nlinarith [le_max_left C 0]
+    (hρ : θ < ρ.re) : riemannZeta ρ ≠ 0 :=
+  riemannZeta_ne_zero_of_signed_window (by linarith) hδ h hρ
 
 end Masullo.Runs

@@ -105,68 +105,57 @@ theorem eq_zero_of_hasSum_exp [Countable ι] (hl : Function.Injective l) {B : �
     (h : ∀ x : ℝ, 0 ≤ x → HasSum (fun i => c i * exp (x * l i)) 0) (j : ι) : c j = 0 := by
   classical
   have hc : Summable fun i => ‖c i‖ := by simpa using (h 0 le_rfl).summable.norm
-  have hU := isOpen_compl_range hd
-  have hA : AnalyticOnNhd ℂ (fun s => ∑' i, c i / (s - l i)) (range l)ᶜ :=
-    (differentiableOn_cauchySum hd hc).analyticOnNhd hU
-  have hconn : IsPreconnected (range l)ᶜ :=
-    ((countable_range l).isConnected_compl_of_one_lt_rank (by simp)).isPreconnected
-  have hp : (((B + 1 : ℝ) : ℂ)) ∈ (range l)ᶜ := by
+  -- continue `c j + (s - l j) ∑_{i ≠ j} c i / (s - l i)` across the other exponents
+  let J := {i // i ∉ ({j} : Finset ι)}
+  let l' (i : J) := l i
+  have hd' : ∀ z, ∃ r > 0, ∀ i, l' i ≠ z → r ≤ ‖z - l' i‖ := fun z =>
+    let ⟨r, hr, h⟩ := hd z; ⟨r, hr, fun i => h i⟩
+  let G (s : ℂ) := c j + (s - l j) * ∑' i : J, c i / (s - l' i)
+  have hA : AnalyticOnNhd ℂ G (range l')ᶜ := analyticOnNhd_const.add
+    ((analyticOnNhd_id.sub analyticOnNhd_const).mul ((differentiableOn_cauchySum
+      (c := fun i : J => c i) hd' (hc.subtype _)).analyticOnNhd (isOpen_compl_range hd')))
+  have hconn : IsPreconnected (range l')ᶜ :=
+    ((countable_range l').isConnected_compl_of_one_lt_rank (by simp)).isPreconnected
+  have hp : (((B + 1 : ℝ) : ℂ)) ∈ (range l')ᶜ := by
     rintro ⟨i, hi⟩
     have := hB i
-    rw [hi, ofReal_re] at this
+    rw [show l i = _ from hi, ofReal_re] at this
     linarith
-  have hF : EqOn (fun s => ∑' i, c i / (s - l i)) 0 (range l)ᶜ := by
+  have hG : EqOn G 0 (range l')ᶜ := by
     refine hA.eqOn_of_preconnected_of_eventuallyEq analyticOnNhd_const hconn hp ?_
     have : {s : ℂ | B < s.re} ∈ 𝓝 ((B + 1 : ℝ) : ℂ) :=
       (isOpen_lt continuous_const continuous_re).mem_nhds (by simp)
-    filter_upwards [this] with s hs using cauchySum_eq_zero hB hc h hs
-  obtain ⟨r, hr, hj⟩ := hd (l j)
-  set M := ∑' i, ‖c i‖ / (r / 2)
-  have hM : Summable fun i => ‖c i‖ / (r / 2) := hc.div_const _
-  have bound : ∀ s, s ≠ l j → ‖s - l j‖ < r / 2 → ‖c j‖ ≤ ‖s - l j‖ * M := by
-    intro s hs hsr
-    have far : ∀ i, i ≠ j → r / 2 ≤ ‖s - l i‖ := by
-      intro i hi
-      have h1 := hj i fun e => hi (hl e)
-      have := norm_add_le (l j - s) (s - l i)
-      rw [sub_add_sub_cancel, norm_sub_rev (l j) s] at this
+    filter_upwards [this] with s hs
+    have hne : s - l j ≠ 0 := fun e => by
+      have := hB j
+      rw [← sub_eq_zero.1 e] at this
       linarith
-    have hsU : s ∈ (range l)ᶜ := by
-      rintro ⟨i, rfl⟩
-      have := far i fun e => hs (by rw [e])
-      simp at this
-      linarith
-    have le : ∀ i, ‖if i = j then 0 else c i / (s - l i)‖ ≤ ‖c i‖ / (r / 2) := by
-      intro i
-      split_ifs with e
-      · simp only [norm_zero]; positivity
-      · rw [norm_div]
-        exact div_le_div_of_nonneg_left (norm_nonneg _) (by positivity) (far i e)
-    have hne : s - l j ≠ 0 := sub_ne_zero.2 hs
-    have hS : Summable fun i => c i / (s - l i) := by
-      have h1 : Summable fun i => if i = j then 0 else c i / (s - l i) :=
-        Summable.of_norm_bounded hM le
-      refine h1.congr_cofinite ?_
-      filter_upwards [(finite_singleton j).compl_mem_cofinite] with i hi
-      exact if_neg hi
-    have h0 := hF hsU
-    simp only [Pi.zero_apply] at h0
-    rw [hS.tsum_eq_add_tsum_ite j] at h0
-    have h1 : ‖c j / (s - l j)‖ ≤ M := by
-      rw [eq_neg_of_add_eq_zero_left h0, norm_neg]
-      exact tsum_of_norm_bounded hM.hasSum le
-    rw [norm_div, div_le_iff₀ (norm_pos_iff.2 hne)] at h1
-    linarith
-  have hlim : Tendsto (fun s => ‖s - l j‖ * M) (𝓝[≠] (l j)) (𝓝 0) := by
-    have : Continuous fun s => ‖s - l j‖ * M := by fun_prop
-    simpa using (this.tendsto (l j)).mono_left nhdsWithin_le_nhds
-  have hev : ∀ᶠ s in 𝓝[≠] (l j), ‖c j‖ ≤ ‖s - l j‖ * M := by
-    filter_upwards [self_mem_nhdsWithin,
-      nhdsWithin_le_nhds (Metric.ball_mem_nhds (l j) (half_pos hr))] with s h1 h2
-    exact bound s h1 (by simpa [dist_eq_norm] using h2)
-  exact norm_le_zero_iff.1 (ge_of_tendsto hlim hev)
+    have h0 := hasSum_cauchySum (F := 0) hB hc h hs
+    simp only [Pi.zero_apply, zero_mul, integral_zero] at h0
+    have e := h0.summable.sum_add_tsum_subtype_compl {j}
+    rw [Finset.sum_singleton, h0.tsum_eq] at e
+    have e' : c j = (s - l j) * (c j / (s - l j)) := (mul_div_cancel₀ _ hne).symm
+    simp only [G, Pi.zero_apply]
+    linear_combination e' + (s - l j) * e
+  have hj : l j ∈ (range l')ᶜ := fun ⟨i, hi⟩ => i.2 (Finset.mem_singleton.2 (hl hi))
+  simpa [G] using hG hj
 
 end ExpSum
+
+/-- The Mellin transform in the logarithmic variable. -/
+lemma Spectrum.mellin_eq_integral (h : ℝ → ℂ) (s : ℂ) :
+    mellin h s = ∫ x : ℝ, h (Real.exp x) * exp (s * x) := by
+  rw [mellin_eq_fourier, Real.fourier_eq', ← integral_neg_eq_self]
+  refine integral_congr_ae (Eventually.of_forall fun u => ?_)
+  have hin : inner ℝ (-u) (s.im / (2 * Real.pi)) = s.im / (2 * Real.pi) * -u := rfl
+  simp only [neg_neg, smul_eq_mul, real_smul, hin]
+  rw [ofReal_exp, ← mul_assoc, ← Complex.exp_add, mul_comm]
+  congr 2
+  have h2 : (Real.pi : ℂ) ≠ 0 := by simp [Real.pi_ne_zero]
+  conv_rhs => rw [← re_add_im s]
+  push_cast
+  field_simp
+  ring
 
 /-! ### Test functions -/
 
@@ -216,8 +205,51 @@ lemma hat_translate (φ : TestFunction) (x : ℝ) (hx : 0 ≤ x) (z : ℂ) :
   push_cast
   ring_nf
 
-/-- The Mellin transform does not vanish identically on test functions at any point. -/
-lemma exists_hat_ne_zero (z : ℂ) : ∃ φ : TestFunction, φ.hat z ≠ 0 := by
+/-- The values are nonnegative real numbers. -/
+def Nonneg (φ : TestFunction) : Prop := ∀ x, 0 ≤ (φ.toFun x).re ∧ (φ.toFun x).im = 0
+
+/-- The tilt `x ↦ x ^ w φ(x)`. -/
+noncomputable def tilt (φ : TestFunction) (w : ℂ) : TestFunction where
+  toFun t := φ.toFun t * exp (w * (Real.log t : ℂ))
+  contDiff := by
+    rw [contDiff_iff_contDiffAt]
+    intro t
+    by_cases ht : t ∈ tsupport φ.toFun
+    · have ht0 : t ≠ 0 := by
+        have : (1 : ℝ) < t := φ.tsupport_subset ht
+        linarith
+      have h2 : ContDiffAt ℝ ∞ (fun t => ((Real.log t : ℝ) : ℂ)) t :=
+        ofRealCLM.contDiff.contDiffAt.comp t (Real.contDiffAt_log.2 ht0)
+      exact φ.contDiff.contDiffAt.mul (contDiffAt_const.mul h2).cexp
+    · have : φ.toFun =ᶠ[𝓝 t] fun _ => 0 := notMem_tsupport_iff_eventuallyEq.1 ht
+      refine contDiffAt_const (c := (0 : ℂ)).congr_of_eventuallyEq ?_
+      filter_upwards [this] with x hx
+      simp [hx]
+  hasCompactSupport := φ.hasCompactSupport.mul_right
+  tsupport_subset := (tsupport_mul_subset_left).trans φ.tsupport_subset
+
+/-- Tilting by `w` shifts the transform by `w`. -/
+lemma hat_tilt (φ : TestFunction) (w z : ℂ) : (φ.tilt w).hat z = φ.hat (z + w) := by
+  unfold hat mellin
+  refine setIntegral_congr_fun measurableSet_Ioi fun t ht => ?_
+  have ht' : (t : ℂ) ≠ 0 := ofReal_ne_zero.2 (ne_of_gt ht)
+  simp only [tilt, smul_eq_mul]
+  rw [show z + w - 1 = z - 1 + w by ring, cpow_add _ _ ht', cpow_def_of_ne_zero ht' w,
+    ← ofReal_log (le_of_lt ht)]
+  ring_nf
+
+lemma Nonneg.tilt {φ : TestFunction} (h : φ.Nonneg) (r : ℝ) : (φ.tilt r).Nonneg := fun x => by
+  have e : φ.toFun x = ((φ.toFun x).re : ℂ) := Complex.ext rfl (by simp [(h x).2])
+  have e2 : (φ.tilt r).toFun x = (((φ.toFun x).re * Real.exp (r * Real.log x) : ℝ) : ℂ) := by
+    simp only [TestFunction.tilt]
+    conv_lhs => rw [e]
+    push_cast
+    rfl
+  rw [e2, ofReal_re, ofReal_im]
+  exact ⟨mul_nonneg (h x).1 (Real.exp_pos _).le, rfl⟩
+
+/-- Some nonnegative test function has transform nonzero at `1`. -/
+lemma exists_nonneg_hat_one : ∃ φ : TestFunction, φ.Nonneg ∧ φ.hat 1 ≠ 0 := by
   let b : ContDiffBump (2 : ℝ) := ⟨1 / 4, 1 / 2, by norm_num, by norm_num⟩
   have hbs : tsupport (b : ℝ → ℝ) ⊆ Ioi 1 := by
     rw [b.tsupport_eq]
@@ -226,66 +258,24 @@ lemma exists_hat_ne_zero (z : ℂ) : ∃ φ : TestFunction, φ.hat z ≠ 0 := by
     have := (abs_le.1 ht).1
     change -(1 / 2 : ℝ) ≤ _ at this
     rw [mem_Ioi]; linarith
-  let f : ℝ → ℂ := fun t => (b t : ℂ) * exp (-z * Real.log t)
-  have hsub : tsupport f ⊆ tsupport (b : ℝ → ℝ) := by
-    refine closure_mono fun t ht => ?_
-    simp only [Function.mem_support, f] at ht ⊢
-    intro h
-    simp [h] at ht
-  have hf : ContDiff ℝ ∞ f := by
-    rw [contDiff_iff_contDiffAt]
-    intro t
-    by_cases ht : t ∈ tsupport f
-    · have ht0 : t ≠ 0 := by
-        have : (1 : ℝ) < t := hbs (hsub ht)
-        linarith
-      have h1 : ContDiffAt ℝ ∞ (fun t => (b t : ℂ)) t :=
-        ofRealCLM.contDiff.contDiffAt.comp t b.contDiffAt
-      have h2 : ContDiffAt ℝ ∞ (fun t => ((Real.log t : ℝ) : ℂ)) t :=
-        ofRealCLM.contDiff.contDiffAt.comp t (Real.contDiffAt_log.2 ht0)
-      exact h1.mul (contDiffAt_const.mul h2).cexp
-    · have : f =ᶠ[𝓝 t] fun _ => 0 := notMem_tsupport_iff_eventuallyEq.1 ht
-      exact contDiffAt_const.congr_of_eventuallyEq this
-  refine ⟨⟨f, hf, b.hasCompactSupport.of_isClosed_subset (isClosed_tsupport f) hsub,
-    hsub.trans hbs⟩, ?_⟩
-  have e : mellin f z = ∫ t in Ioi (0 : ℝ), ((b t / t : ℝ) : ℂ) := by
-    refine setIntegral_congr_fun measurableSet_Ioi fun t ht => ?_
-    have ht' : (t : ℂ) ≠ 0 := ofReal_ne_zero.2 (ne_of_gt ht)
-    simp only [f, smul_eq_mul, cpow_def_of_ne_zero ht', ← ofReal_log (le_of_lt ht)]
-    rw [mul_left_comm, ← Complex.exp_add,
-      show (Real.log t : ℂ) * (z - 1) + -z * Real.log t = ((-Real.log t : ℝ) : ℂ) by
-        push_cast; ring, ← ofReal_exp, Real.exp_neg, Real.exp_log ht]
-    push_cast
-    rfl
-  change mellin f z ≠ 0
+  refine ⟨⟨fun t => (b t : ℂ), ofRealCLM.contDiff.comp b.contDiff,
+    b.hasCompactSupport.comp_left (g := ofReal) rfl,
+    (closure_mono fun t ht => by simpa using ht).trans hbs⟩,
+    fun x => ⟨by simpa using b.nonneg, by simp⟩, ?_⟩
+  have e : mellin (fun t => (b t : ℂ)) 1 = ∫ t in Ioi (0 : ℝ), ((b t : ℝ) : ℂ) :=
+    setIntegral_congr_fun measurableSet_Ioi fun t _ => by simp
+  change mellin _ 1 ≠ 0
   rw [e, integral_complex_ofReal, ofReal_ne_zero]
-  have hcont : Continuous fun t : ℝ => b t / t := by
-    rw [continuous_iff_continuousAt]
-    intro t
-    by_cases ht : t ∈ tsupport (b : ℝ → ℝ)
-    · have : (1 : ℝ) < t := hbs ht
-      exact b.continuous.continuousAt.div continuousAt_id (by simp; linarith)
-    · have hev : (fun t : ℝ => b t / t) =ᶠ[𝓝 t] fun _ => 0 := by
-        filter_upwards [notMem_tsupport_iff_eventuallyEq.1 ht] with u hu
-        simp [hu]
-      exact continuousAt_const.congr hev.symm
-  have hcomp : HasCompactSupport fun t : ℝ => b t / t :=
-    b.hasCompactSupport.mono fun t ht => by
-      simp only [Function.mem_support] at ht ⊢
-      exact fun h => ht (by simp [h])
-  have hpos : 0 < ∫ t in Ioi (0 : ℝ), b t / t := by
-    rw [setIntegral_pos_iff_support_of_nonneg_ae]
-    · refine lt_of_lt_of_le ?_ (measure_mono (s := Metric.ball (2 : ℝ) (1 / 2)) ?_)
-      · exact Metric.measure_ball_pos _ _ (by norm_num)
-      · intro t ht
-        have hb : b t ≠ 0 := by
-          rw [← Function.mem_support, b.support_eq]; exact ht
-        have : (1 : ℝ) < t := hbs (subset_tsupport _ hb)
-        exact ⟨div_ne_zero hb (by linarith), by simp; linarith⟩
-    · filter_upwards [ae_restrict_mem measurableSet_Ioi] with t ht
-      exact div_nonneg b.nonneg (le_of_lt ht)
-    · exact (hcont.integrable_of_hasCompactSupport hcomp).integrableOn
-  exact hpos.ne'
+  refine ne_of_gt ((setIntegral_pos_iff_support_of_nonneg_ae (ae_of_all _ fun t => b.nonneg)
+    (b.continuous.integrable_of_hasCompactSupport b.hasCompactSupport).integrableOn).2 ?_)
+  rw [b.support_eq]
+  refine (Metric.measure_ball_pos _ _ b.rOut_pos).trans_le (measure_mono fun t ht => ⟨ht, ?_⟩)
+  exact zero_lt_one.trans (mem_Ioi.1 (hbs (subset_tsupport _ (b.support_eq.symm ▸ ht))))
+
+/-- The Mellin transform does not vanish identically on test functions at any point. -/
+lemma exists_hat_ne_zero (z : ℂ) : ∃ φ : TestFunction, φ.hat z ≠ 0 := by
+  obtain ⟨b, -, hb⟩ := exists_nonneg_hat_one
+  exact ⟨b.tilt (1 - z), by rwa [hat_tilt, add_sub_cancel]⟩
 
 end TestFunction
 
@@ -305,6 +295,9 @@ def innerZeros (a : ℝ) : Set ℂ :=
   {ρ | riemannZeta ρ = 0 ∧ 0 < ρ.re ∧ ρ.re < 1 ∧ |ρ.re - 1 / 2| < a}
 
 lemma innerZeros_subset (a : ℝ) : innerZeros a ⊆ stripZeros := fun _ h => ⟨h.1, h.2.1, h.2.2.1⟩
+
+lemma abs_sub_half_lt_half {ρ : ℂ} (hρ : ρ ∈ stripZeros) : |ρ.re - 1 / 2| < 1 / 2 :=
+  abs_lt.2 ⟨by linarith [hρ.2.1], by linarith [hρ.2.2]⟩
 
 /-- The sum over zeros at distance at least `a` from the critical line converges to `0` on every
 test function. -/
@@ -339,86 +332,56 @@ theorem zeroMult_pos {ρ : ℂ} (h : riemannZeta ρ = 0) : 0 < zeroMult ρ := by
 
 /-! ### The equivalences -/
 
+/-- A weight on zeros in the critical strip vanishes on `S` if its sums over `S` against all test
+functions vanish. -/
+lemma weight_eq_zero_of_hasSum {S : Set ℂ} (hS : S ⊆ stripZeros) {w : ℂ → ℂ}
+    (h : ∀ φ : TestFunction, HasSum (fun ρ : S => w ρ * φ.hat ((ρ : ℂ) - 1 / 2)) 0)
+    {ρ₀ : ℂ} (hρ₀ : ρ₀ ∈ S) : w ρ₀ = 0 := by
+  obtain ⟨φ, hφ⟩ := TestFunction.exists_hat_ne_zero (ρ₀ - 1 / 2)
+  have : Countable S :=
+    (countable_zeros.mono fun ρ hρ => mem_riemannZetaZeros.2 (hS hρ).1).to_subtype
+  have key := eq_zero_of_hasSum_exp (l := fun ρ : S => (ρ : ℂ) - 1 / 2)
+    (c := fun ρ => w ρ * φ.hat ((ρ : ℂ) - 1 / 2)) (B := 1 / 2)
+    (fun x y e => Subtype.ext (sub_left_injective e))
+    (fun ρ => by
+      have := (hS ρ.2).2.2
+      norm_num
+      linarith)
+    (fun z => by
+      obtain ⟨r, hr, hiso⟩ := exists_isolating_radius (z + 1 / 2)
+      refine ⟨r, hr, fun ρ hne => ?_⟩
+      have := hiso ρ (hS ρ.2).1 fun e => hne (by rw [e]; ring)
+      rwa [show z - ((ρ : ℂ) - 1 / 2) = z + 1 / 2 - ρ by ring])
+    (fun x hx => by
+      have := h (φ.translate x hx)
+      simp_rw [TestFunction.hat_translate] at this
+      convert this using 2
+      ring) ⟨ρ₀, hρ₀⟩
+  exact (mul_eq_zero.1 key).resolve_right hφ
+
 /-- **Theorem A.** The outer zero sum vanishes iff there are no outer zeros. -/
 theorem zeroSumVanishes_iff (a : ℝ) :
     ZeroSumVanishes a ↔
       ¬ ∃ ρ : ℂ, riemannZeta ρ = 0 ∧ 0 < ρ.re ∧ ρ.re < 1 ∧ a ≤ |ρ.re - 1 / 2| := by
-  constructor
-  · rintro h ⟨ρ₀, hρ₀⟩
-    obtain ⟨φ, hφ⟩ := TestFunction.exists_hat_ne_zero (ρ₀ - 1 / 2)
-    have : Countable (outerZeros a) :=
-      (countable_zeros.mono fun ρ hρ => mem_riemannZetaZeros.2 hρ.1).to_subtype
-    have key := eq_zero_of_hasSum_exp (l := fun ρ : outerZeros a => (ρ : ℂ) - 1 / 2)
-      (c := fun ρ => (zeroMult ρ : ℂ) * φ.hat ((ρ : ℂ) - 1 / 2)) (B := 1 / 2)
-      (fun x y e => Subtype.ext (sub_left_injective e))
-      (fun ρ => by
-        have := ρ.2.2.2.1
-        norm_num
-        linarith)
-      (fun z => by
-        obtain ⟨r, hr, hiso⟩ := exists_isolating_radius (z + 1 / 2)
-        refine ⟨r, hr, fun ρ hne => ?_⟩
-        have := hiso ρ ρ.2.1 fun e => hne (by rw [e]; ring)
-        rwa [show z - ((ρ : ℂ) - 1 / 2) = z + 1 / 2 - ρ by ring])
-      (fun x hx => by
-        have := h (φ.translate x hx)
-        simp_rw [TestFunction.hat_translate] at this
-        convert this using 2
-        ring) ⟨ρ₀, hρ₀⟩
-    rcases mul_eq_zero.1 key with h0 | h0
-    · exact (zeroMult_pos hρ₀.1).ne' (by exact_mod_cast h0)
-    · exact hφ h0
-  · intro h φ
-    have : IsEmpty (outerZeros a) := ⟨fun ρ => h ⟨ρ, ρ.2⟩⟩
+  refine ⟨fun h ⟨ρ, hρ⟩ => (zeroMult_pos hρ.1).ne' ?_, fun h φ => ?_⟩
+  · exact_mod_cast weight_eq_zero_of_hasSum (w := fun ρ => (zeroMult ρ : ℂ))
+      (fun _ h => ⟨h.1, h.2.1, h.2.2.1⟩) h hρ
+  · have : IsEmpty (outerZeros a) := ⟨fun ρ => h ⟨ρ, ρ.2⟩⟩
     exact hasSum_empty
 
 /-- A zero of `ζ` with nonpositive real part is a negative even integer. -/
 lemma eq_trivial_of_re_nonpos {s : ℂ} (h : riemannZeta s = 0) (hs : s.re ≤ 0) :
     ∃ n : ℕ, s = -2 * (n + 1) := by
+  have hs0 : s ≠ 0 := by rintro rfl; norm_num [riemannZeta_zero] at h
   have hw : 1 ≤ (1 - s).re := by simp; linarith
-  have hw1 : 1 - s ≠ 1 := by
-    intro e
-    have : s = 0 := by linear_combination -e
-    rw [this, riemannZeta_zero] at h
-    norm_num at h
-  have hn : ∀ n : ℕ, 1 - s ≠ -n := by
-    intro n e
-    rw [e] at hw
-    simp at hw
-    linarith [(Nat.cast_nonneg n : (0 : ℝ) ≤ n)]
-  have fe := riemannZeta_one_sub hn hw1
-  rw [sub_sub_cancel, h] at fe
-  have hG : Gamma (1 - s) ≠ 0 := Gamma_ne_zero_of_re_pos (by linarith)
-  have hz : riemannZeta (1 - s) ≠ 0 := riemannZeta_ne_zero_of_one_le_re hw
-  have hp : (2 * Real.pi : ℂ) ^ (-(1 - s)) ≠ 0 := by
-    rw [Ne, cpow_eq_zero_iff]
-    have : (2 * Real.pi : ℂ) ≠ 0 := by simp [Real.pi_ne_zero]
-    tauto
-  have hcos : cos (Real.pi * (1 - s) / 2) = 0 := by
-    by_contra hc
-    exact (mul_ne_zero (mul_ne_zero (mul_ne_zero (mul_ne_zero two_ne_zero hp) hG) hc) hz) fe.symm
-  obtain ⟨k, hk⟩ := cos_eq_zero_iff.1 hcos
-  have hpi : (Real.pi : ℂ) ≠ 0 := by simp [Real.pi_ne_zero]
-  have hk' : s = -2 * k := by
-    have : (Real.pi : ℂ) * (s + 2 * k) = 0 := by linear_combination -2 * hk
-    rcases mul_eq_zero.1 this with h | h
-    · exact absurd h hpi
-    · linear_combination h
-  have hk0 : 0 < k := by
-    have h1 : s.re = -2 * (k : ℝ) := by rw [hk']; simp
-    have h2 : k ≠ 0 := by
-      rintro rfl
-      simp at hk'
-      simp [hk'] at hw1
-    have h3 : (0 : ℝ) ≤ k := by linarith
-    have : (0 : ℤ) ≤ k := by exact_mod_cast h3
-    omega
-  refine ⟨(k - 1).toNat, ?_⟩
-  have : (((k - 1).toNat : ℤ) : ℂ) = (k - 1 : ℤ) := by rw [Int.toNat_of_nonneg (by omega)]
-  rw [Int.cast_natCast] at this
-  rw [this, hk']
-  push_cast
-  ring
+  have hw0 : 1 - s ≠ 0 := ne_zero_of_re_pos (lt_of_lt_of_le zero_lt_one hw)
+  have hz := riemannZeta_ne_zero_of_one_le_re hw
+  rw [riemannZeta_def_of_ne_zero hw0, completedRiemannZeta_one_sub] at hz
+  rw [riemannZeta_def_of_ne_zero hs0, div_eq_zero_iff] at h
+  obtain ⟨n, hn⟩ := Gammaℝ_eq_zero_iff.mp (h.resolve_left (fun e => hz (by simp [e])))
+  cases n with
+  | zero => simp_all
+  | succ k => exact ⟨k, by simpa [Nat.cast_add, neg_mul] using hn⟩
 
 /-- **Theorem B.** The outer zero sums vanish for all `a > 0` iff the Riemann hypothesis holds. -/
 theorem forall_zeroSumVanishes_iff_riemannHypothesis :
@@ -448,6 +411,16 @@ theorem forall_zeroSumVanishes_iff_riemannHypothesis :
 
 /-! ### Assembly -/
 
+/-- A sum over the zeros in the strip minus the sum over those at distance less than `a` from the
+critical line is the sum over the others. -/
+lemma hasSum_outer_of_full_inner {a : ℝ} {f : ℂ → ℂ} {u v : ℂ}
+    (hf : HasSum (fun z : stripZeros => f z) u) (hi : HasSum (fun z : innerZeros a => f z) v) :
+    HasSum (fun z : outerZeros a => f z) (u - v) := by
+  refine (hasSum_subtype_iff_indicator (f := f)).2 (((hasSum_subtype_iff_indicator (f := f)).1
+    hf).sub ((hasSum_subtype_iff_indicator (f := f)).1 hi) |>.congr_fun fun ρ => ?_)
+  simp only [indicator_apply, innerZeros, outerZeros, stripZeros, mem_ofPred_eq]
+  split_ifs <;> grind
+
 /-- If a functional `G` equals both the full zero sum and the sum over zeros at distance less than
 `a` from the critical line, then the outer zero sum vanishes. -/
 theorem zeroSumVanishes_of_full_of_inner (a : ℝ) (G : TestFunction → ℂ)
@@ -455,25 +428,8 @@ theorem zeroSumVanishes_of_full_of_inner (a : ℝ) (G : TestFunction → ℂ)
       HasSum (fun ρ : stripZeros => (zeroMult ρ : ℂ) * φ.hat ((ρ : ℂ) - 1 / 2)) (G φ))
     (hinner : ∀ φ : TestFunction,
       HasSum (fun ρ : innerZeros a => (zeroMult ρ : ℂ) * φ.hat ((ρ : ℂ) - 1 / 2)) (G φ)) :
-    ZeroSumVanishes a := by
-  intro φ
-  let f : ℂ → ℂ := fun ρ => (zeroMult ρ : ℂ) * φ.hat (ρ - 1 / 2)
-  have h1 : HasSum (stripZeros.indicator f) (G φ) := hasSum_subtype_iff_indicator.1 (hfull φ)
-  have h2 : HasSum ((innerZeros a).indicator f) (G φ) := hasSum_subtype_iff_indicator.1 (hinner φ)
-  have h3 := h1.sub h2
-  rw [sub_self] at h3
-  refine (hasSum_subtype_iff_indicator (f := f) (s := outerZeros a)).2 ?_
-  refine h3.congr_fun fun ρ => ?_
-  by_cases hS : ρ ∈ stripZeros
-  · by_cases hI : |ρ.re - 1 / 2| < a
-    · have hi : ρ ∈ innerZeros a := ⟨hS.1, hS.2.1, hS.2.2, hI⟩
-      have ho : ρ ∉ outerZeros a := fun h => absurd hI (not_lt.2 h.2.2.2)
-      simp [hS, hi, ho]
-    · have hi : ρ ∉ innerZeros a := fun h => hI h.2.2.2
-      have ho : ρ ∈ outerZeros a := ⟨hS.1, hS.2.1, hS.2.2, not_lt.1 hI⟩
-      simp [hS, hi, ho]
-  · have hi : ρ ∉ innerZeros a := fun h => hS ⟨h.1, h.2.1, h.2.2.1⟩
-    have ho : ρ ∉ outerZeros a := fun h => hS ⟨h.1, h.2.1, h.2.2.1⟩
-    simp [hS, hi, ho]
+    ZeroSumVanishes a := fun φ => by
+  simpa only [sub_self] using hasSum_outer_of_full_inner
+    (f := fun ρ => (zeroMult ρ : ℂ) * φ.hat (ρ - 1 / 2)) (hfull φ) (hinner φ)
 
 end Masullo

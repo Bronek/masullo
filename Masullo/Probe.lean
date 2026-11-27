@@ -125,9 +125,6 @@ end ExpSum
 
 namespace TestFunction
 
-/-- The values are nonnegative real numbers. -/
-def Nonneg (φ : TestFunction) : Prop := ∀ x, 0 ≤ (φ.toFun x).re ∧ (φ.toFun x).im = 0
-
 variable {φ : TestFunction}
 
 lemma Nonneg.translate (h : φ.Nonneg) {t : ℝ} (ht : 0 ≤ t) : (φ.translate t ht).Nonneg :=
@@ -152,11 +149,8 @@ lemma Nonneg.hat_ofReal_re (h : φ.Nonneg) (x : ℝ) : 0 ≤ (φ.hat x).re := by
   rw [e, integral_complex_ofReal, ofReal_re]
   exact integral_nonneg fun u => mul_nonneg (h _).1 (Real.exp_pos _).le
 
-lemma digamma_conj (z : ℂ) : digamma (conj z) = conj (digamma z) := by
-  have e : conj ∘ Gamma ∘ conj = Gamma := funext fun z => by simp [Gamma_conj]
-  have h := congrFun (deriv_conj_conj (f := Gamma)) (conj z)
-  rw [e] at h
-  simp [digamma, logDeriv_apply, h, Gamma_conj]
+lemma digamma_conj (z : ℂ) : digamma (conj z) = conj (digamma z) :=
+  WeilExplicit.logDeriv_conj Gamma_conj z
 
 lemma Nonneg.efFunctional_im (h : φ.Nonneg) : φ.efFunctional.im = 0 := by
   rw [← conj_eq_iff_im]
@@ -176,87 +170,16 @@ lemma Nonneg.efFunctional_im (h : φ.Nonneg) : φ.efFunctional.im = 0 := by
   simp
 
 /-- The Mellin transform does not vanish identically on nonnegative test functions at any point. -/
-lemma exists_nonneg_hat_ne_zero (z : ℂ) : ∃ φ : TestFunction, φ.Nonneg ∧ φ.hat z ≠ 0 := by
-  let g : ℝ → ℝ := fun t => (exp (z * (Real.log t - Real.log 2 : ℝ))).re
-  have hg : ContinuousAt g 2 := by
-    have := Real.continuousAt_log (x := 2) (by norm_num)
-    fun_prop
-  obtain ⟨ε, hε, hgε⟩ := Metric.eventually_nhds_iff_ball.1
-    (hg.eventually (lt_mem_nhds (a := 0) (by simp [g])))
-  let b : ContDiffBump (2 : ℝ) := ⟨min ε (1 / 2) / 2, min ε (1 / 2), by positivity,
-    half_lt_self (by positivity)⟩
-  let φ : TestFunction := ⟨fun t => (b t : ℂ), ofRealCLM.contDiff.comp b.contDiff,
-    b.hasCompactSupport.comp_left (g := ofReal) rfl, by
-      refine (closure_mono fun t ht => ?_ : _ ⊆ tsupport (b : ℝ → ℝ)).trans ?_
-      · simpa using ht
-      · intro t ht
-        have h1 := (abs_le.1 (mem_closedBall.1 (b.tsupport_eq.subset ht))).1
-        have : b.rOut ≤ 1 / 2 := min_le_right _ _
-        rw [mem_Ioi]
-        linarith⟩
-  refine ⟨φ, fun x => ⟨by simpa [φ] using b.nonneg, by simp [φ]⟩, fun h0 => ?_⟩
-  have hc : Continuous fun u : ℝ => φ.pull u * exp (z * (u - Real.log 2 : ℝ)) :=
-    φ.pull_contDiff.continuous.mul (by fun_prop)
-  have hi := hc.integrable_of_hasCompactSupport (μ := volume) φ.pull_hasCompactSupport.mul_right
-  have hre (u : ℝ) : (φ.pull u * exp (z * (u - Real.log 2 : ℝ))).re =
-      b (Real.exp u) * g (Real.exp u) := by
-    simp only [φ, pull, g, re_ofReal_mul, Real.log_exp]
-  have hp : 0 < ∫ u : ℝ, (φ.pull u * exp (z * (u - Real.log 2 : ℝ))).re := by
-    refine (continuous_re.comp hc).integral_pos_of_hasCompactSupport_nonneg_nonzero
-      (x := Real.log 2) (φ.pull_hasCompactSupport.mul_right.comp_left (g := re) rfl)
-      (fun u => ?_) ?_
-    · simp only [hre, Pi.zero_apply]
-      by_cases hu : Real.exp u ∈ ball (2 : ℝ) b.rOut
-      · exact mul_nonneg b.nonneg (hgε _ (ball_subset_ball (min_le_left _ _) hu)).le
-      · rw [b.zero_of_le_dist (not_lt.1 hu), zero_mul]
-    · have : b 2 = 1 := b.one_of_mem_closedBall (mem_closedBall_self b.rIn_pos.le)
-      exact (hre _).trans_ne (by simp [Real.exp_log, this, g])
-  have e : ∫ u : ℝ, φ.pull u * exp (z * (u - Real.log 2 : ℝ)) =
-      φ.hat z * exp (-(z * Real.log 2)) := by
-    rw [hat_eq_integral, ← integral_mul_const]
-    congr 1 with u
-    rw [mul_assoc, ← Complex.exp_add]
-    push_cast
-    ring_nf
-  have h1 := reCLM.integral_comp_comm hi
-  simp only [reCLM_apply, e, h0, zero_mul, zero_re] at h1
-  exact hp.ne' h1
-
-lemma Nonneg.tilt (h : φ.Nonneg) (r : ℝ) : (φ.tilt r).Nonneg := fun x => by
-  have e : φ.toFun x = ((φ.toFun x).re : ℂ) := Complex.ext rfl (by simp [(h x).2])
-  have e2 : (φ.tilt r).toFun x = (((φ.toFun x).re * Real.exp (r * Real.log x) : ℝ) : ℂ) := by
-    simp only [TestFunction.tilt]
-    conv_lhs => rw [e]
-    push_cast
-    rfl
-  rw [e2, ofReal_re, ofReal_im]
-  exact ⟨mul_nonneg (h x).1 (Real.exp_pos _).le, rfl⟩
-
-/-- A transform that does not vanish at one point vanishes at countably many points. -/
-lemma countable_hat_eq_zero {z₀ : ℂ} (h : φ.hat z₀ ≠ 0) : {z | φ.hat z = 0}.Countable := by
-  rcases (φ.differentiable_hat.differentiableOn.analyticOnNhd isOpen_univ)
-    |>.eqOn_zero_or_eventually_ne_zero_of_preconnected isPreconnected_univ with h0 | h0
-  · exact absurd (h0 (mem_univ z₀)) h
-  · have := (isDiscrete_of_codiscreteWithin (s := {z | φ.hat z = 0}) h0).to_subtype
-    simpa using (TopologicalSpace.separableSpace_iff_countable.1 inferInstance :
-      Countable ({z | φ.hat z = 0} ∩ univ : Set ℂ))
+lemma exists_nonneg_hat_ne_zero (z : ℂ) : ∃ φ : TestFunction, φ.Nonneg ∧ φ.hat z ≠ 0 :=
+  (exists_nonneg_hat_ne_zero_on (countable_singleton z)).imp fun _ h => ⟨h.1, h.2 z rfl⟩
 
 /-- **A universal probe.** Some nonnegative test function has transform nonzero at `ρ - 1/2` for
-every zero `ρ` in the critical strip. It is a nonnegative bump tilted by a real power `x ^ r`,
-whose transform is that of the bump shifted by `r`; the transform of the bump has countably many
-zeros and there are countably many zeros in the strip, so all but countably many `r` qualify. -/
+every zero `ρ` in the critical strip, since there are countably many such zeros. -/
 theorem exists_nonneg_forall_hat_ne_zero :
-    ∃ φ : TestFunction, φ.Nonneg ∧ ∀ ρ ∈ stripZeros, φ.hat (ρ - 1 / 2) ≠ 0 := by
-  obtain ⟨b, hb, hb0⟩ := exists_nonneg_hat_ne_zero 0
-  have hB : (⋃ ρ ∈ stripZeros, (fun r : ℝ => ρ - 1 / 2 + r) ⁻¹' {z | b.hat z = 0}).Countable :=
-    (countable_zeros.mono fun ρ hρ => mem_riemannZetaZeros.2 hρ.1).biUnion fun ρ _ =>
-      (countable_hat_eq_zero hb0).preimage ((add_right_injective _).comp ofReal_injective)
-  obtain ⟨r, hr⟩ : ∃ r : ℝ, r ∉ ⋃ ρ ∈ stripZeros,
-      (fun r : ℝ => ρ - 1 / 2 + r) ⁻¹' {z | b.hat z = 0} := by
-    by_contra! h
-    exact Cardinal.not_countable_real (hB.mono fun r _ => h r)
-  refine ⟨b.tilt r, hb.tilt r, fun ρ hρ h0 => hr (mem_iUnion₂.2 ⟨ρ, hρ, ?_⟩)⟩
-  rwa [hat_tilt] at h0
+    ∃ φ : TestFunction, φ.Nonneg ∧ ∀ ρ ∈ stripZeros, φ.hat (ρ - 1 / 2) ≠ 0 :=
+  (exists_nonneg_hat_ne_zero_on (((countable_zeros.mono fun _ hρ =>
+    mem_riemannZetaZeros.2 hρ.1).image (· - 1 / 2)))).imp fun _ h =>
+      ⟨h.1, fun _ hρ => h.2 _ (mem_image_of_mem _ hρ)⟩
 
 end TestFunction
 

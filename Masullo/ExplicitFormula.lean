@@ -38,18 +38,42 @@ lemma pull_hasCompactSupport (φ : TestFunction) : HasCompactSupport φ.pull := 
 
 lemma transform_pull (φ : TestFunction) (z : ℂ) :
     WeilExplicit.transform φ.pull (z / I) = φ.hat z := by
-  rw [hat, mellin_eq_fourier, Real.fourier_eq', ← integral_neg_eq_self]
-  refine integral_congr_ae (Filter.Eventually.of_forall fun u => ?_)
-  have hin : inner ℝ (-u) (z.im / (2 * Real.pi)) = z.im / (2 * Real.pi) * -u := rfl
-  simp only [pull, neg_neg, smul_eq_mul, real_smul, hin]
-  rw [ofReal_exp, ← mul_assoc, ← Complex.exp_add, mul_comm]
-  congr 2
-  have h2 : (Real.pi : ℂ) ≠ 0 := by simp [Real.pi_ne_zero]
-  rw [mul_div_cancel₀ _ I_ne_zero]
-  conv_lhs => rw [← re_add_im z]
-  push_cast
-  field_simp
-  ring
+  simpa only [hat, pull, WeilExplicit.transform, mul_div_cancel₀ _ I_ne_zero,
+    mul_div_cancel_left₀ _ I_ne_zero] using (Spectrum.mellin_eq_integral φ.toFun z).symm
+
+/-- The transform is entire. -/
+lemma differentiable_hat (φ : TestFunction) : Differentiable ℂ φ.hat := by
+  have h := (WeilExplicit.differentiable_transform φ.pull_contDiff.continuous
+    φ.pull_hasCompactSupport).comp (differentiable_id.div_const I)
+  exact (funext fun z => (transform_pull φ z).symm : φ.hat = _) ▸ h
+
+lemma continuous_hat (φ : TestFunction) : Continuous φ.hat :=
+  φ.differentiable_hat.continuous
+
+/-- A transform that does not vanish at one point vanishes at countably many points. -/
+lemma countable_hat_eq_zero {z₀ : ℂ} {φ : TestFunction} (h : φ.hat z₀ ≠ 0) :
+    {z | φ.hat z = 0}.Countable := by
+  rcases (φ.differentiable_hat.differentiableOn.analyticOnNhd isOpen_univ)
+    |>.eqOn_zero_or_eventually_ne_zero_of_preconnected isPreconnected_univ with h0 | h0
+  · exact absurd (h0 (mem_univ z₀)) h
+  · have := (isDiscrete_of_codiscreteWithin (s := {z | φ.hat z = 0}) h0).to_subtype
+    simpa using (TopologicalSpace.separableSpace_iff_countable.1 inferInstance :
+      Countable ({z | φ.hat z = 0} ∩ univ : Set ℂ))
+
+/-- Some nonnegative test function has transform nonzero on a given countable set. It is a
+nonnegative bump tilted by a real power `x ^ r`, whose transform is that of the bump shifted by
+`r`; the transform of the bump has countably many zeros, so all but countably many `r` qualify. -/
+lemma exists_nonneg_hat_ne_zero_on {S : Set ℂ} (hS : S.Countable) :
+    ∃ φ : TestFunction, φ.Nonneg ∧ ∀ z ∈ S, φ.hat z ≠ 0 := by
+  obtain ⟨b, hb, hb1⟩ := exists_nonneg_hat_one
+  have hB : (⋃ z ∈ S, (fun r : ℝ => z + r) ⁻¹' {w | b.hat w = 0}).Countable :=
+    hS.biUnion fun z _ =>
+      (countable_hat_eq_zero hb1).preimage ((add_right_injective _).comp ofReal_injective)
+  obtain ⟨r, hr⟩ : ∃ r : ℝ, r ∉ ⋃ z ∈ S, (fun r : ℝ => z + r) ⁻¹' {w | b.hat w = 0} := by
+    by_contra! h
+    exact Cardinal.not_countable_real (hB.mono fun r _ => h r)
+  refine ⟨b.tilt r, hb.tilt r, fun z hz h0 => hr (mem_iUnion₂.2 ⟨z, hz, ?_⟩)⟩
+  rwa [hat_tilt] at h0
 
 /-- The functional of Weil's explicit formula: two pole terms, the prime powers weighted by the
 von Mangoldt function, and the archimedean term as an integral over the critical line, with the

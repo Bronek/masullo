@@ -53,6 +53,22 @@ lemma finite_outerZerosUpTo (a T : ℝ) : (outerZerosUpTo a T).Finite := by
   exact hc.inter_riemannZetaZeros_finite.subset fun ρ h =>
     ⟨⟨⟨h.1.2.1.le, h.1.2.2.le⟩, abs_le.mp h.2.2⟩, h.1.1⟩
 
+/-- Zeros in the critical strip at distance at least `a` from the critical line. -/
+def exterior (a : ℝ) : Set ℂ := {ρ | ρ ∈ stripZeros ∧ a ≤ |ρ.re - 1 / 2|}
+
+/-- Weil's functional minus the trace at width `a` is the sum over the exterior zeros. -/
+lemma hasSum_exterior {a : ℝ} (ha : 0 < a) {φ : TestFunction} {s : ℂ}
+    (hs : HasTrace (induced ha φ) s) :
+    HasSum ((exterior a).indicator fun ρ : ℂ => (zeroMult ρ : ℂ) * φ.hat (ρ - 1 / 2))
+      (φ.efFunctional - s) := by
+  obtain ⟨s', h1, h2⟩ := exists_hasTrace_induced ha φ
+  obtain rfl := h1.unique hs
+  have e : exterior a = outerZeros a :=
+    Set.ext fun _ => by simp [exterior, outerZeros, stripZeros, and_assoc]
+  rw [e, ← hasSum_subtype_iff_indicator]
+  exact hasSum_outer_of_full_inner (f := fun ρ => (zeroMult ρ : ℂ) * φ.hat (ρ - 1 / 2))
+    φ.hasSum_full h2
+
 /-- After removal of the trace and of the finite sum, Weil's functional is the sum over the
 remaining zeros. -/
 lemma hasSum_remainder {a T : ℝ} (ha : 0 < a) {φ : TestFunction} {s : ℂ}
@@ -61,17 +77,24 @@ lemma hasSum_remainder {a T : ℝ} (ha : 0 < a) {φ : TestFunction} {s : ℂ}
       fun ρ : ℂ => (zeroMult ρ : ℂ) * φ.hat (ρ - 1 / 2)) (φ.efFunctional - s -
         ∑ ρ ∈ (finite_outerZerosUpTo a T).toFinset, (zeroMult ρ : ℂ) * φ.hat (ρ - 1 / 2)) := by
   classical
-  obtain ⟨s', h1, h2⟩ := exists_hasTrace_induced ha φ
-  obtain rfl := h1.unique hs
   set f : ℂ → ℂ := fun ρ => (zeroMult ρ : ℂ) * φ.hat (ρ - 1 / 2)
-  have h3 := (hasSum_subtype_iff_indicator (f := f)).1 φ.hasSum_full
-  have h4 := (hasSum_subtype_iff_indicator (f := f)).1 h2
-  have h5 := (hasSum_subtype_iff_indicator (f := f)).1
+  have h := (hasSum_subtype_iff_indicator (f := f)).1
     ((finite_outerZerosUpTo a T).toFinset.hasSum f)
-  rw [Finite.coe_toFinset] at h5
-  refine ((h3.sub h4).sub h5).congr_fun fun ρ => ?_
-  simp only [indicator_apply, innerZeros, outerZerosUpTo, stripZeros, mem_ofPred_eq]
+  rw [Finite.coe_toFinset] at h
+  refine ((hasSum_exterior ha hs).sub h).congr_fun fun ρ => ?_
+  simp only [indicator_apply, exterior, outerZerosUpTo, mem_ofPred_eq]
   split_ifs <;> grind
+
+/-- `zeroMult ρ / (1 + |ρ - 1/2|²)`, summable over the zeros in the strip. -/
+noncomputable def zeroWeight (ρ : ℂ) : ℝ := (zeroMult ρ : ℝ) / (1 + normSq ((ρ - 1 / 2) / I))
+
+lemma zeroWeight_nonneg (ρ : ℂ) : 0 ≤ zeroWeight ρ :=
+  div_nonneg (Nat.cast_nonneg _) (add_nonneg zero_le_one (normSq_nonneg _))
+
+lemma hasSum_zeroWeight :
+    HasSum (stripZeros.indicator zeroWeight) (∑' ρ : stripZeros, zeroWeight ρ) :=
+  (hasSum_subtype_iff_indicator (f := zeroWeight)).1
+    WeilExplicit.summable_zeroMult_div_one_add_normSq.hasSum
 
 /-- **The trace formula up to height `T`.** At the translate of `φ` by `t`, Weil's functional is the
 trace at width `a` plus the finite sum over the zeros of height at most `T` at distance at least `a`
@@ -83,15 +106,10 @@ theorem exists_bound (φ : TestFunction) : ∃ C : ℝ, 0 ≤ C ∧
         (zeroMult ρ : ℂ) * (φ.hat (ρ - 1 / 2) * exp (t * (ρ - 1 / 2)))‖ ≤
           C * Real.exp (t / 2) / (1 + T ^ 2) := by
   obtain ⟨M, hM, hφ⟩ := φ.exists_hat_bound
-  let w (ρ : ℂ) := (zeroMult ρ : ℝ) / (1 + normSq ((ρ - 1 / 2) / I))
-  have hw (ρ : ℂ) : 0 ≤ w ρ :=
-    div_nonneg (Nat.cast_nonneg _) (add_nonneg zero_le_one (normSq_nonneg _))
-  have hb := (hasSum_subtype_iff_indicator (f := w)).1
-    WeilExplicit.summable_zeroMult_div_one_add_normSq.hasSum
-  refine ⟨M * ∑' ρ : stripZeros, w ρ, mul_nonneg hM (tsum_nonneg fun _ => hw _),
-    fun a ha t ht T hT s hs => ?_⟩
+  refine ⟨M * ∑' ρ : stripZeros, zeroWeight ρ,
+    mul_nonneg hM (tsum_nonneg fun _ => zeroWeight_nonneg _), fun a ha t ht T hT s hs => ?_⟩
   have key := HasSum.norm_le_of_bounded (hasSum_remainder (T := T) ha hs)
-    (hb.mul_left (M * Real.exp (t / 2) / (1 + T ^ 2))) fun ρ => ?_
+    (hasSum_zeroWeight.mul_left (M * Real.exp (t / 2) / (1 + T ^ 2))) fun ρ => ?_
   · simp only [TestFunction.hat_translate, mul_comm (exp _)] at key
     exact key.trans_eq (by ring)
   · by_cases hρ : ρ ∈ stripZeros ∧ a ≤ |ρ.re - 1 / 2| ∧ T < |ρ.im|
@@ -107,7 +125,7 @@ theorem exists_bound (φ : TestFunction) : ∃ C : ℝ, 0 ≤ C ∧
       have hsq : T ^ 2 ≤ ‖ρ - 1 / 2‖ ^ 2 := by
         gcongr
         exact hρ.2.2.le.trans (by simpa using abs_im_le_norm (ρ - 1 / 2))
-      simp only [w, normSq_eq_norm_sq, norm_div, norm_I, div_one] at h2 ⊢
+      simp only [zeroWeight, normSq_eq_norm_sq, norm_div, norm_I, div_one] at h2 ⊢
       calc _ ≤ (zeroMult ρ : ℝ) * (Real.exp (t / 2) *
               (M / ((1 + T ^ 2) * (1 + ‖ρ - 1 / 2‖ ^ 2)))) := by
             gcongr
@@ -116,7 +134,7 @@ theorem exists_bound (φ : TestFunction) : ∃ C : ℝ, 0 ≤ C ∧
             gcongr
         _ = _ := by simp only [div_eq_mul_inv, mul_inv_rev]; ring
     · rw [indicator_of_notMem (by exact hρ), norm_zero]
-      exact mul_nonneg (by positivity) (indicator_nonneg (fun ρ _ => hw ρ) _)
+      exact mul_nonneg (by positivity) (indicator_nonneg (fun ρ _ => zeroWeight_nonneg ρ) _)
 
 /-- If every zero in the critical strip of height at most `T` is at distance less than `a` from
 the critical line, then the trace at width `a` is Weil's functional up to the same error. -/
@@ -136,12 +154,9 @@ theorem exists_bound_of_height (φ : TestFunction) : ∃ C : ℝ, 0 ≤ C ∧
 
 /-- At `a ≥ 1 / 2` the finite sum is empty and the error is zero. -/
 theorem outerZerosUpTo_eq_empty {a : ℝ} (ha : 1 / 2 ≤ a) (T : ℝ) : outerZerosUpTo a T = ∅ ∧
-    ∀ φ : TestFunction, HasTrace (induced (by linarith : 0 < a) φ) φ.efFunctional := by
-  have h : ∀ ρ ∈ stripZeros, |ρ.re - 1 / 2| < a := fun ρ hρ => by
-    rw [abs_lt]
-    constructor <;> linarith [hρ.2.1, hρ.2.2]
-  exact ⟨eq_empty_iff_forall_notMem.2 fun ρ hρ => (h ρ hρ.1).not_ge hρ.2.1,
-    (trace_eq_efFunctional_iff _).2 fun ⟨ρ, h0, h1, h2, h3⟩ => (h ρ ⟨h0, h1, h2⟩).not_ge h3⟩
+    ∀ φ : TestFunction, HasTrace (induced (by linarith : 0 < a) φ) φ.efFunctional :=
+  ⟨eq_empty_iff_forall_notMem.2 fun _ hρ =>
+    ((abs_sub_half_lt_half hρ.1).trans_le ha).not_ge hρ.2.1, hasTrace_of_half_le ha⟩
 
 /-- Without the finite sum, the bound of `exists_bound` at one width `a` holds for every test
 function iff the critical strip has no zeros at distance at least `a` from the critical line: one

@@ -168,20 +168,6 @@ lemma ThetaClass.rapid (hf : ThetaClass f) : Rapid (theta f) where
 
 /-! ### Moments of theta functions -/
 
-lemma mellin_eq_integral (h : ℝ → ℂ) (s : ℂ) :
-    mellin h s = ∫ x : ℝ, h (Real.exp x) * exp (s * x) := by
-  rw [mellin_eq_fourier, Real.fourier_eq', ← integral_neg_eq_self]
-  refine integral_congr_ae (Eventually.of_forall fun u => ?_)
-  have hin : inner ℝ (-u) (s.im / (2 * Real.pi)) = s.im / (2 * Real.pi) * -u := rfl
-  simp only [neg_neg, smul_eq_mul, real_smul, hin]
-  rw [ofReal_exp, ← mul_assoc, ← Complex.exp_add, mul_comm]
-  congr 2
-  have h2 : (Real.pi : ℂ) ≠ 0 := by simp [Real.pi_ne_zero]
-  conv_rhs => rw [← re_add_im s]
-  push_cast
-  field_simp
-  ring
-
 lemma integrable_mellin (f : 𝓢(ℝ, ℂ)) {s : ℂ} (hs : 0 < s.re) :
     Integrable fun x : ℝ => f (Real.exp x) * exp (s * x) := by
   obtain ⟨C, hC, h⟩ := exists_decay f 0
@@ -271,21 +257,12 @@ lemma jet_theta_of_one_lt (f : 𝓢(ℝ, ℂ)) {s : ℂ} (hs : 1 < s.re) :
   rfl
 
 /-- `(s - 1) ζ(s)`, continued to the pole. -/
-noncomputable def zetaNum : ℂ → ℂ := Function.update (fun s => (s - 1) * riemannZeta s) 1 1
+noncomputable abbrev zetaNum : ℂ → ℂ := riemannZeta₁
 
-lemma zetaNum_of_ne {s : ℂ} (hs : s ≠ 1) : zetaNum s = (s - 1) * riemannZeta s :=
-  Function.update_of_ne hs _ _
+lemma zetaNum_of_ne {s : ℂ} (hs : s ≠ 1) : zetaNum s = (s - 1) * riemannZeta s := by
+  rw [riemannZeta_eq_inv_sub_mul hs, ← mul_assoc, mul_inv_cancel₀ (sub_ne_zero.2 hs), one_mul]
 
-lemma differentiable_zetaNum : Differentiable ℂ zetaNum := by
-  intro s
-  have h : ∀ w : ℂ, w ≠ 1 → DifferentiableAt ℂ zetaNum w := fun w hw =>
-    ((differentiableAt_id.sub_const 1).mul (differentiableAt_riemannZeta hw)).congr_of_eventuallyEq
-      ((eventually_ne_nhds hw).mono fun _ h => zetaNum_of_ne h)
-  rcases eq_or_ne s 1 with rfl | hs
-  · refine (analyticAt_of_differentiable_on_punctured_nhds_of_continuousAt ?_
-      (continuousAt_update_same.2 riemannZeta_residue_one)).differentiableAt
-    filter_upwards [self_mem_nhdsWithin] using h
-  · exact h s hs
+lemma differentiable_zetaNum : Differentiable ℂ zetaNum := differentiable_riemannZeta₁
 
 lemma sub_one_mul_jet (hf : ThetaClass f) {s : ℂ} (hs : 0 < s.re) :
     (s - 1) * jet (theta f) 0 (s - 1 / 2) = zetaNum s * mellin f s := by
@@ -355,11 +332,6 @@ lemma analyticOrderAt_zetaNum (s : ℂ) : analyticOrderAt zetaNum s = zeroMult s
         analyticOrderAt_mul (by fun_prop) (analyticOn_riemannZeta s hs),
         (by fun_prop : AnalyticAt ℂ (fun w : ℂ => w - 1) s).analyticOrderAt_eq_zero.2
           (sub_ne_zero.2 hs), zero_add]
-    have hne : analyticOrderAt zetaNum s ≠ ⊤ := fun h => by
-      have h0 := (AnalyticOnNhd.analyticOrderAt_eq_top_iff_eq_zero s
-        fun w => differentiable_zetaNum.analyticAt w).1 h
-      simpa [zetaNum] using congrFun h0 1
-    rw [e] at hne ⊢
-    exact (Nat.cast_analyticOrderNatAt hne).symm
+    exact e.trans (Nat.cast_analyticOrderNatAt (WeilExplicit.zeta_order_ne_top hs)).symm
 
 end Masullo.Spectrum

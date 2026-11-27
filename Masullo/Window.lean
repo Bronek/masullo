@@ -171,15 +171,7 @@ lemma zetaNum_ne_zero {s : ℂ} (h : riemannZeta s ≠ 0) : zetaNum s ≠ 0 := b
     exact mul_ne_zero (sub_ne_zero.2 hs) h
 
 lemma num_one : num 1 = 0 := by
-  have h : HasDerivAt zetaNum Real.eulerMascheroniConstant 1 := by
-    rw [hasDerivAt_iff_tendsto_slope]
-    refine tendsto_riemannZeta_sub_one_div.congr' ?_
-    filter_upwards [self_mem_nhdsWithin] with s hs
-    have : s - 1 ≠ 0 := sub_ne_zero.2 hs
-    rw [slope_def_field, zetaNum_of_ne hs, zetaNum, Function.update_self]
-    field_simp
-  rw [num, logDeriv_apply, h.deriv]
-  simp [zetaNum]
+  simp [num, logDeriv_apply]
 
 lemma analyticAt_linear (s : ℂ) :
     AnalyticAt ℂ (fun s : ℂ => (1 + (Real.eulerMascheroniConstant : ℂ)) * s - 1) s := by fun_prop
