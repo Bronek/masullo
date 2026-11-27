@@ -13,16 +13,15 @@ over the nonzero prime ideals `𝔭`, where `M_𝔭(W, D) = moebiusSum 𝔭 W D`
 here, not a theorem.
 
 From it, `smoothedBound_of_meanSquareA` gives `SmoothedBound eisensteinMoebius β` for every
-`β > 23/24`, and `hasTrace_of_meanSquareA` gives the trace identity at every width `a > 11/24`.
+`β > 11/12`, and `hasTrace_of_meanSquareA` gives the trace identity at every width `a > 5/12`.
 
-For each rational prime `5 ≤ p ≤ Y = D ^ (1/12)` take one prime ideal `q_p` above `p`. Its norm
-is `p` or `p²`, at most `D ^ (1/6)`, so (A) bounds `∑_p ‖M_{q_p}‖²`. Removing the multiples of
-`q_p` changes the full sum `M = M_⊤` by `O_W(D / p)`. Chebyshev's lower bound gives `≫ Y / log Y`
-such primes, and averaging `‖M‖² ≤ 2 ‖M_{q_p}‖² + 2 ‖M - M_{q_p}‖²` over them, with
-`∑ 1 / p² ≤ 1`, gives `M ≪ D ^ (23/24 + ε)`. Adding back the ideals above `2` and `3` and
-grouping by norm (`sum_idealMoebius_absNorm_eq`) turns this into the smoothed bound. Rational
-primes replace the source's prime ideals with `N𝔭 ∈ (D ^ (1/6) / C, D ^ (1/6)]`, which would
-give `11/12`, so no prime ideal theorem over `𝓔` is needed.
+Each rational prime `p ≡ 1 [MOD 3]` with `p ≤ Y = D ^ (1/6)` splits in `𝓔`; take one prime ideal
+`q_p` of norm `p` above it, so (A) bounds `∑_p ‖M_{q_p}‖²`. Removing the multiples of `q_p` changes
+the full sum `M = M_⊤` by `O_W(D / p)`. The prime number theorem in arithmetic progressions
+(`Nat.tendsto_card_prime_modEq_mul_log_div_atTop`) gives `≫ Y / log Y` such primes, and averaging
+`‖M‖² ≤ 2 ‖M_{q_p}‖² + 2 ‖M - M_{q_p}‖²` over them, with `∑ 1 / p² ≤ 1`, gives
+`M ≪ D ^ (11/12 + ε)`. Adding back the ideals above `2` and `3` and grouping by norm
+(`sum_idealMoebius_absNorm_eq`) turns this into the smoothed bound.
 -/
 
 open NumberField Ideal Filter
@@ -152,86 +151,52 @@ lemma eq_top_of_natCast_mem {𝔮 : Ideal 𝓔} {m n : ℕ} (hm : (m : 𝓔) ∈
     (h : Nat.Coprime m n) : 𝔮 = ⊤ :=
   isUnit_iff.1 (isCoprime_self.1 (isCoprime_of_natCast_mem hm hn h))
 
-lemma exists_prime_above {p : ℕ} (hp : p.Prime) (hp5 : 5 ≤ p) :
-    ∃ 𝔮 : Ideal 𝓔, 𝔮.IsMaximal ∧ 𝔮 ≠ ⊥ ∧ (p : 𝓔) ∈ 𝔮 ∧ ¬ 𝔮 ∣ span {6} ∧
-      p ≤ absNorm 𝔮 ∧ absNorm 𝔮 ≤ p ^ 2 := by
+lemma exists_prime_above {p : ℕ} (hp : p.Prime) (hp5 : 5 ≤ p) (hp1 : p ≡ 1 [MOD 3]) :
+    ∃ 𝔮 : Ideal 𝓔, 𝔮.IsMaximal ∧ 𝔮 ≠ ⊥ ∧ (p : 𝓔) ∈ 𝔮 ∧ ¬ 𝔮 ∣ span {6} ∧ absNorm 𝔮 = p := by
   have hp3 : p ≠ 3 := by omega
   have hcard := card_primesAbove_mul_inertiaDegIn hp hp3
   obtain ⟨𝔮, h𝔮⟩ := (Finset.card_pos (s := primesAbove p)).1
     (Nat.pos_of_ne_zero fun h => by simp [h] at hcard)
   obtain ⟨hprime, hmem⟩ := (mem_primesAbove hp).1 h𝔮
   have h0 : 𝔮 ≠ ⊥ := (prime_of_mem_primesAbove hp h𝔮).ne_zero
-  have hf := inertiaDegIn_of_ne_three hp hp3
-  have hf1 : 1 ≤ orderOf (p : ZMod 3) := Nat.pos_of_ne_zero fun h => by simp [h] at hcard
-  have hf2 : orderOf (p : ZMod 3) ≤ 2 := Nat.le_of_dvd two_pos (Dvd.intro_left _ hcard)
+  have hf : orderOf (p : ZMod 3) = 1 := by
+    rw [show (p : ZMod 3) = 1 by exact_mod_cast (ZMod.natCast_eq_natCast_iff p 1 3).2 hp1,
+      orderOf_one]
   have hcop : Nat.Coprime p 6 := (Nat.Prime.coprime_iff_not_dvd hp).2 fun h => by
     have := Nat.le_of_dvd (by norm_num) h
     interval_cases p <;> revert h hp <;> norm_num
-  refine ⟨𝔮, hprime.isMaximal h0, h0, hmem, fun h6 => hprime.ne_top ?_, ?_, ?_⟩
+  refine ⟨𝔮, hprime.isMaximal h0, h0, hmem, fun h6 => hprime.ne_top ?_, ?_⟩
   · refine eq_top_of_natCast_mem hmem (n := 6) ?_ hcop
     exact_mod_cast dvd_iff_le.1 h6 (mem_span_singleton_self (6 : 𝓔))
-  · rw [absNorm_of_mem_primesAbove hp h𝔮, hf]
-    exact Nat.le_self_pow (by omega) p
-  · rw [absNorm_of_mem_primesAbove hp h𝔮, hf]
-    exact Nat.pow_le_pow_right hp.pos hf2
+  · rw [absNorm_of_mem_primesAbove hp h𝔮, inertiaDegIn_of_ne_three hp hp3, hf, pow_one]
 
 lemma eq_of_natCast_mem {𝔮 : Ideal 𝓔} (h𝔮 : 𝔮 ≠ ⊤) {p p' : ℕ} (hp : p.Prime) (hp' : p'.Prime)
     (hm : (p : 𝓔) ∈ 𝔮) (hm' : (p' : 𝓔) ∈ 𝔮) : p = p' :=
   by_contra fun h => h𝔮 (eq_top_of_natCast_mem hm hm' ((Nat.coprime_primes hp hp').2 h))
 
-lemma isLittleO_rpow_mul_log {a : ℝ} (ha : 0 < a) :
-    (fun Y : ℝ => Y ^ (1 - a) * Real.log Y) =o[atTop] id := by
-  refine ((Asymptotics.isBigO_refl (fun Y : ℝ => Y ^ (1 - a)) atTop).mul_isLittleO
-    (isLittleO_log_rpow_atTop ha)).congr' EventuallyEq.rfl ?_
-  filter_upwards [eventually_gt_atTop 0] with Y hY
-  rw [← Real.rpow_add hY]
-  simp
-
-lemma eventually_rpow_le_card_primes {ε : ℝ} (hε : 0 < ε) :
-    ∀ᶠ Y : ℝ in atTop, Y ^ (1 - ε) ≤ ((Finset.Ioc 4 ⌊Y⌋₊).filter Nat.Prime).card := by
-  have hlog2 : (fun Y : ℝ => Real.log (Y + 2)) =O[atTop] Real.log := by
-    refine Asymptotics.IsBigO.of_bound 2 ?_
-    filter_upwards [eventually_ge_atTop 2] with Y hY
-    rw [Real.norm_of_nonneg (Real.log_nonneg (by linarith)),
-      Real.norm_of_nonneg (Real.log_nonneg (by linarith)),
-      show (2 : ℝ) * Real.log Y = Real.log (Y ^ 2) by rw [Real.log_pow]; norm_num]
-    exact Real.log_le_log (by linarith) (by nlinarith)
-  have hsqrt : (fun Y : ℝ => 2 * √Y * Real.log Y) =o[atTop] id := by
-    refine ((isLittleO_rpow_mul_log (a := 1 / 2) (by norm_num)).const_mul_left 2).congr'
-      ?_ EventuallyEq.rfl
-    filter_upwards [eventually_ge_atTop 0] with Y hY
-    rw [Real.sqrt_eq_rpow]
-    norm_num [mul_assoc]
-  have ho := ((((isLittleO_rpow_mul_log hε).add
-    (Real.isLittleO_log_id_atTop.const_mul_left 4)).add
-    (Asymptotics.isLittleO_const_id_atTop (Real.log 2))).add
-    (hlog2.trans_isLittleO Real.isLittleO_log_id_atTop)).add hsqrt
-  filter_upwards [ho.bound (c := Real.log 2) (Real.log_pos one_lt_two),
-    eventually_ge_atTop 3] with Y hY hY3
-  have hlogY : 0 < Real.log Y := Real.log_pos (by linarith)
-  set P := (Finset.Ioc 4 ⌊Y⌋₊).filter Nat.Prime
-  have htheta : Chebyshev.theta Y ≤ (P.card + 4) * Real.log Y := by
-    have hsub : (Finset.Ioc 0 ⌊Y⌋₊).filter Nat.Prime ⊆ Finset.Ioc 0 4 ∪ P := fun n hn => by
-      simp only [Finset.mem_filter, Finset.mem_Ioc, Finset.mem_union, P] at hn ⊢
-      rcases le_or_gt n 4 with h | h
-      · exact Or.inl ⟨hn.1.1, h⟩
-      · exact Or.inr ⟨⟨h, hn.1.2⟩, hn.2⟩
-    have hcard : (((Finset.Ioc 0 ⌊Y⌋₊).filter Nat.Prime).card : ℝ) ≤ P.card + 4 := by
-      have := (Finset.card_le_card hsub).trans (Finset.card_union_le _ _)
-      simp only [Nat.card_Ioc] at this
-      exact_mod_cast (by omega : _ ≤ P.card + 4)
-    refine (Finset.sum_le_card_nsmul _ _ (Real.log Y) fun n hn => ?_).trans ?_
-    · simp only [Finset.mem_filter, Finset.mem_Ioc] at hn
-      exact Real.log_le_log (by exact_mod_cast hn.1.1) ((Nat.cast_le.2 hn.1.2).trans
-        (Nat.floor_le (by linarith)))
-    · rw [nsmul_eq_mul]
-      exact mul_le_mul_of_nonneg_right hcard hlogY.le
-  have hlow := Chebyshev.theta_ge' (x := Y) (by linarith)
-  simp only [Real.norm_eq_abs, id] at hY
-  have hY' := (le_abs_self _).trans hY
-  rw [abs_of_nonneg (by linarith)] at hY'
-  have : Y ^ (1 - ε) * Real.log Y ≤ P.card * Real.log Y := by nlinarith
-  exact le_of_mul_le_mul_right this hlogY
+/-- For every `ε > 0`, eventually `Y ^ (1 - ε)` is at most the number of primes
+`p ≡ 1 [MOD 3]` with `p ≤ Y`. -/
+lemma eventually_rpow_le_card_split_primes {ε : ℝ} (hε : 0 < ε) :
+    ∀ᶠ Y : ℝ in atTop,
+      Y ^ (1 - ε) ≤ ((Finset.Ioc 0 ⌊Y⌋₊).filter fun p => p.Prime ∧ p ≡ 1 [MOD 3]).card := by
+  have hφ : (0 : ℝ) < (Nat.totient 3 : ℝ)⁻¹ :=
+    inv_pos.2 (Nat.cast_pos.2 (Nat.totient_pos.2 (by norm_num)))
+  set c : ℝ := (Nat.totient 3 : ℝ)⁻¹ / 2
+  have hc : 0 < c := by positivity
+  have ht := Nat.tendsto_card_prime_modEq_mul_log_div_atTop (q := 3) (Nat.coprime_one_left 3)
+  filter_upwards [ht.eventually_const_lt (half_lt_self hφ),
+    (isLittleO_log_rpow_atTop hε).bound hc, eventually_gt_atTop 1] with Y hN hlog hY1
+  have hY0 : 0 < Y := by linarith
+  have hlogY : 0 < Real.log Y := Real.log_pos hY1
+  rw [lt_div_iff₀ hY0] at hN
+  rw [Real.norm_of_nonneg hlogY.le, Real.norm_of_nonneg (by positivity)] at hlog
+  have hsplit : Y ^ (1 - ε) * Y ^ ε = Y := by rw [← Real.rpow_add hY0]; simp
+  have h1 := mul_le_mul_of_nonneg_left hlog (Real.rpow_nonneg hY0.le (1 - ε))
+  set N := ((Finset.Ioc 0 ⌊Y⌋₊).filter fun p => p.Prime ∧ p ≡ 1 [MOD 3]).card
+  have h2 : Y ^ (1 - ε) * Real.log Y < N * Real.log Y := by
+    rw [← mul_assoc, mul_comm _ c, mul_assoc, hsplit] at h1
+    exact h1.trans_lt hN
+  exact (lt_of_mul_lt_mul_right h2 hlogY.le).le
 
 lemma isCoprime_six_iff (𝔞 : Ideal 𝓔) :
     IsCoprime 𝔞 (span {6}) ↔ Nat.Coprime (absNorm 𝔞) 6 := by
@@ -450,8 +415,8 @@ lemma smoothedSum_eq (hR0 : 0 ≤ R) (hR : ∀ x, W x ≠ 0 → x ≤ R) (hD : 0
   · refine summable_of_ne_finset_zero (s := Finset.range (⌊R * D⌋₊ + 1)) fun n hn => ?_
     rw [hW0 n (by simpa using hn), mul_zero, mul_zero]
 
-/-- (A) bounds the full sum `M_⊤(W, D)` by `D ^ β` for every `β > 23/24`. -/
-theorem norm_moebiusSum_top_le (h : MeanSquareA) {β : ℝ} (hβ : 23 / 24 < β) {W : ℝ → ℂ}
+/-- (A) bounds the full sum `M_⊤(W, D)` by `D ^ β` for every `β > 11/12`. -/
+theorem norm_moebiusSum_top_le (h : MeanSquareA) {β : ℝ} (hβ : 11 / 12 < β) {W : ℝ → ℂ}
     (hW : ContDiff ℝ ∞ W) (hWc : HasCompactSupport W) (hW0 : tsupport W ⊆ Set.Ioi 0) :
     ∃ C, ∀ D : ℝ, 1 ≤ D → ‖moebiusSum ⊤ W D‖ ≤ C * D ^ β := by
   obtain ⟨B, hB⟩ := hWc.exists_bound_of_continuous hW.continuous
@@ -462,12 +427,12 @@ theorem norm_moebiusSum_top_le (h : MeanSquareA) {β : ℝ} (hβ : 23 / 24 < β)
     have := hK 1 le_rfl
     have := (Nat.cast_nonneg (idealsLe 1).card : (0 : ℝ) ≤ _)
     linarith
-  set η := 2 * β - 23 / 12 with hη
+  set η := 2 * β - 11 / 6 with hη
   have hη0 : 0 < η := by linarith
   obtain ⟨CA, hCA⟩ := h W hW hWc hW0 (η / 2) (by positivity)
   obtain ⟨Y₀, hY₀⟩ := eventually_atTop.1
-    (eventually_rpow_le_card_primes (ε := 6 * η) (by positivity))
-  set D₀ := max Y₀ 5 ^ 12
+    (eventually_rpow_le_card_split_primes (ε := 3 * η) (by positivity))
+  set D₀ := max Y₀ 5 ^ 6
   set C₃ := 2 * |CA| + 2 * (B * K * R) ^ 2 with hC₃def
   have hBKR : 0 ≤ B * K * R := mul_nonneg (mul_nonneg hB0 hK0) (by linarith)
   have hC₃ : 0 ≤ C₃ := by positivity
@@ -481,36 +446,38 @@ theorem norm_moebiusSum_top_le (h : MeanSquareA) {β : ℝ} (hβ : 23 / 24 < β)
         _ ≤ B * (K * (R * D)) := mul_le_mul_of_nonneg_left (hK _ (by nlinarith)) hB0
         _ ≤ B * K * R * D₀ := by nlinarith
     nlinarith [mul_nonneg hBKR hD₀]
-  set Y := D ^ ((1 : ℝ) / 12) with hYdef
+  set Y := D ^ ((1 : ℝ) / 6) with hYdef
   have hY0 : 0 ≤ Y := Real.rpow_nonneg hD0.le _
-  have hY12 : Y ^ 12 = D := by
+  have hY6 : Y ^ 6 = D := by
     rw [← Real.rpow_natCast, ← Real.rpow_mul hD0.le]
     norm_num
   have hYM : max Y₀ 5 ≤ Y := by
     by_contra hlt
-    have := pow_lt_pow_left₀ (not_le.1 hlt) hY0 (by norm_num : (12 : ℕ) ≠ 0)
+    have := pow_lt_pow_left₀ (not_le.1 hlt) hY0 (by norm_num : (6 : ℕ) ≠ 0)
     linarith
   have hY5 : 5 ≤ Y := (le_max_right _ _).trans hYM
-  have hY2 : Y ^ 2 = D ^ (1 / 6 : ℝ) := by
-    rw [← Real.rpow_natCast, ← Real.rpow_mul hD0.le]
-    norm_num
-  have hYD : Y ^ 2 ≤ D := hY12 ▸ pow_le_pow_right₀ (by linarith) (by norm_num)
-  have hD2 : 2 ≤ D := by nlinarith
-  set P := (Finset.Ioc 4 ⌊Y⌋₊).filter Nat.Prime
-  have hmemP : ∀ p ∈ P, p.Prime ∧ 5 ≤ p ∧ (p : ℝ) ≤ Y := fun p hp => by
+  have hYD : Y ≤ D := hY6 ▸ le_self_pow₀ (by linarith) (by norm_num)
+  have hD2 : 2 ≤ D := by linarith
+  set P := (Finset.Ioc 0 ⌊Y⌋₊).filter fun p => p.Prime ∧ p ≡ 1 [MOD 3]
+  have hmemP : ∀ p ∈ P, p.Prime ∧ 5 ≤ p ∧ p ≡ 1 [MOD 3] ∧ (p : ℝ) ≤ Y := fun p hp => by
     simp only [Finset.mem_filter, Finset.mem_Ioc, P] at hp
-    exact ⟨hp.2, hp.1.1, (Nat.cast_le.2 hp.1.2).trans (Nat.floor_le hY0)⟩
-  have hJ : Y ^ (1 - 6 * η) ≤ P.card := hY₀ Y ((le_max_left _ _).trans hYM)
-  choose! q hq using fun p hp => exists_prime_above (hmemP p hp).1 (hmemP p hp).2.1
-  have hNY : ∀ p ∈ P, (absNorm (q p) : ℝ) ≤ Y ^ 2 := fun p hp => by
-    have : (absNorm (q p) : ℝ) ≤ (p : ℝ) ^ 2 := by exact_mod_cast (hq p hp).2.2.2.2.2
-    nlinarith [(hmemP p hp).2.2, (Nat.cast_nonneg p : (0 : ℝ) ≤ p)]
+    refine ⟨hp.2.1, ?_, hp.2.2, (Nat.cast_le.2 hp.1.2).trans (Nat.floor_le hY0)⟩
+    have h2 := hp.2.1.two_le
+    have h1 : p % 3 = 1 := hp.2.2
+    by_contra h5
+    interval_cases p <;> first | omega | norm_num at hp
+  have hJ : Y ^ (1 - 3 * η) ≤ P.card := hY₀ Y ((le_max_left _ _).trans hYM)
+  choose! q hq using fun p hp =>
+    exists_prime_above (hmemP p hp).1 (hmemP p hp).2.1 (hmemP p hp).2.2.1
+  have hNY : ∀ p ∈ P, (absNorm (q p) : ℝ) ≤ Y := fun p hp => by
+    rw [(hq p hp).2.2.2.2]
+    exact (hmemP p hp).2.2.2
   set X := B * K * R * D
   have hdiff : ∀ p ∈ P, ‖moebiusSum ⊤ W D - moebiusSum (q p) W D‖ ≤ X / p := by
     intro p hp
-    obtain ⟨hmax, h0, -, -, hpN, -⟩ := hq p hp
+    obtain ⟨hmax, h0, -, -, hpN⟩ := hq p hp
     have hp0 : (0 : ℝ) < p := by exact_mod_cast (hmemP p hp).1.pos
-    have hpN' : (p : ℝ) ≤ absNorm (q p) := by exact_mod_cast hpN
+    have hpN' : (p : ℝ) ≤ absNorm (q p) := by exact_mod_cast hpN.ge
     have hx : 1 ≤ R * D / absNorm (q p) := by
       rw [le_div_iff₀ (by linarith)]
       nlinarith [hNY p hp]
@@ -547,7 +514,7 @@ theorem norm_moebiusSum_top_le (h : MeanSquareA) {β : ℝ} (hβ : 23 / 24 < β)
           refine Finset.sum_congr rfl fun 𝔭 h𝔭 => (Set.indicator_of_mem ?_ g).symm
           obtain ⟨p, hp, rfl⟩ := Finset.mem_image.1 h𝔭
           obtain ⟨hmax, h0, -, h6, -⟩ := hq p hp
-          exact ⟨hmax.isPrime, h0, h6, hY2 ▸ hNY p hp⟩
+          exact ⟨hmax.isPrime, h0, h6, hNY p hp⟩
       _ ≤ ∑' 𝔭, (primesUpTo (D ^ (1 / 6 : ℝ))).indicator g 𝔭 :=
           hsumm.sum_le_tsum _ fun 𝔭 _ => Set.indicator_nonneg (fun _ _ => sq_nonneg _) _
       _ = ∑' 𝔭 : primesUpTo (D ^ (1 / 6 : ℝ)), g 𝔭 := (tsum_subtype _ g).symm
@@ -556,6 +523,7 @@ theorem norm_moebiusSum_top_le (h : MeanSquareA) {β : ℝ} (hβ : 23 / 24 < β)
     refine (Finset.sum_le_sum_of_subset_of_nonneg (t := Finset.Ioo 4 (⌊Y⌋₊ + 1))
       (fun p hp => ?_) fun _ _ _ => by positivity).trans
       ((sum_Ioo_inv_sq_le 4 _).trans (by norm_num))
+    have h5 := (hmemP p hp).2.1
     simp only [Finset.mem_filter, Finset.mem_Ioc, P] at hp
     simp only [Finset.mem_Ioo]
     omega
@@ -576,17 +544,17 @@ theorem norm_moebiusSum_top_le (h : MeanSquareA) {β : ℝ} (hβ : 23 / 24 < β)
       hXsq ▸ mul_le_mul_of_nonneg_left hD2δ (sq_nonneg _)
     rw [hC₃def]
     linarith
-  have hYε : Y ^ (1 - 6 * η) = D ^ ((1 - 6 * η) / 12) := by
+  have hYε : Y ^ (1 - 3 * η) = D ^ ((1 - 3 * η) / 6) := by
     rw [hYdef, ← Real.rpow_mul hD0.le]
     ring_nf
-  have hsplit : D ^ (2 + η / 2) = (D ^ β) ^ 2 * D ^ ((1 - 6 * η) / 12) := by
+  have hsplit : D ^ (2 + η / 2) = (D ^ β) ^ 2 * D ^ ((1 - 3 * η) / 6) := by
     rw [← Real.rpow_natCast, ← Real.rpow_mul hD0.le, ← Real.rpow_add hD0]
     congr 1
     rw [hη]
     push_cast
     ring
   have hMsq : ‖moebiusSum ⊤ W D‖ ^ 2 ≤ C₃ * (D ^ β) ^ 2 := by
-    have hpos : 0 < D ^ ((1 - 6 * η) / 12) := Real.rpow_pos_of_pos hD0 _
+    have hpos : 0 < D ^ ((1 - 3 * η) / 6) := Real.rpow_pos_of_pos hD0 _
     have := (mul_le_mul_of_nonneg_right hJ (sq_nonneg ‖moebiusSum ⊤ W D‖)).trans hJM
     rw [hYε, hsplit] at this
     refine le_of_mul_le_mul_left ?_ hpos
@@ -599,8 +567,8 @@ theorem norm_moebiusSum_top_le (h : MeanSquareA) {β : ℝ} (hβ : 23 / 24 < β)
   rw [add_mul]
   linarith
 
-/-- (A) gives the smoothed bound for `μ ∗ χ₃μ` at every exponent `β > 23/24`. -/
-theorem smoothedBound_of_meanSquareA (h : MeanSquareA) {β : ℝ} (hβ : 23 / 24 < β) :
+/-- (A) gives the smoothed bound for `μ ∗ χ₃μ` at every exponent `β > 11/12`. -/
+theorem smoothedBound_of_meanSquareA (h : MeanSquareA) {β : ℝ} (hβ : 11 / 12 < β) :
     Smoothed.SmoothedBound Smoothed.eisensteinMoebius β := by
   intro W hW hWc hW0
   have hex : ∀ e : ℕ, ∃ C, 0 < e → ∀ D : ℝ, 1 ≤ D →
@@ -619,11 +587,11 @@ theorem smoothedBound_of_meanSquareA (h : MeanSquareA) {β : ℝ} (hβ : 23 / 24
   rw [norm_mul, mul_assoc]
   exact mul_le_mul_of_nonneg_left (hC e (Nat.pos_of_mem_divisors he) D hD) (norm_nonneg _)
 
-/-- (A) gives the trace identity at every width `a > 11/24`. -/
-theorem hasTrace_of_meanSquareA (h : MeanSquareA) {a : ℝ} (ha : 11 / 24 < a)
+/-- (A) gives the trace identity at every width `a > 5/12`. -/
+theorem hasTrace_of_meanSquareA (h : MeanSquareA) {a : ℝ} (ha : 5 / 12 < a)
     (φ : TestFunction) :
     Trace.HasTrace (Trace.induced (by linarith : (0 : ℝ) < a) φ) φ.efFunctional :=
-  Smoothed.hasTrace_of_smoothedBound (β := (a + 1 / 2 + 23 / 24) / 2) (by linarith) _
+  Smoothed.hasTrace_of_smoothedBound (β := (a + 1 / 2 + 11 / 12) / 2) (by linarith) _
     (by linarith) (smoothedBound_of_meanSquareA h (by linarith)) φ
 
 end Masullo.QRH
