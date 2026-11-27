@@ -113,3 +113,6 @@ one constant per test and wrote the Lean. Codex reviewed it. The power-series pr
 of positivity is the Vivanti–Pringsheim theorem.
 Codex proposed in review the criterion with one probe, a real tilt of a bump that avoids the
 countably many bad exponents, and a Claude Opus subagent formalised it (`windowBound_iff`).
+Claude Fable proposed the width form of Bagchi's recurrence criterion (Steuding, *Value-Distribution
+of L-Functions*, Theorem 8.3), Codex corrected the counting in review, and a Claude Opus subagent
+formalised the sufficient direction (`trace_eq_efFunctional_of_selfRecurrent`).

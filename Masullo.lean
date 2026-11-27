@@ -15,6 +15,7 @@ import Masullo.ModulationControls
 import Masullo.Landau
 import Masullo.Window
 import Masullo.WindowControls
+import Masullo.Recurrence
 import Masullo.Dyadic
 import Masullo.DyadicControls
 import Masullo.Probe
