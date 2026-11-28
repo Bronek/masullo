@@ -1,4 +1,4 @@
-import Masullo.QRH.MeanSquare.CosetPoisson
+import Masullo.QRH.MeanSquare.PrimitivePoissonSteps
 import Masullo.QRH.MeanSquare.Poisson
 import Masullo.QRH.MeanSquare.PrimeRows
 import Masullo.QRH.MeanSquare.Reciprocity

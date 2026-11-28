@@ -6,6 +6,8 @@ import Masullo.Lattice.Eisenstein
 The fixed embedding `eisEmbedding` identifies `𝓔` with the lattice `ℤ[ω] ⊂ ℂ` and the residue
 class `r + n𝓔` with the coset `σ(r) + σ(n) ℤ[ω]`. Poisson summation on `σ(n) ℤ[ω]`
 (`Masullo.Lattice.tsum_eisLattice_comp_add`) applied to `z ↦ W (|z|² / X)` gives `GaoZhaoLemma23`.
+Summing it over the residues modulo `(m)` against a function of period `(m)` gives
+`hasSum_twisted_poisson`.
 -/
 
 noncomputable section
@@ -276,5 +278,63 @@ theorem gaoZhaoLemma23 : GaoZhaoLemma23 := by
   simp only [N, q] at *
   push_cast
   field_simp
+
+/-! ### Twisting by a periodic function -/
+
+/-- The finite Fourier transform `∑_{x mod I} χ(x) e(Tr(k x / (m √-3)))`, for `I = (m)`. -/
+def twistedGauss (χ : 𝓔 → ℂ) (I : Ideal 𝓔) (m k : 𝓔) : ℂ :=
+  ∑ᶠ x : 𝓔 ⧸ I, χ (Quotient.out x) *
+    differentCharacter (eisEmbedding k * eisEmbedding (Quotient.out x) / eisEmbedding m)
+
+/-- Poisson summation on `𝓔` twisted by a function `χ` of period `I = (m)`: the sum of
+`W(N y / X) χ(y)` is `X / N m` times the sum of the transform against the finite Fourier
+transform of `χ`. Both sums converge. -/
+theorem hasSum_twisted_poisson (W : 𝓢(ℝ, ℂ)) {X : ℝ} (hX : 0 < X) {I : Ideal 𝓔} {m : 𝓔}
+    (hm : Ideal.span {m} = I) (hI : I ≠ ⊥) {χ : 𝓔 → ℂ}
+    (hχ : ∀ y y', y - y' ∈ I → χ y = χ y') :
+    let N := fun y : 𝓔 ↦ Complex.normSq (eisEmbedding y)
+    Summable (fun k ↦ gaoZhaoTransform W (√(N k * X / N m)) * twistedGauss χ I m k) ∧
+      HasSum (fun y ↦ W (N y / X) * χ y)
+        (X / N m * ∑' k, gaoZhaoTransform W (√(N k * X / N m)) * twistedGauss χ I m k) := by
+  intro N
+  have hm0 : m ≠ 0 := by rintro rfl; exact hI (by simpa using hm.symm)
+  have : Finite (𝓔 ⧸ I) := (Ideal.absNorm_ne_zero_iff I).mp (Ideal.absNorm_eq_zero_iff.not.mpr hI)
+  let : Fintype (𝓔 ⧸ I) := Fintype.ofFinite _
+  have hdvd : ∀ y y' : 𝓔, m ∣ y - y' ↔ Ideal.Quotient.mk I y = Ideal.Quotient.mk I y' := by
+    intro y y'
+    rw [Ideal.Quotient.eq, ← hm, Ideal.mem_span_singleton]
+  let t : (𝓔 ⧸ I) → 𝓔 → ℂ := fun x k ↦ gaoZhaoTransform W (√(N k * X / N m)) *
+    differentCharacter (eisEmbedding k * eisEmbedding (Quotient.out x) / eisEmbedding m)
+  have hx : ∀ x, Summable (t x) ∧ HasSum (Set.indicator {y | m ∣ y - Quotient.out x}
+      fun y ↦ W (N y / X)) (X / N m * ∑' k, t x k) := by
+    intro x
+    obtain ⟨s, h₁, h₂⟩ := gaoZhaoLemma23 W X hX (Quotient.out x) m hm0
+    rw [h₂.tsum_eq]
+    exact ⟨h₂.summable, (hasSum_subtype_iff_indicator (s := {y | m ∣ y - Quotient.out x})).mp h₁⟩
+  have hG : ∀ k, gaoZhaoTransform W (√(N k * X / N m)) * twistedGauss χ I m k =
+      ∑ x, χ (Quotient.out x) * t x k := by
+    intro k
+    rw [twistedGauss, finsum_eq_sum_of_fintype, Finset.mul_sum]
+    exact Finset.sum_congr rfl fun x _ ↦ by ring
+  simp_rw [hG]
+  refine ⟨summable_sum fun x _ ↦ (hx x).1.mul_left (χ (Quotient.out x)), ?_⟩
+  have hT : ∑' k, ∑ x, χ (Quotient.out x) * t x k = ∑ x, ∑' k, χ (Quotient.out x) * t x k :=
+    Summable.tsum_finsetSum fun x _ ↦ (hx x).1.mul_left _
+  rw [hT, Finset.mul_sum]
+  convert hasSum_sum fun x (_ : x ∈ Finset.univ) ↦ (hx x).2.mul_left (χ (Quotient.out x))
+    using 1
+  · ext y
+    rw [Finset.sum_eq_single (Ideal.Quotient.mk I y)]
+    · rw [Set.indicator_of_mem (by
+        simp only [Set.mem_ofPred_eq, hdvd, Ideal.Quotient.mk_out])]
+      rw [hχ (Quotient.out _) y (by
+        rw [← Ideal.Quotient.eq, Ideal.Quotient.mk_out]), mul_comm]
+    · intro x _ hx'
+      rw [Set.indicator_of_notMem (by
+        simp only [Set.mem_ofPred_eq, hdvd, Ideal.Quotient.mk_out]; exact Ne.symm hx'), mul_zero]
+    · simp
+  · refine Finset.sum_congr rfl fun x _ ↦ ?_
+    rw [tsum_mul_left]
+    ring
 
 end Masullo.QRH.MeanSquare
