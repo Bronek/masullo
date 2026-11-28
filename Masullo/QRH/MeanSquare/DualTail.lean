@@ -17,6 +17,9 @@ Steps toward `DualTailEstimate rowMajorant` from `GapEstimate`.
   `dualExclusionMain` up to such a power.
 * `exists_norm_dualTailSum_sub_le`: summed over the gcd splits, the far dual frequencies at
   radius `D^(2+η)/Y` cost `O(D^(2+θ))`, leaving `dualMainSum`.
+* `exists_sum_inv_absNorm_le`: `Σ_{N b ≤ x} 1 / N b ≪ x^s`.
+* `gaoZhaoTransform_eq_cutDualKernel`: the dual kernel of a pair of columns is a cut dual kernel
+  `cutDualKernel` for a cut `χ` from `exists_cutoff_exp`.
 * `exists_dualMeanSquareCoprime_le`: `GapEstimate` for columns coprime to `b`, with no lower
   bounds on `K` and `X`.
 * `exists_sum_rows_le`: the rows `(e, v, h)` of a block cover each pair `(f, k) = (e v, e° h)`
@@ -964,5 +967,118 @@ theorem exists_norm_dualTailSum_sub_le (P : SchwartzMap ℝ ℂ) (A : Q₇₂ �
     _ ≤ Amax * M ^ 2 * Ct * Cτ * A₀ ^ 3 * R' ^ 4 * (R' ^ 2) ^ k *
         ((R' ^ 2 + 1) * D ^ (2 + θ)) * 1 := by gcongr
     _ = B * D ^ (2 + θ) := by ring
+
+/-! ### The harmonic sum over ideals -/
+
+/-- `Σ_{N b ≤ x} 1 / N b ≪ x^s` for every `s > 0`. -/
+theorem exists_sum_inv_absNorm_le {s : ℝ} (hs : 0 < s) :
+    ∃ C ≥ (0 : ℝ), ∀ x : ℝ, 1 ≤ x → ∑ b ∈ idealsLe x, (absNorm b : ℝ)⁻¹ ≤ C * x ^ s := by
+  classical
+  obtain ⟨A₀, hA₀⟩ := exists_card_idealsLe_le
+  have hA₀' : 0 ≤ A₀ := by
+    have := hA₀ 1 le_rfl
+    nlinarith [(Finset.card_pos.mpr ⟨⊤, (mem_idealsLe zero_le_one).mpr (by simp)⟩ :
+      0 < (idealsLe 1).card)]
+  set f : ℝ → ℝ := fun x => ∑ b ∈ idealsLe x, (absNorm b : ℝ)⁻¹ with hf
+  have hmono : ∀ {x y : ℝ}, 0 ≤ x → x ≤ y → f x ≤ f y := fun hx hxy =>
+    Finset.sum_le_sum_of_subset_of_nonneg (fun b hb => (mem_idealsLe (hx.trans hxy)).mpr
+      (((mem_idealsLe hx).mp hb).trans hxy)) fun _ _ _ => inv_nonneg.mpr (Nat.cast_nonneg _)
+  have hbase : ∀ x, 0 ≤ x → x ≤ 1 → f x ≤ A₀ := fun x hx hx1 => by
+    refine (hmono hx hx1).trans ?_
+    calc f 1 ≤ ∑ _b ∈ idealsLe 1, (1 : ℝ) := Finset.sum_le_sum fun b _ => Nat.cast_inv_le_one _
+      _ ≤ A₀ := by simpa using hA₀ 1 le_rfl
+  have hstep : ∀ x, 1 ≤ x → f x ≤ f (x / 2) + 2 * A₀ := fun x hx => by
+    have hx0 : 0 < x := by linarith
+    simp only [hf]
+    rw [← Finset.sum_filter_add_sum_filter_not (idealsLe x)
+      (fun b => (absNorm b : ℝ) ≤ x / 2)]
+    gcongr
+    · exact fun b hb => (mem_idealsLe (by positivity)).mpr (Finset.mem_filter.mp hb).2
+    · calc ∑ b ∈ (idealsLe x).filter (fun b => ¬ (absNorm b : ℝ) ≤ x / 2), (absNorm b : ℝ)⁻¹
+          ≤ ∑ _b ∈ idealsLe x, 2 / x := by
+            refine Finset.sum_le_sum_of_subset_of_nonneg (Finset.filter_subset _ _)
+              (fun _ _ _ => by positivity) |>.trans' (Finset.sum_le_sum fun b hb => ?_)
+            have hb := lt_of_not_ge (Finset.mem_filter.mp hb).2
+            rw [inv_eq_one_div, div_le_div_iff₀ (by linarith) hx0]
+            linarith
+        _ = (idealsLe x).card * (2 / x) := by rw [Finset.sum_const, nsmul_eq_mul]
+        _ ≤ A₀ * x * (2 / x) := by gcongr; exact hA₀ x hx
+        _ = 2 * A₀ := by field_simp
+  have hind : ∀ n : ℕ, ∀ x, 0 ≤ x → x ≤ 2 ^ n → f x ≤ 2 * A₀ * (n + 1) := by
+    intro n
+    induction n with
+    | zero => intro x hx hxn; simp only [pow_zero] at hxn; nlinarith [hbase x hx hxn]
+    | succ n ih =>
+      intro x hx hxn
+      by_cases hx1 : x ≤ 1
+      · nlinarith [hbase x hx hx1, (Nat.cast_nonneg n : (0 : ℝ) ≤ n)]
+      · have := ih (x / 2) (by positivity) (by rw [pow_succ] at hxn; linarith)
+        have := hstep x (le_of_not_ge hx1)
+        push_cast
+        linarith
+  have h2s : 0 < (2 : ℝ) ^ s - 1 := by
+    have := Real.one_lt_rpow (by norm_num : (1 : ℝ) < 2) hs
+    linarith
+  refine ⟨2 * A₀ * (1 / ((2 : ℝ) ^ s - 1) + 2), by positivity, fun x hx => ?_⟩
+  have hx0 : 0 ≤ x := by linarith
+  set L := Nat.log 2 ⌊x⌋₊
+  have hfl : ⌊x⌋₊ ≠ 0 := (Nat.floor_pos.mpr hx).ne'
+  have h1 : x ≤ 2 ^ (L + 1) := by
+    have h := Nat.lt_pow_succ_log_self (by norm_num : 1 < 2) ⌊x⌋₊
+    have h' : (⌊x⌋₊ : ℝ) + 1 ≤ 2 ^ (L + 1) := by exact_mod_cast h
+    linarith [Nat.lt_floor_add_one x]
+  have h2 : (2 : ℝ) ^ L ≤ x := by
+    have h : ((2 ^ L : ℕ) : ℝ) ≤ ⌊x⌋₊ := by exact_mod_cast Nat.pow_log_le_self 2 hfl
+    push_cast at h
+    exact h.trans (Nat.floor_le hx0)
+  have hL : (L : ℝ) * ((2 : ℝ) ^ s - 1) ≤ x ^ s := by
+    have hb := one_add_mul_le_pow (a := (2 : ℝ) ^ s - 1) (by linarith) L
+    have he : (1 + ((2 : ℝ) ^ s - 1)) ^ L = ((2 : ℝ) ^ L) ^ s := by
+      rw [add_sub_cancel, ← Real.rpow_natCast, ← Real.rpow_natCast (2 : ℝ) L,
+        ← Real.rpow_mul (by norm_num), ← Real.rpow_mul (by norm_num), mul_comm]
+    rw [he] at hb
+    have := Real.rpow_le_rpow (by positivity) h2 hs.le
+    linarith
+  have hxs : 1 ≤ x ^ s := Real.one_le_rpow hx hs.le
+  calc f x ≤ 2 * A₀ * ((L + 1 : ℕ) + 1) := hind (L + 1) x hx0 h1
+    _ = 2 * A₀ * (L + 2) := by push_cast; ring
+    _ ≤ 2 * A₀ * (x ^ s / ((2 : ℝ) ^ s - 1) + 2 * x ^ s) := by
+        gcongr
+        · rw [le_div_iff₀ h2s]; exact hL
+        · linarith
+    _ = _ := by ring
+
+/-! ### The cut kernel of a main dual term -/
+
+/-- A smooth compactly supported `χ` equal to `e^{-s/2}` on `[a, b]`. -/
+lemma exists_cutoff_exp (a b : ℝ) : ∃ χ : ℝ → ℂ, ContDiff ℝ ∞ χ ∧ HasCompactSupport χ ∧
+    ∀ s ∈ Icc a b, χ s = (Real.exp (-(s / 2)) : ℂ) := by
+  set r := max ((b - a) / 2) 0 + 1
+  have hr : 0 < r := by positivity
+  let f : ContDiffBump ((a + b) / 2) := ⟨r, r + 1, hr, by linarith⟩
+  refine ⟨fun s => ((f s * Real.exp (-(s / 2)) : ℝ) : ℂ), ?_, ?_, fun s hs => ?_⟩
+  · exact Complex.ofRealCLM.contDiff.comp
+      (f.contDiff.mul (Real.contDiff_exp.comp (contDiff_id.div_const 2).neg))
+  · exact (f.hasCompactSupport.mul_right).comp_left Complex.ofReal_zero
+  · have h1 : f s = 1 := by
+      refine f.one_of_mem_closedBall ?_
+      rw [Metric.mem_closedBall, Real.dist_eq, abs_le]
+      obtain ⟨h₁, h₂⟩ := hs
+      have : (b - a) / 2 ≤ r - 1 := by simp only [r, add_sub_cancel_right, le_max_left]
+      constructor <;> simp only [f] <;> linarith
+    simp only [h1, one_mul]
+
+/-- The dual kernel of a pair of columns `x₁ = N m₁ / X`, `x₂ = N m₂ / X` is a cut dual kernel
+at the shift `½ log q`, wherever the cut `χ` is `e^{-s/2}`. -/
+lemma gaoZhaoTransform_eq_cutDualKernel (P : SchwartzMap ℝ ℂ) {χ : ℝ → ℂ} {q x₁ x₂ : ℝ}
+    (hq : 0 < q) (hx₁ : 0 < x₁) (hx₂ : 0 < x₂)
+    (hχ : χ (Real.log x₁ + Real.log x₂) = (Real.exp (-((Real.log x₁ + Real.log x₂) / 2)) : ℂ)) :
+    ((Real.sqrt (x₁ * x₂))⁻¹ : ℂ) * gaoZhaoTransform P (Real.sqrt (q / (x₁ * x₂))) =
+      cutDualKernel P χ (Real.log q / 2) (Real.log x₁ + Real.log x₂) := by
+  have hx := mul_pos hx₁ hx₂
+  rw [cutDualKernel, hχ, logDualKernel, Real.sqrt_eq_rpow, Real.sqrt_eq_rpow,
+    Real.rpow_def_of_pos hx, Real.rpow_def_of_pos (div_pos hq hx), Real.log_div hq.ne' hx.ne',
+    Real.log_mul hx₁.ne' hx₂.ne', ← Complex.ofReal_inv, ← Real.exp_neg]
+  congr 4 <;> ring
 
 end Masullo.QRH.MeanSquare
