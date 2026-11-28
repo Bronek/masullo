@@ -15,6 +15,8 @@ Steps toward `DualTailEstimate rowMajorant` from `GapEstimate`.
   of the radius.
 * `exists_norm_dualExclusionTail_sub_le`: `dualExclusionTail` is its main dual frequencies
   `dualExclusionMain` up to such a power.
+* `exists_norm_dualTailSum_sub_le`: summed over the gcd splits, the far dual frequencies at
+  radius `D^(2+η)/Y` cost `O(D^(2+θ))`, leaving `dualMainSum`.
 * `exists_dualMeanSquareCoprime_le`: `GapEstimate` for columns coprime to `b`, with no lower
   bounds on `K` and `X`.
 * `exists_sum_rows_le`: the rows `(e, v, h)` of a block cover each pair `(f, k) = (e v, e° h)`
@@ -743,5 +745,224 @@ theorem exists_block_le (hpg : PairedGaussIdentities) (hgap : GapEstimate) {W : 
       rw [← Real.rpow_add hD0]; ring_nf
     rw [← hDε]
     ring
+
+/-! ### The far dual frequencies of the full square -/
+
+/-- The weight of the gcd split `t` in `dualTailTerm`. -/
+def splitWeight (A : Q₇₂ → Q₇₂ → ℂ) (W : ℝ → ℂ) (D Y : ℝ)
+    (t : Ideal 𝓔 × Ideal 𝓔 × Ideal 𝓔) : ℂ :=
+  W (absNorm (t.1 * t.2.1) / D) * conj (W (absNorm (t.1 * t.2.2) / D)) *
+    ((Y : ℂ) / Real.sqrt (absNorm (t.2.2 * t.2.1))) *
+    (gaussCoefficient t.2.2 * conj (gaussCoefficient t.2.1) *
+      A (Ideal.Quotient.mk _ (generator t.2.2)) (Ideal.Quotient.mk _ (generator t.2.1)))
+
+/-- `dualTailSum` with only the main dual frequencies `dualExclusionMain` at radius `R`. -/
+def dualMainSum (P : SchwartzMap ℝ ℂ) (A : Q₇₂ → Q₇₂ → ℂ) (W : ℝ → ℂ) (D Y R : ℝ) : ℂ :=
+  ∑ᶠ t ∈ {t | IsGcdSplit t}, splitWeight A W D Y t * dualExclusionMain P Y R t.2.2 t.2.1 t.1
+
+/-- The gcd splits with all three ideals of norm at most `X`. -/
+def gcdSplitsLe (X : ℝ) : Finset (Ideal 𝓔 × Ideal 𝓔 × Ideal 𝓔) := by
+  classical exact ((idealsLe X) ×ˢ ((idealsLe X) ×ˢ (idealsLe X))).filter IsGcdSplit
+
+lemma mem_gcdSplitsLe {X : ℝ} (hX : 0 ≤ X) {t : Ideal 𝓔 × Ideal 𝓔 × Ideal 𝓔}
+    (ht : IsGcdSplit t) (h₁ : (absNorm (t.1 * t.2.1) : ℝ) ≤ X)
+    (h₂ : (absNorm (t.1 * t.2.2) : ℝ) ≤ X) : t ∈ gcdSplitsLe X := by
+  classical
+  obtain ⟨g, z₁, z₂⟩ := t
+  have hn₁ : g * z₁ ≠ ⊥ := mul_ne_zero ht.1.1.1 ht.2.1.1.1
+  have hn₂ : g * z₂ ≠ ⊥ := mul_ne_zero ht.1.1.1 ht.2.2.1.1.1
+  unfold gcdSplitsLe
+  exact Finset.mem_filter.mpr ⟨Finset.mem_product.mpr ⟨(mem_idealsLe hX).mpr
+    ((absNorm_le_absNorm_mul hn₁).1.trans h₁), Finset.mem_product.mpr
+      ⟨(mem_idealsLe hX).mpr ((absNorm_le_absNorm_mul hn₁).2.trans h₁),
+        (mem_idealsLe hX).mpr ((absNorm_le_absNorm_mul hn₂).2.trans h₂)⟩⟩, ht⟩
+
+lemma splitWeight_ne_zero {A : Q₇₂ → Q₇₂ → ℂ} {W : ℝ → ℂ} {D Y : ℝ}
+    {t : Ideal 𝓔 × Ideal 𝓔 × Ideal 𝓔} (h : splitWeight A W D Y t ≠ 0) :
+    W (absNorm (t.1 * t.2.1) / D) ≠ 0 ∧ W (absNorm (t.1 * t.2.2) / D) ≠ 0 := by
+  have h' := left_ne_zero_of_mul (left_ne_zero_of_mul h)
+  exact ⟨left_ne_zero_of_mul h', fun h₀ => right_ne_zero_of_mul h' (by rw [h₀, map_zero])⟩
+
+/-- A sum weighted by `splitWeight` over the gcd splits is a finite sum when `W` vanishes beyond
+`R'`. -/
+lemma finsum_splitWeight_eq_sum {A : Q₇₂ → Q₇₂ → ℂ} {W : ℝ → ℂ} {D Y R' : ℝ}
+    (hWz : ∀ x, W x ≠ 0 → x ≤ R') (hD : 0 < D) (hX : 0 ≤ R' * D)
+    (Z : Ideal 𝓔 × Ideal 𝓔 × Ideal 𝓔 → ℂ) :
+    ∑ᶠ t ∈ {t | IsGcdSplit t}, splitWeight A W D Y t * Z t =
+      ∑ t ∈ gcdSplitsLe (R' * D), splitWeight A W D Y t * Z t := by
+  classical
+  have hWX : ∀ n : Ideal 𝓔, W (absNorm n / D) ≠ 0 → (absNorm n : ℝ) ≤ R' * D := fun n h => by
+    have := hWz _ h
+    rwa [div_le_iff₀ hD] at this
+  refine finsum_mem_eq_sum_of_subset _ (fun t ht => ?_) fun t ht => ?_
+  · obtain ⟨ht, hne⟩ := ht
+    obtain ⟨h₁, h₂⟩ := splitWeight_ne_zero (left_ne_zero_of_mul hne)
+    exact mem_gcdSplitsLe hX ht (hWX _ h₁) (hWX _ h₂)
+  · unfold gcdSplitsLe at ht
+    exact (Finset.mem_filter.mp ht).2
+
+/-- The far dual frequencies of the full square: `dualTailSum` is `dualMainSum` at radius
+`D^(2+η)/Y` up to `O(D^(2+θ))`. -/
+theorem exists_norm_dualTailSum_sub_le (P : SchwartzMap ℝ ℂ) (A : Q₇₂ → Q₇₂ → ℂ) {W : ℝ → ℂ}
+    (hW : Continuous W) (hc : HasCompactSupport W) {θ η : ℝ} (hθ : 0 ≤ θ) (hη : 0 < η) :
+    ∃ C ≥ (0 : ℝ), ∀ D : ℝ, 2 ≤ D →
+      ‖dualTailSum P A W D (D ^ (1 + θ)) -
+        dualMainSum P A W D (D ^ (1 + θ)) (D ^ (2 + η) / D ^ (1 + θ))‖ ≤ C * D ^ (2 + θ) := by
+  classical
+  obtain ⟨M, hM⟩ := hW.bounded_above_of_compact_support hc
+  obtain ⟨R, hR⟩ := hc.isCompact.bddAbove
+  obtain ⟨A₀, hA₀⟩ := exists_card_idealsLe_le
+  obtain ⟨Cτ, hCτ, hτ⟩ := two_pow_card_normalizedFactors_le one_pos
+  set k := ⌈4 / η⌉₊
+  obtain ⟨Ct, hCt, hfar⟩ := exists_norm_dualExclusionTail_sub_le P k
+  set R' := max R 1
+  set Amax := ∑ x, ∑ y, ‖A x y‖
+  have hAmax : ∀ x y, ‖A x y‖ ≤ Amax := fun x y =>
+    (Finset.single_le_sum (f := fun y => ‖A x y‖) (fun _ _ => norm_nonneg _)
+      (Finset.mem_univ y)).trans (Finset.single_le_sum (f := fun x => ∑ y, ‖A x y‖)
+        (fun _ _ => Finset.sum_nonneg fun _ _ => norm_nonneg _) (Finset.mem_univ x))
+  have hAmax₀ : 0 ≤ Amax := (norm_nonneg _).trans (hAmax 0 0)
+  have hM₀ : 0 ≤ M := (norm_nonneg _).trans (hM 0)
+  have hR' : 1 ≤ R' := le_max_right R 1
+  have hA₀' : 0 ≤ A₀ := by
+    have := hA₀ 1 le_rfl
+    nlinarith [(Finset.card_pos.mpr ⟨⊤, (mem_idealsLe zero_le_one).mpr (by simp)⟩ :
+      0 < (idealsLe 1).card)]
+  have hWz : ∀ x, W x ≠ 0 → x ≤ R' := fun x hx => by
+    by_contra hlt
+    exact hx (image_eq_zero_of_notMem_tsupport fun h => by
+      linarith [hR h, le_max_left R 1, lt_of_not_ge hlt])
+  have hk : 4 ≤ η * k := by
+    have := Nat.le_ceil (4 / η)
+    rw [div_le_iff₀ hη] at this
+    linarith
+  set B := Amax * M ^ 2 * Ct * Cτ * A₀ ^ 3 * R' ^ 4 * (R' ^ 2) ^ k * (R' ^ 2 + 1)
+  refine ⟨B, by positivity, fun D hD => ?_⟩
+  have hD₀ : 0 < D := by linarith
+  have hD1 : 1 ≤ D := by linarith
+  set Y := D ^ (1 + θ) with hYdef
+  have hY : 0 < Y := Real.rpow_pos_of_pos hD₀ _
+  set X := R' * D with hXdef
+  have hX : 1 ≤ X := one_le_mul_of_one_le_of_one_le hR' hD1
+  have hRY : Y * (D ^ (2 + η) / Y) = D ^ (2 + η) := by field_simp
+  have hXη : X ^ 2 / D ^ (2 + η) = R' ^ 2 * D ^ (-η) := by
+    rw [Real.rpow_add hD₀, Real.rpow_neg hD₀.le, Real.rpow_two]
+    have : 0 < D ^ η := Real.rpow_pos_of_pos hD₀ η
+    field_simp
+    rw [hXdef]
+    ring
+  -- Each gcd split.
+  have hterm : ∀ t ∈ gcdSplitsLe X, ‖splitWeight A W D Y t *
+      (dualExclusionTail P Y t.2.2 t.2.1 t.1 -
+        dualExclusionMain P Y (D ^ (2 + η) / Y) t.2.2 t.2.1 t.1)‖ ≤
+      Amax * M ^ 2 * Ct * Cτ * X * (X ^ 2 + Y) * (R' ^ 2 * D ^ (-η)) ^ k := by
+    rintro ⟨g, z₁, z₂⟩ ht
+    have hRHS : 0 ≤ Amax * M ^ 2 * Ct * Cτ * X * (X ^ 2 + Y) * (R' ^ 2 * D ^ (-η)) ^ k := by
+      have := Real.rpow_pos_of_pos hD₀ (-η)
+      positivity
+    by_cases hsw : splitWeight A W D Y (g, z₁, z₂) = 0
+    · rw [hsw, zero_mul, norm_zero]
+      exact hRHS
+    have hWX : ∀ n : Ideal 𝓔, W (absNorm n / D) ≠ 0 → (absNorm n : ℝ) ≤ X := fun n h => by
+      have := hWz _ h
+      rwa [div_le_iff₀ hD₀] at this
+    obtain ⟨hW₁, hW₂⟩ := splitWeight_ne_zero hsw
+    have hn₁ := hWX _ hW₁
+    have hn₂ := hWX _ hW₂
+    simp only [gcdSplitsLe] at ht
+    obtain ⟨hg, h₁, h₂, -, -⟩ := (Finset.mem_filter.mp ht).2
+    have hg1 : (1 : ℝ) ≤ absNorm g := by
+      exact_mod_cast Nat.one_le_iff_ne_zero.mpr (absNorm_eq_zero_iff.not.mpr hg.1.1)
+    have hz : (1 : ℝ) ≤ absNorm (z₂ * z₁) := by
+      exact_mod_cast Nat.one_le_iff_ne_zero.mpr
+        (absNorm_eq_zero_iff.not.mpr (mul_ne_zero h₂.1.1 h₁.1.1))
+    have hprod : (absNorm g : ℝ) ^ 2 * absNorm (z₂ * z₁) =
+        absNorm (g * z₁) * absNorm (g * z₂) := by
+      simp only [map_mul, Nat.cast_mul]
+      ring
+    have hgz : (absNorm g : ℝ) * absNorm (z₂ * z₁) ≤ X ^ 2 := by
+      have : (absNorm g : ℝ) * absNorm (z₂ * z₁) ≤ (absNorm g : ℝ) ^ 2 * absNorm (z₂ * z₁) :=
+        calc (absNorm g : ℝ) * absNorm (z₂ * z₁) = absNorm g * absNorm (z₂ * z₁) * 1 := by ring
+          _ ≤ absNorm g * absNorm (z₂ * z₁) * absNorm g :=
+            mul_le_mul_of_nonneg_left hg1 (by positivity)
+          _ = _ := by ring
+      rw [hprod] at this
+      nlinarith [(Nat.cast_nonneg _ : (0 : ℝ) ≤ absNorm (g * z₁))]
+    have hτg : (2 : ℝ) ^ Multiset.card (normalizedFactors g) ≤ Cτ * X := by
+      refine (hτ g hg.1.1 hg.2).trans ?_
+      rw [Real.rpow_one]
+      exact mul_le_mul_of_nonneg_left (by
+        nlinarith [(absNorm_le_absNorm_mul (mul_ne_zero hg.1.1 h₁.1.1)).1]) hCτ
+    have hfar' := hfar z₂ z₁ g h₂.1 h₁.1 hg Y (D ^ (2 + η) / Y) hY (by positivity)
+    rw [hRY, hprod] at hfar'
+    have hq : (absNorm (g * z₁) : ℝ) * absNorm (g * z₂) / D ^ (2 + η) ≤ R' ^ 2 * D ^ (-η) := by
+      rw [← hXη]
+      gcongr
+      nlinarith [(Nat.cast_nonneg _ : (0 : ℝ) ≤ absNorm (g * z₁))]
+    have hsw' : ‖splitWeight A W D Y (g, z₁, z₂)‖ ≤ M * M * Y * (1 * 1 * Amax) := by
+      simp only [splitWeight]
+      rw [norm_mul, norm_mul, norm_mul, norm_mul, norm_mul, Complex.norm_conj,
+        Complex.norm_conj, norm_div, Complex.norm_real, Complex.norm_real,
+        Real.norm_of_nonneg hY.le, Real.norm_of_nonneg (Real.sqrt_nonneg _)]
+      gcongr
+      · exact hM _
+      · exact hM _
+      · exact div_le_self hY.le (Real.one_le_sqrt.mpr hz)
+      · exact gaussCoefficientBound _ h₂
+      · exact gaussCoefficientBound _ h₁
+      · exact hAmax _ _
+    have hD' : 0 ≤ D ^ (-η) := (Real.rpow_pos_of_pos hD₀ _).le
+    calc _ = ‖splitWeight A W D Y (g, z₁, z₂)‖ * ‖dualExclusionTail P Y z₂ z₁ g -
+          dualExclusionMain P Y (D ^ (2 + η) / Y) z₂ z₁ g‖ := norm_mul _ _
+      _ ≤ (M * M * Y * (1 * 1 * Amax)) * (Ct * (Cτ * X) * (X ^ 2 / Y + 1) *
+          (R' ^ 2 * D ^ (-η)) ^ k) := by
+          refine mul_le_mul hsw' (hfar'.trans ?_) (norm_nonneg _) (by positivity)
+          gcongr
+      _ = _ := by field_simp
+  have hcard : ((gcdSplitsLe X).card : ℝ) ≤ (A₀ * X) ^ 3 := by
+    have h := hA₀ X hX
+    calc ((gcdSplitsLe X).card : ℝ)
+        ≤ ((idealsLe X) ×ˢ ((idealsLe X) ×ˢ (idealsLe X))).card := by
+          simp only [gcdSplitsLe]
+          exact_mod_cast Finset.card_filter_le _ _
+      _ = (idealsLe X).card ^ 3 := by simp [Finset.card_product]; ring
+      _ ≤ (A₀ * X) ^ 3 := by gcongr
+  have hDk : D ^ 4 * (D ^ (-η)) ^ k ≤ 1 := by
+    rw [← Real.rpow_natCast (D ^ (-η)), ← Real.rpow_mul hD₀.le]
+    have : D ^ (-η * k) ≤ D ^ (-4 : ℝ) :=
+      Real.rpow_le_rpow_of_exponent_le hD1 (by linarith)
+    calc D ^ 4 * D ^ (-η * k) ≤ D ^ 4 * D ^ (-4 : ℝ) := by gcongr
+      _ = 1 := by
+        rw [Real.rpow_neg hD₀.le, show (4 : ℝ) = ((4 : ℕ) : ℝ) by norm_num,
+          Real.rpow_natCast]
+        field_simp
+  have hXY : X ^ 2 + Y ≤ (R' ^ 2 + 1) * D ^ (2 + θ) := by
+    have h₁ : D ^ (2 : ℝ) ≤ D ^ (2 + θ) := Real.rpow_le_rpow_of_exponent_le hD1 (by linarith)
+    have h₂ : Y ≤ D ^ (2 + θ) := Real.rpow_le_rpow_of_exponent_le hD1 (by linarith)
+    rw [Real.rpow_two] at h₁
+    nlinarith
+  have hsum : dualTailSum P A W D Y - dualMainSum P A W D Y (D ^ (2 + η) / Y) =
+      ∑ t ∈ gcdSplitsLe X, splitWeight A W D Y t *
+        (dualExclusionTail P Y t.2.2 t.2.1 t.1 -
+          dualExclusionMain P Y (D ^ (2 + η) / Y) t.2.2 t.2.1 t.1) := by
+    have h₁ : dualTailSum P A W D Y = ∑ t ∈ gcdSplitsLe X,
+        splitWeight A W D Y t * dualExclusionTail P Y t.2.2 t.2.1 t.1 :=
+      finsum_splitWeight_eq_sum hWz hD₀ (by linarith) _
+    rw [h₁, dualMainSum, finsum_splitWeight_eq_sum hWz hD₀ (by linarith),
+      ← Finset.sum_sub_distrib]
+    simp only [mul_sub]
+  have hD' : 0 ≤ D ^ (-η) := (Real.rpow_pos_of_pos hD₀ _).le
+  rw [hsum]
+  calc _ ≤ ∑ t ∈ gcdSplitsLe X, Amax * M ^ 2 * Ct * Cτ * X * (X ^ 2 + Y) *
+        (R' ^ 2 * D ^ (-η)) ^ k := (norm_sum_le _ _).trans (Finset.sum_le_sum hterm)
+    _ = (gcdSplitsLe X).card * (Amax * M ^ 2 * Ct * Cτ * X * (X ^ 2 + Y) *
+        (R' ^ 2 * D ^ (-η)) ^ k) := by rw [Finset.sum_const, nsmul_eq_mul]
+    _ ≤ (A₀ * X) ^ 3 * (Amax * M ^ 2 * Ct * Cτ * X * (X ^ 2 + Y) *
+        (R' ^ 2 * D ^ (-η)) ^ k) := by gcongr
+    _ = Amax * M ^ 2 * Ct * Cτ * A₀ ^ 3 * R' ^ 4 * (R' ^ 2) ^ k * (X ^ 2 + Y) *
+        (D ^ 4 * (D ^ (-η)) ^ k) := by rw [hXdef]; ring
+    _ ≤ Amax * M ^ 2 * Ct * Cτ * A₀ ^ 3 * R' ^ 4 * (R' ^ 2) ^ k *
+        ((R' ^ 2 + 1) * D ^ (2 + θ)) * 1 := by gcongr
+    _ = B * D ^ (2 + θ) := by ring
 
 end Masullo.QRH.MeanSquare
