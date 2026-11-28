@@ -150,4 +150,183 @@ theorem mainSplitTerm_eq (hres : ResidueMultiplicative)
         push_cast
         ring
 
+/-! ### The columns of a row -/
+
+lemma isCoprime_of_le {m I J : Ideal 𝓔} (h : IsCoprime m I) (hIJ : I ≤ J) : IsCoprime m J := by
+  rw [isCoprime_iff_sup_eq] at *
+  exact eq_top_iff.mpr (h ▸ sup_le_sup_left hIJ m)
+
+lemma starred_mul {I J : Ideal 𝓔} (hI : Starred I) (hJ : Starred J) (h : IsCoprime I J) :
+    Starred (I * J) :=
+  ⟨hI.1.mul hJ.1, squarefree_mul_iff.mpr ⟨h.isRelPrime, hI.2, hJ.2⟩⟩
+
+/-- A nonzero column coefficient is at a column away from `6` and coprime to `b` and to the
+twist ideal. -/
+lemma blockCoefficient_ne_zero {ξ : RayCharacter} {b m : Ideal 𝓔} {ρ : Ideal 𝓔 × Ideal 𝓔 × 𝓔}
+    (h : blockCoefficient ξ b ρ m ≠ 0) :
+    IsCoprime m b ∧ AwayFromSix m ∧ IsCoprime m (ρ.1 * ρ.2.1) := by
+  classical
+  unfold blockCoefficient at h
+  split_ifs at h with hmb
+  · refine ⟨hmb, ?_⟩
+    have ht := right_ne_zero_of_mul h
+    unfold twist at ht
+    split_ifs at ht with hm
+    · refine ⟨hm, ?_⟩
+      have hs := right_ne_zero_of_mul ht
+      by_contra hc
+      refine hs (sextic_eq_zero hm fun hco => hc (isCoprime_of_le hco ?_))
+      conv_rhs => rw [← span_generator (ρ.1 * ρ.2.1)]
+      exact span_singleton_le_span_singleton.mpr
+        (Dvd.dvd.mul_left (dvd_pow_self _ four_ne_zero) _)
+    · exact absurd rfl ht
+  · exact absurd rfl h
+
+lemma mem_moebiusSplitsLe {X : ℝ} (hX : 0 ≤ X) {b e v m₁ m₂ : Ideal 𝓔} :
+    (b, e, v, m₁, m₂) ∈ moebiusSplitsLe X ↔
+      ((absNorm b : ℝ) ≤ X ∧ (absNorm e : ℝ) ≤ X ∧ (absNorm v : ℝ) ≤ X ∧
+        (absNorm m₁ : ℝ) ≤ X ∧ (absNorm m₂ : ℝ) ≤ X) ∧
+      Starred (b * e) ∧ Starred (v * m₁) ∧ Starred (v * m₂) ∧
+      IsCoprime (b * e) (v * m₁ * (v * m₂)) ∧ (absNorm (b * e) : ℝ) ≤ X ∧
+      (absNorm (v * m₁) : ℝ) ≤ X ∧ (absNorm (v * m₂) : ℝ) ≤ X := by
+  classical
+  simp only [moebiusSplitsLe, Finset.mem_filter, Finset.mem_product, mem_idealsLe hX]
+
+/-- A double sum over a box with a condition is a double sum over `T` when every nonzero
+term satisfies the condition exactly on `T`. -/
+lemma sum_sum_ite_eq {ι : Type*} {S T : Finset ι} {p : ι → ι → Prop} [∀ a b, Decidable (p a b)]
+    {f : ι → ι → ℂ}
+    (h : ∀ a b, f a b ≠ 0 → (a ∈ S ∧ b ∈ S ∧ p a b ↔ a ∈ T ∧ b ∈ T)) :
+    ∑ a ∈ S, ∑ b ∈ S, (if p a b then f a b else 0) = ∑ a ∈ T, ∑ b ∈ T, f a b := by
+  classical
+  rw [← Finset.sum_product' (f := fun a b => if p a b then f a b else 0),
+    ← Finset.sum_product' (f := f), ← Finset.sum_filter]
+  refine Finset.sum_bij_ne_zero (fun x _ _ => x) (fun x hx hfx => ?_)
+    (fun _ _ _ _ _ _ h => h) (fun x hx hfx => ⟨x, ?_, hfx, rfl⟩) fun _ _ _ => rfl
+  · obtain ⟨hxS, hp⟩ := Finset.mem_filter.mp hx
+    obtain ⟨h₁, h₂⟩ := (h x.1 x.2 hfx).mp ⟨(Finset.mem_product.mp hxS).1,
+      (Finset.mem_product.mp hxS).2, hp⟩
+    exact Finset.mem_product.mpr ⟨h₁, h₂⟩
+  · obtain ⟨h₁, h₂, hp⟩ := (h x.1 x.2 hfx).mpr (Finset.mem_product.mp hx)
+    exact Finset.mem_filter.mpr ⟨Finset.mem_product.mpr ⟨h₁, h₂⟩, hp⟩
+
+/-- For a row `ρ = (e, v, h)` of a starred `b`, the columns `(m₁, m₂)` of the Möbius splits
+`(b, e, v, m₁, m₂)` are the block columns: the remaining terms of `blockTerm` vanish. -/
+theorem sum_moebiusSplit_cols_eq (P : SchwartzMap ℝ ℂ) {χ W : ℝ → ℂ} (ξ η : RayCharacter)
+    {D' Y X F R R₀ : ℝ} {b e v : Ideal 𝓔} (h : 𝓔) (c : ℂ) (hb : Starred b) (hX : 0 < X)
+    (hF : 0 < F) (hR₀ : 1 ≤ R₀) (hXF : X * F = D' / absNorm b)
+    (hFe : F ≤ absNorm (e * v)) (hWz : ∀ x, W (x / D') ≠ 0 → x ≤ D') : open Classical in
+    ∑ m₁ ∈ idealsLe D', ∑ m₂ ∈ idealsLe D',
+        (if (b, e, v, m₁, m₂) ∈ moebiusSplitsLe D' ∧
+            h ∈ elementRows (R * absNorm e / (absNorm (b * e) : ℝ) ^ 2) then
+          c * blockTerm P χ W ξ η b Y X F (e, v, h) m₁ m₂ else 0) =
+      if Starred (b * e * v) ∧ (absNorm (b * e * v) : ℝ) ≤ D' ∧
+          h ∈ elementRows (R * absNorm e / (absNorm (b * e) : ℝ) ^ 2) then
+        c * ∑ m₁ ∈ blockColumns R₀ X, ∑ m₂ ∈ blockColumns R₀ X,
+          blockTerm P χ W ξ η b Y X F (e, v, h) m₁ m₂
+      else 0 := by
+  classical
+  have hNb := natCast_absNorm_pos hb.1.1
+  have hD' : D' = X * F * absNorm b := by rw [hXF]; field_simp
+  have hD'0 : 0 ≤ D' := by rw [hD']; positivity
+  -- A nonzero weight bounds the norm of `b e v m`.
+  have hWn : ∀ m : Ideal 𝓔, W (absNorm (e * v) / F * (absNorm m / X)) ≠ 0 →
+      (absNorm (b * e * v * m) : ℝ) ≤ D' := fun m hm => by
+    refine hWz _ ?_
+    convert hm using 2
+    rw [hD']
+    simp only [map_mul, Nat.cast_mul]
+    field_simp
+  -- What a nonzero block term gives.
+  have hT : ∀ m₁ m₂, c * blockTerm P χ W ξ η b Y X F (e, v, h) m₁ m₂ ≠ 0 →
+      (IsCoprime m₁ b ∧ AwayFromSix m₁ ∧ IsCoprime m₁ (e * v) ∧
+        (absNorm (b * e * v * m₁) : ℝ) ≤ D') ∧
+      (IsCoprime m₂ b ∧ AwayFromSix m₂ ∧ IsCoprime m₂ (e * v) ∧
+        (absNorm (b * e * v * m₂) : ℝ) ≤ D') := fun m₁ m₂ hne => by
+    have h' := right_ne_zero_of_mul hne
+    unfold blockTerm at h'
+    have hc₁ := left_ne_zero_of_mul (left_ne_zero_of_mul h')
+    have hc₂ : blockCoefficient η b (e, v, h) m₂ ≠ 0 := fun h0 =>
+      right_ne_zero_of_mul (left_ne_zero_of_mul h') (by rw [h0, map_zero])
+    have hw := left_ne_zero_of_mul (right_ne_zero_of_mul h')
+    have hw₁ : W (absNorm (e * v) / F * (absNorm m₁ / X)) ≠ 0 := fun h0 =>
+      left_ne_zero_of_mul hw (by rw [h0, map_zero])
+    have hw₂ := right_ne_zero_of_mul hw
+    exact ⟨⟨(blockCoefficient_ne_zero hc₁).1, (blockCoefficient_ne_zero hc₁).2.1,
+      (blockCoefficient_ne_zero hc₁).2.2, hWn _ hw₁⟩, ⟨(blockCoefficient_ne_zero hc₂).1,
+      (blockCoefficient_ne_zero hc₂).2.1, (blockCoefficient_ne_zero hc₂).2.2, hWn _ hw₂⟩⟩
+  have hle : ∀ {I J : Ideal 𝓔}, I * J ≠ ⊥ → (absNorm I : ℝ) ≤ absNorm (I * J) ∧
+      (absNorm J : ℝ) ≤ absNorm (I * J) := absNorm_le_absNorm_mul
+  -- A column of norm `N(b e v m) ≤ D'` lies in the block columns.
+  have hcol : ∀ m, Starred m → b * e * v * m ≠ ⊥ → (absNorm (b * e * v * m) : ℝ) ≤ D' →
+      m ∈ blockColumns R₀ X := fun m hm hne hN => by
+    have hbev : b * (e * v) ≠ ⊥ := by
+      rw [← mul_assoc]
+      exact left_ne_zero_of_mul hne
+    have hev := natCast_absNorm_pos (right_ne_zero_of_mul hbev)
+    simp only [blockColumns, Finset.mem_filter, mem_idealsLe (by positivity : 0 ≤ R₀ * X)]
+    refine ⟨?_, hm⟩
+    have h1 : (absNorm b : ℝ) * absNorm (e * v) * absNorm m ≤ X * F * absNorm b := by
+      rw [← hD']
+      convert hN using 1
+      simp only [map_mul, Nat.cast_mul]
+      ring
+    have h2 : (absNorm (e * v) : ℝ) * absNorm m ≤ X * absNorm (e * v) := by
+      have : (absNorm (e * v) : ℝ) * absNorm m ≤ X * F := by
+        nlinarith
+      nlinarith
+    have h3 : (absNorm m : ℝ) ≤ X := by nlinarith
+    nlinarith
+  split_ifs with hρ
+  · obtain ⟨hbev, hNbev, hrow⟩ := hρ
+    have hbe : Starred (b * e) := hbev.of_mul_left
+    have hv : Starred v := hbev.of_mul_right
+    have hbev' : IsCoprime (b * e) v := isCoprime_of_squarefree_mul hbev.2
+    rw [Finset.mul_sum]
+    simp only [Finset.mul_sum]
+    refine sum_sum_ite_eq fun m₁ m₂ hne => ?_
+    obtain ⟨⟨hb₁, h6₁, hev₁, hN₁⟩, ⟨hb₂, h6₂, hev₂, hN₂⟩⟩ := hT m₁ m₂ hne
+    rw [mem_idealsLe hD'0, mem_idealsLe hD'0, mem_moebiusSplitsLe hD'0]
+    constructor
+    · rintro ⟨-, -, ⟨-, -, hz₁, hz₂, -⟩, -⟩
+      exact ⟨hcol m₁ hz₁.of_mul_right ((mul_assoc (b * e) v m₁).symm ▸
+        mul_ne_zero hbe.1.1 hz₁.1.1) hN₁, hcol m₂ hz₂.of_mul_right
+        ((mul_assoc (b * e) v m₂).symm ▸ mul_ne_zero hbe.1.1 hz₂.1.1) hN₂⟩
+    · rintro ⟨hc₁, hc₂⟩
+      have hm₁ : Starred m₁ := (Finset.mem_filter.mp hc₁).2
+      have hm₂ : Starred m₂ := (Finset.mem_filter.mp hc₂).2
+      have hvm₁ : IsCoprime v m₁ := (hev₁.of_mul_right_right).symm
+      have hvm₂ : IsCoprime v m₂ := (hev₂.of_mul_right_right).symm
+      have hz₁ := starred_mul hv hm₁ hvm₁
+      have hz₂ := starred_mul hv hm₂ hvm₂
+      have hcop : ∀ {m : Ideal 𝓔}, IsCoprime m b → IsCoprime m (e * v) → IsCoprime v m →
+          IsCoprime (b * e) (v * m) := fun h₁ h₂ h₃ =>
+        IsCoprime.mul_right hbev' (IsCoprime.mul_left h₁.symm h₂.of_mul_right_left.symm)
+      have hne₁ : b * e * v * m₁ ≠ ⊥ := (starred_mul hbev hm₁
+        ((isCoprime_of_le (hb₁.mul_right hev₁) (by rw [mul_assoc]))).symm).1.1
+      have hne₂ : b * e * v * m₂ ≠ ⊥ := (starred_mul hbev hm₂
+        ((isCoprime_of_le (hb₂.mul_right hev₂) (by rw [mul_assoc]))).symm).1.1
+      have hN₁' : ∀ {I : Ideal 𝓔}, I ∣ b * e * v * m₁ → (absNorm I : ℝ) ≤ D' := fun ⟨J, hJ⟩ =>
+        (hle (hJ ▸ hne₁)).1.trans (hJ ▸ hN₁)
+      have hN₂' : ∀ {I : Ideal 𝓔}, I ∣ b * e * v * m₂ → (absNorm I : ℝ) ≤ D' := fun ⟨J, hJ⟩ =>
+        (hle (hJ ▸ hne₂)).1.trans (hJ ▸ hN₂)
+      refine ⟨hN₁' ⟨b * e * v, by ring⟩, hN₂' ⟨b * e * v, by ring⟩,
+        ⟨⟨hN₁' ⟨e * v * m₁, by ring⟩, hN₁' ⟨b * v * m₁, by ring⟩, hN₁' ⟨b * e * m₁, by ring⟩,
+          hN₁' ⟨b * e * v, by ring⟩, hN₂' ⟨b * e * v, by ring⟩⟩, hbe, hz₁, hz₂,
+          IsCoprime.mul_right (hcop hb₁ hev₁ hvm₁) (hcop hb₂ hev₂ hvm₂),
+          hN₁' ⟨v * m₁, by ring⟩, hN₁' ⟨b * e, by ring⟩, hN₂' ⟨b * e, by ring⟩⟩, hrow⟩
+  · refine Finset.sum_eq_zero fun m₁ _ => Finset.sum_eq_zero fun m₂ _ => ?_
+    split_ifs with hu
+    · by_contra hne
+      obtain ⟨⟨-, -, -, hN₁⟩, -⟩ := hT m₁ m₂ hne
+      obtain ⟨hmem, hrow⟩ := hu
+      obtain ⟨-, hbe, hz₁, -, hco, -⟩ := (mem_moebiusSplitsLe hD'0).mp hmem
+      have hv : Starred v := hz₁.of_mul_left
+      have hbev := starred_mul hbe hv hco.of_mul_right_left.of_mul_right_left
+      have hne₁ : b * e * v * m₁ ≠ ⊥ := by
+        rw [mul_assoc (b * e)]
+        exact mul_ne_zero hbe.1.1 hz₁.1.1
+      exact hρ ⟨hbev, (hle hne₁).1.trans hN₁, hrow⟩
+    · rfl
+
 end Masullo.QRH.MeanSquare
