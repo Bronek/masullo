@@ -20,6 +20,13 @@ local notation "𝓔" => 𝓞 (CyclotomicField 3 ℚ)
 
 def AwayFromSix (n : Ideal 𝓔) : Prop := n ≠ ⊥ ∧ IsCoprime n (span {6})
 
+lemma AwayFromSix.coprime_three {n : Ideal 𝓔} (hn : AwayFromSix n) :
+    IsCoprime n (span {3}) :=
+  hn.2.of_isCoprime_of_dvd_right (span_singleton_dvd_span_singleton_iff_dvd.mpr ⟨2, by norm_num⟩)
+
+lemma AwayFromSix.mul {b c : Ideal 𝓔} (hb : AwayFromSix b) (hc : AwayFromSix c) :
+    AwayFromSix (b * c) := ⟨mul_ne_zero hb.1 hc.1, hb.2.mul_left hc.2⟩
+
 def Starred (n : Ideal 𝓔) : Prop := AwayFromSix n ∧ Squarefree n
 
 /-- Characters on residues modulo 72, evaluated at primary generators. Only

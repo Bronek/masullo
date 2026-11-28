@@ -1,9 +1,9 @@
-import Masullo.QRH.MeanSquare.Poisson
+import Masullo.QRH.MeanSquare.GaussNorm
+import Masullo.QRH.MeanSquare.GaussPair
 import Masullo.QRH.MeanSquare.PrimeRows
 import Masullo.QRH.MeanSquare.Reciprocity
 import Masullo.QRH.MeanSquare.Sieve
 import Masullo.QRH.MeanSquare.Theta
-import Masullo.QRH.MeanSquare.UnitRows
 
 /-! # Proof obligations between the printed inputs and estimate (A) -/
 
@@ -27,9 +27,6 @@ structure PrintedInputs : Prop where
 Each arrow names a proof still needed to obtain (A) from `PrintedInputs` alone. -/
 theorem meanSquareA_of_reductions (h : PrintedInputs)
     (family : DeloupTuraevTheorem1 → EisensteinFamilyRealizes primaryQuadraticSymbol)
-    (gauss : DunnRadziwillReciprocity → DunnRadziwillGaussCube → DeloupTuraevTheorem1 →
-      PairedGaussIdentities)
-    (normGauss : DunnRadziwillGaussCube → GaussCoefficientBound)
     (poisson : GaoZhaoLemma23 → PrimitivePoisson)
     (reflection : PattersonTheorem81 → DunnRadziwillReciprocity → DeloupTuraevTheorem1 →
       DLMFBesselMellin →
@@ -44,8 +41,8 @@ theorem meanSquareA_of_reductions (h : PrintedInputs)
   have h5 := reflection h.theta h.cubicReciprocity h.quadraticGauss h.besselMellin h.besselDecay
     h.besselDeriv h.gammaVertical h7
   have hp := poisson h.cosetPoisson
-  have hg := gauss h.cubicReciprocity h.cubicGaussCube h.quadraticGauss
-  have hn := normGauss h.cubicGaussCube
+  have hg := pairedGaussIdentities h.cubicReciprocity h.cubicGaussCube h.quadraticGauss
+  have hn := gaussCoefficientBound
   have h₁ := unitRowEstimate_of_gaussCoefficientBound hn
   have h4 := gapEstimate_of_tail_transfer h₁ (invert hn h5) (transfer hp hg hn)
   exact meanSquareA_of_fullRows (firstPoisson hp hg hn h4)
