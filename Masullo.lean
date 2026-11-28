@@ -43,5 +43,7 @@ import Masullo.QRH.MeanSquare.DilatedSeparation
 import Masullo.QRH.MeanSquare.Transfer
 import Masullo.QRH.MeanSquare.OffDiagonal
 import Masullo.Lattice.Eisenstein
+import Masullo.QRH.MeanSquare.Majorant
+import Masullo.QRH.MeanSquare.TransferKernel
 
 #print RiemannHypothesis
