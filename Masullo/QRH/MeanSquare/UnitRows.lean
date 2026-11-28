@@ -54,8 +54,20 @@ lemma norm_twist_le_one (ξ : RayCharacter) (k : 𝓔) (f n : Ideal 𝓔) :
     exact (isOfFinOrder_iff_pow_eq_one.mpr ⟨_, Nat.card_pos, hχ⟩).norm_eq_one.le
   · simp [ξ.map_nonunit hx]
 
-private theorem norm_columnSum_le {I : TestInterval} {W : ℝ → ℂ} {X : ℝ}
-    (hg : GaussCoefficientBound) (hW : UnitTest I 0 W) (hX : 1 ≤ X)
+/-- The column vanishes when its support would require an ideal of norm less than one. -/
+theorem columnSum_eq_zero_of_short {I : TestInterval} {j : ℕ} {W : ℝ → ℂ} (hW : UnitTest I j W)
+    {L : ℝ} (hL : 0 < L) (hcut : I.hi * L < 1)
+    (ξ : RayCharacter) (k : 𝓔) (f : Ideal 𝓔) : columnSum ξ W L k f = 0 := by
+  have hz (n : {n : Ideal 𝓔 // Starred n}) : W (absNorm n.1 / L) = 0 := by
+    by_contra h
+    have hx := (hW.2.1 (subset_tsupport W h)).2
+    have hN : 1 ≤ (absNorm n.1 : ℝ) := by
+      exact_mod_cast Nat.one_le_iff_ne_zero.mpr (absNorm_eq_zero_iff.not.mpr n.2.1.1)
+    linarith [(div_le_iff₀ hL).mp hx]
+  simp [columnSum, hz]
+
+theorem norm_columnSum_le {I : TestInterval} {W : ℝ → ℂ} {X : ℝ}
+    (hg : GaussCoefficientBound) (hW : UnitTest I 0 W) (hX : 0 < X)
     (ξ : RayCharacter) (k : 𝓔) (f : Ideal 𝓔) :
     ‖columnSum ξ W X k f‖ ≤ (idealsLe (max I.hi 1 * X)).card := by
   classical
@@ -102,7 +114,8 @@ theorem unitRowEstimate_of_gaussCoefficientBound (hg : GaussCoefficientBound) : 
   refine ⟨2 * A * U * (A * R) ^ 2, by positivity, ?_⟩
   intro X F ξ W hX hF hW
   have hcol (k : 𝓔) (f : Ideal 𝓔) : ‖columnSum ξ W X k f‖ ≤ A * (R * X) :=
-    (norm_columnSum_le hg hW hX ξ k f).trans (hA _ (by nlinarith [mul_nonneg (sub_nonneg.mpr hR) (sub_nonneg.mpr hX)]))
+    (norm_columnSum_le hg hW (by linarith : 0 < X) ξ k f).trans
+      (hA _ (by nlinarith [mul_nonneg (sub_nonneg.mpr hR) (sub_nonneg.mpr hX)]))
   have hinner (f : Ideal 𝓔) : (∑ k ∈ elementRows 1, ‖columnSum ξ W X k f‖ ^ 2) ≤
       U * (A * (R * X)) ^ 2 := by
     simpa [U, nsmul_eq_mul] using Finset.sum_le_card_nsmul (elementRows 1)

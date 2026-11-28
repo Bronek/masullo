@@ -76,7 +76,7 @@ private lemma neg_one_sextic_sq {n : Ideal 𝓔} (hn : AwayFromSix n) :
   have he := map_mul (sexticChar hn) (Ideal.Quotient.mk n (-1)) (Ideal.Quotient.mk n (-1))
   simpa only [← map_mul, neg_one_mul, neg_neg, map_one, sexticChar_apply_mk, sq] using he.symm
 
-private lemma quadraticGauss_conj {n : Ideal 𝓔} (hn : AwayFromSix n) :
+lemma quadraticGauss_conj {n : Ideal 𝓔} (hn : AwayFromSix n) :
     conj (sextic n (-1)) * conj (normalizedGauss n 3) = normalizedGauss n 3 := by
   classical
   let := Ring.HasFiniteQuotients.finiteQuotient hn.1
