@@ -415,7 +415,8 @@ def OffDiagonalEstimate (P : SchwartzMap ℝ ℂ) : Prop :=
     ∀ θ : ℝ, 0 < θ → θ ≤ 1 / 10 → ∀ ε > (0 : ℝ), ∃ C ≥ (0 : ℝ), ∀ D : ℝ, 2 ≤ D →
       (offDiagonalSum P W D (D ^ (1 + θ))).re ≤ C * D ^ (2 + θ + ε)
 
-private lemma sum_sum_eq_diag_add {S : Finset (Ideal 𝓔)} (G : Ideal 𝓔 → Ideal 𝓔 → ℂ) :
+/-- A double sum is its diagonal plus its off-diagonal part. -/
+lemma sum_sum_eq_diag_add {S : Finset (Ideal 𝓔)} (G : Ideal 𝓔 → Ideal 𝓔 → ℂ) :
     open Classical in
     ∑ n₁ ∈ S, ∑ n₂ ∈ S, G n₁ n₂ =
       ∑ n ∈ S, G n n + ∑ n₁ ∈ S, ∑ n₂ ∈ S, if n₁ = n₂ then 0 else G n₁ n₂ := by
