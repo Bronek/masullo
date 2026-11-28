@@ -126,7 +126,8 @@ lemma dvd_of_forall_differentCharacter_eq_one {c x : 𝓔} (hc : c ≠ 0)
       exact hy)
   have he : z = eisEmbedding (a + b * eisOmega) := by
     rw [map_add, map_mul, map_intCast, map_intCast, hω]
-    simp only [Masullo.Lattice.omega, Complex.mul_im, Complex.add_re, Complex.add_im, Complex.one_re,
+    simp only [Masullo.Lattice.omega, Complex.mul_im, Complex.add_re, Complex.add_im,
+      Complex.one_re,
       Complex.one_im] at ha
     apply Complex.ext <;> simp [Masullo.Lattice.omega]
     · apply mul_right_cancel₀ Masullo.Lattice.sqrt_three_pos.ne'

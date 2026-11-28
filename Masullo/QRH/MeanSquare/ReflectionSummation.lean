@@ -29,7 +29,8 @@ theorem branch_count_bound {q δ : ℝ} (hq : 1 ≤ q) (hδ : 0 < δ) :
   simp only [pow_one] at he
   have hlarge (p : Ideal 𝓔) (h : p ∈ P \ S) : q ≤ (absNorm p : ℝ)^δ := by
     have hn : ¬(absNorm p : ℝ) ≤ V := fun hh => (mem_sdiff.mp h).2 ((mem_idealsLe hV).mpr hh)
-    exact (Real.rpow_inv_rpow hq₀ hδ.ne').symm.le.trans (Real.rpow_le_rpow hV (le_of_not_ge hn) hδ.le)
+    exact (Real.rpow_inv_rpow hq₀ hδ.ne').symm.le.trans (Real.rpow_le_rpow hV (le_of_not_ge hn)
+      hδ.le)
   rw [← Finset.prod_const,← Finset.prod_inter_mul_prod_sdiff P S]
   calc
     _ ≤ q ^ S.card * ∏ p ∈ P \ S, (absNorm p : ℝ)^δ := by
@@ -126,7 +127,8 @@ theorem summed_kernel_branch (quad : DeloupTuraevTheorem1)
     dsimp only [F,kernelBlockVector]
     rw [norm_smul, Real.norm_of_nonneg (Real.rpow_nonneg (by norm_num) _),
       EuclideanSpace.norm_eq]
-    have h := hb W hw hK (one_le_pow₀ (by norm_num : (1:ℝ) ≤ 2)) (one_le_pow₀ (by norm_num : (1:ℝ) ≤ 2))
+    have h := hb W hw hK (one_le_pow₀ (by norm_num : (1:ℝ) ≤ 2)) (one_le_pow₀ (by
+      norm_num : (1:ℝ) ≤ 2))
       hY ha ((k:ℤ)-3) g R (S i) (T j) hR (hS i) hg (hT j) (c (k,i,j)) (d (k,i,j)) (u (k,i,j))
       (hc (k,i,j)) (hd (k,i,j)) (hu (k,i,j))
     rw [← R.sum_coe_sort] at h

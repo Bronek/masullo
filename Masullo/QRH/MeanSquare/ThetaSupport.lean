@@ -75,7 +75,8 @@ theorem PattersonRow.emultiplicity_numerator (r : PattersonRow) :
     emultiplicity eisLambda r.numerator = r.layer.lambdaExponent := by
   have hu : ¬ eisLambda ∣ r.layer.unitFactor :=
     fun h => eisLambda_prime.not_isUnit (isUnit_of_dvd_unit h r.layer.isUnit_unitFactor)
-  have hd : ¬ eisLambda ∣ r.d ^ 3 := fun h => r.primary_d.lambda_not_dvd (eisLambda_prime.dvd_of_dvd_pow h)
+  have hd : ¬ eisLambda ∣ r.d ^ 3 := fun h => r.primary_d.lambda_not_dvd
+    (eisLambda_prime.dvd_of_dvd_pow h)
   simp only [PattersonRow.numerator, emultiplicity_mul eisLambda_prime,
     emultiplicity_pow_self_of_prime eisLambda_prime, emultiplicity_eq_zero.mpr hu,
     emultiplicity_eq_zero.mpr r.primary_c.lambda_not_dvd, emultiplicity_eq_zero.mpr hd,
@@ -131,7 +132,8 @@ theorem PattersonCoefficients.exists_primary_cube {τ : ℂ → ℂ} (hτ : Patt
     ∃ c d : 𝓔, eisPrimary c ∧ eisPrimary d ∧ Squarefree c ∧
       (m = c * d ^ 3 ∨ m = -(c * d ^ 3)) := by
   classical
-  obtain ⟨r, hr⟩ : ∃ r : PattersonRow, eisEmbedding m = r.frequency ∨ eisEmbedding m = -r.frequency := by
+  obtain ⟨r, hr⟩ : ∃ r : PattersonRow, eisEmbedding m = r.frequency ∨ eisEmbedding m = -r.frequency
+    := by
     by_contra! h
     exact ht (hτ.2 _ h)
   have hLambda : eisEmbedding eisLambda ≠ 0 :=

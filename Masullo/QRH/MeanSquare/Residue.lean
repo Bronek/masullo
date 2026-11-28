@@ -66,13 +66,15 @@ theorem primePowerResidueSymbol_spec {P : Ideal 𝓔} (hp : Prime P)
   have hq : (f a ^ ((absNorm P - 1) / d)) ^ d = 1 := by
     rw [← pow_mul, Nat.div_mul_cancel hdiv]
     simpa only [Ideal.absNorm_eq_natCard, Nat.card_eq_fintype_card] using
-      FiniteField.pow_card_sub_one_eq_one _ (fun h => ha (Ideal.Quotient.eq_zero_iff_mem.mp h) : f a ≠ 0)
+      FiniteField.pow_card_sub_one_eq_one _ (fun h => ha (Ideal.Quotient.eq_zero_iff_mem.mp h) : f a
+        ≠ 0)
   obtain ⟨i, _, hi⟩ := hz.eq_pow_of_pow_eq_one hq
   have hw : ∃ u : 𝓔, u ^ d = 1 ∧ a ^ ((absNorm P - 1) / d) - u ∈ P :=
     ⟨ζ ^ i, by rw [pow_right_comm, hζ.pow_eq_one, one_pow],
       Ideal.Quotient.eq.mp (by simpa only [map_pow] using hi.symm)⟩
   rw [primePowerResidueSymbol, ite_eq_right ha, dite_eq_left hw]
-  exact ⟨hw.choose_spec.1, by simpa only [map_pow] using (Ideal.Quotient.eq.mpr hw.choose_spec.2).symm⟩
+  exact ⟨hw.choose_spec.1,
+    by simpa only [map_pow] using (Ideal.Quotient.eq.mpr hw.choose_spec.2).symm⟩
 
 private theorem primePowerResidueSymbol_mul {P : Ideal 𝓔} (hp : Prime P)
     {d : ℕ} [NeZero d] (hd : (d : 𝓔) ∉ P) {ζ : 𝓔} (hζ : IsPrimitiveRoot ζ d)

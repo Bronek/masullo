@@ -19,7 +19,8 @@ private abbrev Index := {m : 𝓔 // m ≠ 0}
 /-- A test of compact support leaves finitely many numerators in the frequency lattice. -/
 theorem pattersonTest_hasFiniteSupport {I : TestInterval} {j : ℕ} {V : ℝ → ℂ}
     (hV : UnitTest I j V) {X : ℝ} (hX : 0 < X) :
-    Function.HasFiniteSupport (fun m : {m : 𝓔 // m ≠ 0} => V (normSq (pattersonFrequency m)/X)) := by
+    Function.HasFiniteSupport (fun m : {m : 𝓔 // m ≠ 0} => V (normSq (pattersonFrequency m)/X))
+      := by
   have hT := tendsto_norm_pattersonFrequency.eventually_gt_atTop (Real.sqrt (I.hi * X))
   have he : ∀ᶠ m in cofinite, V (normSq (pattersonFrequency m) / X) = 0 := by
     filter_upwards [hT] with m hm
@@ -45,7 +46,8 @@ private theorem primaryIndex_injective : Function.Injective primaryIndex := by
   intro m n h
   have hg : generator m.val = generator n.val :=
     mul_left_cancel₀ (pow_ne_zero _ eisLambda_prime.ne_zero) (congrArg Subtype.val h)
-  exact Subtype.ext ((span_generator _).symm.trans ((congrArg (fun a : 𝓔 => span {a}) hg).trans (span_generator _)))
+  exact Subtype.ext ((span_generator _).symm.trans ((congrArg (fun a : 𝓔 => span {a}) hg).trans
+    (span_generator _)))
 
 private theorem pattersonFrequency_cube_mul (a : 𝓔) :
     pattersonFrequency (eisLambda ^ 3 * a) = eisEmbedding a := by
@@ -128,7 +130,8 @@ private theorem norm_primaryRayWeight_le_one {ψ : (𝓔 ⧸ span {(72:𝓔)}) �
   split_ifs with h
   · have hn := (good_span_iff h.1).mpr h.2
     rw [norm_mul, cubicSymbol, ← powerResidueSymbol_six_sq hn.2, map_pow, norm_pow]
-    exact (mul_le_of_le_one_left (norm_nonneg _) (pow_le_one₀ (norm_nonneg _) (norm_sextic_le_one _ _))).trans (hψ _)
+    exact (mul_le_of_le_one_left (norm_nonneg _) (pow_le_one₀ (norm_nonneg _) (norm_sextic_le_one _
+      _))).trans (hψ _)
   · simp
 
 private theorem norm_lift_le_one {w : RayResidue 7 → ℂ} {ψ : (𝓔 ⧸ span {(72:𝓔)}) → ℂ}

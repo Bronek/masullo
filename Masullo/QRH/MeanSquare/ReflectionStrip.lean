@@ -62,9 +62,11 @@ theorem integral_vertical_eq_of_exp_growth {F : ℂ → ℂ} {a b : ℝ} (hab : 
         rw [two_mul, Real.exp_add, ← sq]
         exact pow_le_pow_left₀ (by positivity) (by linarith [Real.add_one_le_exp |w.im|]) 2
       have h₂ : A*|w.im| + 2*|w.im| ≤ M/c * Real.exp (c*|w.im|) := calc
-        _ ≤ M*|w.im| := by dsimp [M]; nlinarith [mul_le_mul_of_nonneg_right (le_max_left A 0) (abs_nonneg w.im)]
+        _ ≤ M*|w.im| :=
+          by dsimp [M]; nlinarith [mul_le_mul_of_nonneg_right (le_max_left A 0) (abs_nonneg w.im)]
         _ = M/c * (c*|w.im|) := by field_simp
-        _ ≤ _ := mul_le_mul_of_nonneg_left (by linarith [Real.add_one_le_exp (c*|w.im|)]) (div_nonneg hM hc.le)
+        _ ≤ _ := mul_le_mul_of_nonneg_left (by
+          linarith [Real.add_one_le_exp (c*|w.im|)]) (div_nonneg hM hc.le)
       calc
         _ ≤ D^2*(‖F w‖*(1+|w.im|)^2) := hpoly w hw'
         _ ≤ D^2*((max C 0 * Real.exp (A*|w.im|))*Real.exp (2*|w.im|)) := by
@@ -94,7 +96,8 @@ private theorem reciprocal_gamma_growth (h : DLMFGammaVertical) :
   let R := max 1 T
   let K := reProdIm (Icc (-(1/2:ℝ)) 3) (Icc (-R) R)
   have hk : IsCompact K := isCompact_Icc.reProdIm isCompact_Icc
-  obtain ⟨U,hU⟩ := hk.exists_bound_of_continuousOn differentiable_one_div_Gamma.continuous.continuousOn
+  obtain ⟨U,hU⟩ := hk.exists_bound_of_continuousOn
+    differentiable_one_div_Gamma.continuous.continuousOn
   let B := 2 / Real.sqrt (2*Real.pi)
   have hB : 0 < B := by dsimp [B]; positivity
   refine ⟨max B U,hB.le.trans (le_max_left ..),fun z hz => ?_⟩
@@ -111,7 +114,8 @@ private theorem reciprocal_gamma_growth (h : DLMFGammaVertical) :
     have hl : M/2 ≤ ‖Gamma z‖ := by
       have := (le_div_iff₀ hM).mp (show (1/2:ℝ) ≤ ‖Gamma z‖/M by linarith)
       linarith
-    have hpow : y^(-(1:ℝ)) ≤ y^(z.re-1/2) := Real.rpow_le_rpow_of_exponent_le hy₁ (by linarith [hz.1])
+    have hpow : y^(-(1:ℝ)) ≤ y^(z.re-1/2) := Real.rpow_le_rpow_of_exponent_le hy₁ (by
+      linarith [hz.1])
     have hinv : (y^(z.re-1/2))⁻¹ ≤ y := by
       rw [Real.rpow_neg_one] at hpow
       apply (inv_le_iff_one_le_mul₀ (Real.rpow_pos_of_pos hy₀ _)).mpr
@@ -130,7 +134,8 @@ private theorem reciprocal_gamma_growth (h : DLMFGammaVertical) :
         rw [mul_assoc,← Real.exp_add]; congr 2; ring
       _ ≤ _ := mul_le_mul_of_nonneg_right (le_max_left ..) (Real.exp_pos _).le
   · have hzK : z ∈ K := ⟨hz,abs_le.mp (le_of_not_ge hy)⟩
-    exact (hU z hzK).trans ((le_max_right B U).trans (le_mul_of_one_le_right (hB.le.trans (le_max_left ..))
+    exact (hU z hzK).trans ((le_max_right B U).trans (le_mul_of_one_le_right (hB.le.trans
+      (le_max_left ..))
       (Real.one_le_exp (by positivity))))
 
 /-- On the strip used in smoothed reflection, the reciprocal of the completed
@@ -144,7 +149,8 @@ theorem norm_inv_reflectionGammaFactor_strip (h : DLMFGammaVertical) :
   let A := 1+Real.pi/2
   refine ⟨B^2*p^3,2*A,by positivity, fun z hz => ?_⟩
   have hg (c : ℝ) (hc : 0 ≤ c) (hc' : c ≤ 1) : ‖(Gamma (z+c))⁻¹‖ ≤ B*Real.exp (A*|z.im|) := by
-    simpa [A] using hγ (z+c) (by simp only [add_re,ofReal_re,mem_Icc]; constructor <;> linarith [hz.1,hz.2])
+    simpa [A] using hγ (z+c) (by
+      simp only [add_re,ofReal_re,mem_Icc]; constructor <;> linarith [hz.1,hz.2])
   have h₁ := hg (1/3) (by norm_num) (by norm_num)
   have h₂ := hg (2/3) (by norm_num) (by norm_num)
   push_cast at h₁ h₂

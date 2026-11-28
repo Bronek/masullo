@@ -52,7 +52,8 @@ private theorem eisMatrix_map_mulVec (a b : ℤ) (x : Fin 2 → ℤ) :
   fin_cases i <;> simp [eisMatrix, mulVec, dotProduct, Fin.sum_univ_two]
 
 private theorem lattice_one :
-    lattice (1 : Matrix (Fin 2) (Fin 2) ℝ) = Set.range (fun x : Fin 2 → ℤ => fun i => (x i : ℝ)) := by
+    lattice (1 : Matrix (Fin 2) (Fin 2) ℝ) = Set.range (fun x : Fin 2 → ℤ => fun i => (x i : ℝ))
+      := by
   simp [lattice]
 
 private theorem integral_dot (x y : Fin 2 → ℤ) :
@@ -250,7 +251,8 @@ private lemma sub_rep_mem_iff (n : Ideal 𝓔) (q : Fin 2 → ℤ) (hq : span {e
 
 private theorem reps_eisMatrix (n : Ideal 𝓔) [Fintype (𝓔 ⧸ n)] (q : Fin 2 → ℤ)
     (hq : span {elem q} = n) :
-    Representatives (lattice 1) ((eisMatrix ((q 0 : ℤ) : ℝ) (q 1)).mulVec '' lattice 1) (reps n) := by
+    Representatives (lattice 1) ((eisMatrix ((q 0 : ℤ) : ℝ) (q 1)).mulVec '' lattice 1) (reps n)
+      := by
   classical
   have hmem (y : 𝓔 ⧸ n) : rep n y ∈ reps n := Finset.mem_map.mpr ⟨_, Finset.mem_univ _, rfl⟩
   constructor
@@ -328,7 +330,8 @@ private theorem quadraticExponentialSum_eq_raySum (h : DeloupTuraevTheorem1) {n 
     (hn : n ≠ ⊥) : quadraticExponentialSum n = quadraticRaySum (coords.symm (generator n)) := by
   have hg : generator n ≠ 0 := fun hz => hn (by simpa [hz] using (span_generator n).symm)
   have hsum : (∑ᶠ y : 𝓔 ⧸ n, quotientDifferentCharacter n (y^2)) =
-      ∑ᶠ y : 𝓔 ⧸ n, differentCharacter (eisEmbedding (Quotient.out y)^2 / eisEmbedding (generator n)) :=
+      ∑ᶠ y : 𝓔 ⧸ n, differentCharacter (eisEmbedding (Quotient.out y)^2 / eisEmbedding (generator
+        n)) :=
     by
     classical
     let := Ring.HasFiniteQuotients.finiteQuotient hn
@@ -357,7 +360,8 @@ private theorem quadraticRaySum_congr {a b : 𝓔}
   apply congrArg (fun z : ℂ => z / 2)
   exact Finset.sum_congr rfl fun x hx => eisMatrix_phase_congr (hd 0) (hd 1) (reps_two.1 hx)
 
-/-- Fourth-root sum over the four classes modulo two, evaluated at a denominator class modulo four. -/
+/-- Fourth-root sum over the four classes modulo two, evaluated at a denominator class modulo
+four. -/
 def quadraticRayValue (r : 𝓔 ⧸ span {(4 : 𝓔)}) : ℂ :=
   quadraticRaySum (coords.symm (Quotient.out r))
 
@@ -378,7 +382,8 @@ theorem quadraticExponentialSum_eq_of_mk_four_eq (h : DeloupTuraevTheorem1)
 every residue. The two coefficients are in the Eisenstein basis `1, ω`. -/
 theorem quadraticRayValue_representatives :
     ∃ s, Representatives (lattice 1) ((fun x => (2 : ℝ) • x) '' lattice 1) s ∧
-      ∀ a b : ℤ, quadraticRayValue (Ideal.Quotient.mk (span {(4 : 𝓔)}) ((a : 𝓔) + (b : 𝓔) * eisOmega)) =
+      ∀ a b : ℤ, quadraticRayValue (Ideal.Quotient.mk (span {(4 : 𝓔)}) ((a : 𝓔) + (b : 𝓔) *
+        eisOmega)) =
         (∑ x ∈ s, phase (dotProduct x ((eisMatrix (a : ℝ) b).mulVec x) / 2)) / 2 := by
   refine ⟨reps (span {(2 : 𝓔)}), reps_two, ?_⟩
   intro a b
@@ -393,7 +398,8 @@ theorem quadraticRayValue_representatives :
 Both evaluations use the same representatives modulo the Eisenstein matrix. -/
 theorem quadraticRayValue_of_representatives (quad : DeloupTuraevTheorem1) (a b : ℤ)
     (hN : 0 < (a : ℝ)^2 - a*b + b^2)
-    {s : Finset (Fin 2 → ℝ)} (hs : Representatives (lattice 1) ((fun x => (2 : ℝ) • x) '' lattice 1) s) :
+    {s : Finset (Fin 2 → ℝ)} (hs : Representatives (lattice 1) ((fun x => (2 : ℝ) • x) '' lattice 1)
+      s) :
     quadraticRayValue (Ideal.Quotient.mk (span {(4 : 𝓔)}) ((a : 𝓔) + (b : 𝓔)*eisOmega)) =
       (∑ x ∈ s, phase (dotProduct x ((eisMatrix (a : ℝ) b).mulVec x) / 2)) / 2 := by
   classical

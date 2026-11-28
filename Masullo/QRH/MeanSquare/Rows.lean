@@ -88,7 +88,8 @@ lemma sixthRow_injective (Y : ℝ) :
   have hd : generator p.1 ∣ generator q.1 := hp.dvd_of_dvd_pow (n := 6)
     (by rw [← hpq]; exact dvd_pow (dvd_refl _) (by decide : 6 ≠ 0))
   exact Subtype.ext ((span_generator p.1).symm.trans
-    ((span_singleton_eq_span_singleton.mpr (hp.associated_of_dvd hq hd)).trans (span_generator q.1)))
+    ((span_singleton_eq_span_singleton.mpr (hp.associated_of_dvd hq hd)).trans (span_generator
+      q.1)))
 
 /-- Select the prime sixth powers from the finite nonnegative square sum on the disk. -/
 theorem primeSixthRows_le {D : ℝ} (hD : 0 < D) (v : 𝓔 → ℂ) :

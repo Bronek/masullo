@@ -27,7 +27,8 @@ private lemma ramified_square_associated : Associated ((eisOmega - 1) ^ 2) (3 : 
   exact ⟨-omegaUnit, by rw [ramified_square]; change 3 * -eisOmega = _; ring⟩
 
 private lemma not_unit_three : ¬ IsUnit (3 : 𝓔) := fun h =>
-  rootSpec.zeta_sub_one_prime'.not_isUnit (isUnit_of_dvd_unit rootSpec.toInteger_sub_one_dvd_prime' h)
+  rootSpec.zeta_sub_one_prime'.not_isUnit (isUnit_of_dvd_unit
+    rootSpec.toInteger_sub_one_dvd_prime' h)
 
 /-- Primary elements reduce to the identity in the quotient by three. -/
 lemma eisPrimary_iff_mk_eq_one (x : 𝓔) :
@@ -122,7 +123,8 @@ theorem generator_eq_of_eisPrimary {x : 𝓔} {I : Ideal 𝓔} (hspan : span {x}
 
 theorem generator_mul {I J : Ideal 𝓔} (hI : IsCoprime I (span {3})) (hJ : IsCoprime J (span {3})) :
     generator (I * J) = generator I * generator J :=
-  generator_eq_of_eisPrimary (by rw [← span_singleton_mul_span_singleton, span_generator, span_generator])
+  generator_eq_of_eisPrimary (by
+    rw [← span_singleton_mul_span_singleton, span_generator, span_generator])
     ((eisPrimary_generator hI).mul (eisPrimary_generator hJ))
 
 open InfinitePlace in

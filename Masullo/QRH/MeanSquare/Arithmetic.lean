@@ -47,7 +47,8 @@ theorem cubicSymbol_neg_two (h : DunnRadziwillReciprocity) {a : 𝓔} (ha : eisP
 
 /-- A. Dunn and M. Radziwiłł, *Bias in cubic Gauss sums: Patterson's conjecture*, Ann. of Math.
 200 (2024), §1.2, (1.7)–(1.8), arXiv:2109.07463v3 p. 4. Here `pattersonGauss 1 c` has the trace
-character of (1.7), and division by `|c|` normalizes it. <https://arxiv.org/pdf/2109.07463v3#page=4> -/
+character of (1.7), and division by `|c|` normalizes it.
+<https://arxiv.org/pdf/2109.07463v3#page=4> -/
 def DunnRadziwillGaussCube : Prop :=
   ∀ c : 𝓔, eisPrimary c → (pattersonGauss 1 c / (‖eisEmbedding c‖ : ℝ)) ^ 3 =
     (idealMoebius (span {c}) : ℂ) * eisEmbedding c / (‖eisEmbedding c‖ : ℝ)

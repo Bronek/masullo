@@ -37,7 +37,8 @@ absolutely convergent ideal sums. This form matches the branch count in (16). -/
 theorem branchSum_extracted {τ : ℂ → ℂ} (ht : PattersonCoefficients τ)
     (hΓ : DLMFGammaVertical) {J : TestInterval} {W : ℝ → ℂ} (hw : UnitTest J 6 W)
     {X : ℝ} (hX : 0 < X) {k : Idl} (hk : AwayFromSix k) {h : RayResidue 7} (D : FixedCusp h)
-    (r : ReflectionCRT.Residue (72*eisLambda^7)) (T G : Idl) (F : Finset Idl) (hF : ∀ p ∈ F, AwayFromSix p ∧ Prime p) :
+    (r : ReflectionCRT.Residue (72*eisLambda^7)) (T G : Idl) (F : Finset Idl) (hF : ∀ p ∈ F,
+      AwayFromSix p ∧ Prime p) :
     let j := fun p => exponent T G p % 6
     let ψ := fun m => classWeight D r F (ReflectionCRT.red (8*eisLambda^9) m)
     let c := D.c * (generator k * ∏ p ∈ F, generator p)
@@ -48,9 +49,12 @@ theorem branchSum_extracted {τ : ℂ → ℂ} (ht : PattersonCoefficients τ)
   classical
   intro j ψ c
   have hc : c ≠ 0 := by
-    have hd {p : Idl} (hp : p ≠ 0) : generator p ≠ 0 := fun hh => hp (by simpa [hh] using (span_generator p).symm)
-    exact mul_ne_zero D.c_ne_zero (mul_ne_zero (hd hk.1) (prod_ne_zero_iff.mpr fun p hp => hd (hF p hp).1.1))
-  have hs := split_dual_row ht hΓ hw hX hc (ψ := ψ) (fun m => norm_classWeight_le D r (fun p hp => (hF p hp).1) _) hk F hF j
+    have hd {p : Idl} (hp : p ≠ 0) : generator p ≠ 0 := fun hh =>
+      hp (by simpa [hh] using (span_generator p).symm)
+    exact mul_ne_zero D.c_ne_zero (mul_ne_zero (hd hk.1) (prod_ne_zero_iff.mpr fun p hp =>
+      hd (hF p hp).1.1))
+  have hs := split_dual_row ht hΓ hw hX hc (ψ := ψ) (fun m => norm_classWeight_le D r (fun p hp =>
+    (hF p hp).1) _) hk F hF j
   change branchSum D r T G F hk τ W X = _
   apply hs.trans
   rw [← (Fintype.piFinset (fun p : F => TameBranch.activeChoices (j p))).sum_coe_sort]

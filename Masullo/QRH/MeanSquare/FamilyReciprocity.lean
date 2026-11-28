@@ -86,13 +86,17 @@ theorem primaryQuadraticSymbol_reciprocity (quad : DeloupTuraevTheorem1) {a b : 
   have hr : gaussRatio (familyClass a) (familyClass b) =
       primaryQuadraticSymbol b a * primaryQuadraticSymbol a b := by
     rw [gaussRatio, ← Units.val_mul, ← familyClass_mul ha.1 hb.1, familyClass_gauss quad hab,
-      familyClass_gauss quad ha, familyClass_gauss quad hb, normalizedGauss_mul ha.1 hb.1 h (by decide : 3 ≠ 0),
-      mul_div_cancel_left₀ _ (mul_ne_zero (quadraticGauss_ne_zero ha) (quadraticGauss_ne_zero hb)), mul_pow]
+      familyClass_gauss quad ha, familyClass_gauss quad hb, normalizedGauss_mul ha.1 hb.1 h (by
+        decide : 3 ≠ 0),
+      mul_div_cancel_left₀ _ (mul_ne_zero (quadraticGauss_ne_zero ha) (quadraticGauss_ne_zero hb)),
+        mul_pow]
     rfl
   have hx := symbol_sq ha.1 h
   have hy := symbol_sq hb.1 h.symm
-  have hs : (gaussRatio (familyClass a) (familyClass b)) ^ 2 = 1 := by rw [hr, mul_pow, hx, hy, one_mul]
-  have hsign : familySign (familyClass a) (familyClass b) = gaussRatio (familyClass a) (familyClass b) := by
+  have hs : (gaussRatio (familyClass a) (familyClass b)) ^ 2 = 1 :=
+    by rw [hr, mul_pow, hx, hy, one_mul]
+  have hsign : familySign (familyClass a) (familyClass b) = gaussRatio (familyClass a) (familyClass
+    b) := by
     rcases sq_eq_one_iff.mp hs with he | he <;> norm_num [familySign, he]
   rw [hsign, hr]
   linear_combination -(primaryQuadraticSymbol b a) * hy
