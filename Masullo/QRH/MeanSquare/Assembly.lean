@@ -1,3 +1,4 @@
+import Masullo.QRH.MeanSquare.CubeTail
 import Masullo.QRH.MeanSquare.Family
 import Masullo.QRH.MeanSquare.GaussNorm
 import Masullo.QRH.MeanSquare.GaussPair
@@ -32,7 +33,6 @@ theorem meanSquareA_of_reductions (h : PrintedInputs)
       DLMFBesselMellin →
       DLMFBesselAsymptotic → DLMFBesselDerivAsymptotic → DLMFGammaVertical →
       QuadraticSieve primaryQuadraticSymbol → CompletedEstimate)
-    (invert : GaussCoefficientBound → CompletedEstimate → CubeTailEstimate)
     (transfer : PrimitivePoisson → PairedGaussIdentities → GaussCoefficientBound → TransferEstimate)
     (firstPoisson : PrimitivePoisson → PairedGaussIdentities → GaussCoefficientBound →
       GapEstimate → FullRowEstimate) :
@@ -44,7 +44,7 @@ theorem meanSquareA_of_reductions (h : PrintedInputs)
   have hg := pairedGaussIdentities h.cubicReciprocity h.cubicGaussCube h.quadraticGauss
   have hn := gaussCoefficientBound
   have h₁ := unitRowEstimate_of_gaussCoefficientBound hn
-  have h4 := gapEstimate_of_tail_transfer h₁ (invert hn h5) (transfer hp hg hn)
+  have h4 := gapEstimate_of_tail_transfer h₁ (cubeTailEstimate_of_completedEstimate hn h5) (transfer hp hg hn)
   exact meanSquareA_of_fullRows (firstPoisson hp hg hn h4)
 
 end Masullo.QRH.MeanSquare

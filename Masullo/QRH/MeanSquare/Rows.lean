@@ -47,6 +47,15 @@ noncomputable def elementRows (K : ℝ) : Finset 𝓔 := by
   exact ((idealsLe K).erase ⊥).biUnion fun a =>
     Finset.univ.image fun u : 𝓔ˣ => generator a * u
 
+lemma card_elementRows_le (K : ℝ) : (elementRows K).card ≤ (idealsLe K).card * Nat.card 𝓔ˣ := by
+  classical
+  let := Fintype.ofFinite 𝓔ˣ
+  unfold elementRows
+  refine (Finset.card_biUnion_le_card_mul _ _ (Nat.card 𝓔ˣ) (fun a _ => ?_)).trans
+    (Nat.mul_le_mul_right _ (Finset.card_le_card (Finset.erase_subset ..)))
+  simpa only [Nat.card_eq_fintype_card, Finset.card_univ] using
+    (Finset.card_image_le (s := (Finset.univ : Finset 𝓔ˣ)) (f := fun u => generator a * (u : 𝓔)))
+
 lemma mem_elementRows {K : ℝ} (hK : 0 ≤ K) {k : 𝓔} :
     k ∈ elementRows K ↔ k ≠ 0 ∧ (elementNorm k : ℝ) ≤ K := by
   classical
