@@ -1,4 +1,5 @@
 import Masullo.QRH.MeanSquare.OffDiagonal
+import Masullo.QRH.MeanSquare.GaussNorm
 
 /-!
 # The nonzero dual frequencies
@@ -13,6 +14,8 @@ Steps toward `DualTailEstimate rowMajorant` from `GapEstimate`.
   of the radius.
 * `exists_norm_dualExclusionTail_sub_le`: `dualExclusionTail` is its main dual frequencies
   `dualExclusionMain` up to such a power.
+* `exists_dualMeanSquareCoprime_le`: `GapEstimate` for columns coprime to `b`, with no lower
+  bounds on `K` and `X`.
 -/
 
 noncomputable section
@@ -372,5 +375,93 @@ theorem exists_norm_dualExclusionTail_sub_le (P : SchwartzMap ℝ ℂ) (k : ℕ)
     field_simp
   rw [hq]
   gcongr
+
+/-! ### The gap estimate for columns coprime to `b` -/
+
+lemma elementRows_eq_empty {K : ℝ} (hK : K < 1) : elementRows K = ∅ := by
+  classical
+  refine Finset.eq_empty_of_forall_notMem fun k hk => ?_
+  unfold elementRows at hk
+  simp only [Finset.mem_biUnion, Finset.mem_erase] at hk
+  obtain ⟨a, ⟨ha, haK⟩, -⟩ := hk
+  rw [idealsLe, Set.Finite.mem_toFinset, Set.mem_ofPred_eq, Nat.floor_eq_zero.mpr hK,
+    Nat.le_zero, absNorm_eq_zero_iff] at haK
+  exact ha haK
+
+/-- `GapEstimate` with columns coprime to a starred `b` of norm at most `D`, for all `K` and
+all `X > 0`. Small `K` gives no rows, and short columns are counted directly. -/
+theorem exists_dualMeanSquareCoprime_le (hpg : PairedGaussIdentities) (hgap : GapEstimate)
+    {κ ε : ℝ} (hκ : 0 < κ) (hε : 0 < ε) :
+    ∃ j : ℕ, ∀ I : TestInterval, ∃ C ≥ (0 : ℝ), ∀ (D K X F : ℝ) (ξ : RayCharacter)
+      (U : ℝ → ℂ) (b : Ideal 𝓔), 2 ≤ D → 0 < X → 1 ≤ F → X * F ≤ D →
+      K ≤ X * F * D ^ (-κ) → Starred b → (absNorm b : ℝ) ≤ D → UnitTest I j U →
+        dualMeanSquareCoprime ξ U K X F b ≤ C * D ^ ε * (X * F) := by
+  classical
+  obtain ⟨C₁, hC₁, h₁⟩ := two_pow_card_normalizedFactors_le (by positivity : 0 < ε / 4)
+  obtain ⟨j, hj⟩ := hgap 1 le_rfl κ hκ (ε / 2) (by positivity)
+  refine ⟨j, fun I => ?_⟩
+  obtain ⟨C₂, hC₂, h₂⟩ := hj I
+  obtain ⟨C₃, hC₃, h₃⟩ := dualMeanSquare_le_mul gaussCoefficientBound I
+  refine ⟨C₁ ^ 2 * (C₂ + C₃), by positivity,
+    fun D K X F ξ U b hD hX hF hXF hK hb hbD hU => ?_⟩
+  have hD0 : 0 < D := by linarith
+  have hXF0 : 0 < X * F := by positivity
+  by_cases hK1 : K < 1
+  · have : dualMeanSquareCoprime ξ U K X F b = 0 := by
+      simp [dualMeanSquareCoprime, elementRows_eq_empty hK1]
+    rw [this]; positivity
+  push Not at hK1
+  have hDκ : D ^ (-κ) ≤ 1 := Real.rpow_le_one_of_one_le_of_nonpos (by linarith) (by linarith)
+  have hD2 : 1 ≤ D ^ (ε / 2) := Real.one_le_rpow (by linarith) (by positivity)
+  have hW : ∀ x, U x ≠ 0 → x ≤ I.hi := fun x hx =>
+    (hU.2.1 (subset_tsupport U hx)).2
+  have hM : ∀ t ≤ normalizedFactors b, dualMeanSquare ξ U K (X / absNorm t.prod)
+      (F * absNorm t.prod) ≤ (C₂ + C₃) * D ^ (ε / 2) * (X * F) := by
+    intro t htb
+    have ht : (1 : ℝ) ≤ absNorm t.prod := by
+      have h0 : t.prod ≠ ⊥ := Multiset.prod_ne_zero fun h0 =>
+        (prime_of_normalized_factor _ (Multiset.mem_of_le htb h0)).ne_zero rfl
+      exact_mod_cast Nat.one_le_iff_ne_zero.mpr (absNorm_eq_zero_iff.not.mpr h0)
+    have hprod : X / absNorm t.prod * (F * absNorm t.prod) = X * F := by field_simp
+    by_cases hX1 : 1 ≤ X / absNorm t.prod
+    · refine (h₂ D K _ _ ξ U hD hK1 hX1 (one_le_mul_of_one_le_of_one_le hF ht)
+        (by rw [hprod, Real.rpow_one]; exact hXF) (by rwa [hprod]) hU).trans ?_
+      rw [hprod]
+      nlinarith [mul_nonneg (mul_nonneg hC₃ (by positivity : (0 : ℝ) ≤ D ^ (ε / 2)))
+        hXF0.le]
+    · push Not at hX1
+      refine (h₃ K _ _ ξ U hK1 (by positivity) (one_le_mul_of_one_le_of_one_le hF ht)
+        (hU.of_le (Nat.zero_le j))).trans ?_
+      have : K * (X / absNorm t.prod) ≤ X * F := by
+        calc K * (X / absNorm t.prod) ≤ K * 1 := by gcongr
+          _ ≤ X * F * D ^ (-κ) := by rwa [mul_one]
+          _ ≤ X * F := mul_le_of_le_one_right hXF0.le hDκ
+      nlinarith [mul_nonneg (mul_nonneg hC₂ (by positivity : (0 : ℝ) ≤ D ^ (ε / 2)))
+        hXF0.le, mul_le_mul_of_nonneg_left this hC₃,
+        mul_le_mul_of_nonneg_left hD2 (mul_nonneg hC₃ hXF0.le)]
+  refine (dualMeanSquareCoprime_le_of_forall hpg gaussCoefficientBound residueMultiplicative hW
+    hb hX (by linarith) hM).trans ?_
+  have hb0 : (0 : ℝ) < absNorm b := by
+    exact_mod_cast Nat.pos_of_ne_zero (absNorm_eq_zero_iff.not.mpr hb.1.1)
+  have h4 : (4 : ℝ) ^ Multiset.card (normalizedFactors b) ≤ C₁ ^ 2 * D ^ (ε / 2) := by
+    have h2 := h₁ b hb.1.1 hb.2
+    have hpow : (absNorm b : ℝ) ^ (ε / 4) ≤ D ^ (ε / 4) :=
+      Real.rpow_le_rpow hb0.le hbD (by positivity)
+    calc (4 : ℝ) ^ Multiset.card (normalizedFactors b)
+        = ((2 : ℝ) ^ Multiset.card (normalizedFactors b)) ^ 2 := by
+          rw [← pow_mul, mul_comm, pow_mul]; norm_num
+      _ ≤ (C₁ * D ^ (ε / 4)) ^ 2 := by
+          gcongr
+          exact h2.trans (mul_le_mul_of_nonneg_left hpow hC₁)
+      _ = C₁ ^ 2 * D ^ (ε / 2) := by
+          rw [mul_pow, ← Real.rpow_natCast (D ^ (ε / 4)), ← Real.rpow_mul hD0.le]
+          congr 2
+          push_cast
+          ring
+  have hDε : D ^ (ε / 2) * D ^ (ε / 2) = D ^ ε := by
+    rw [← Real.rpow_add hD0]; ring_nf
+  calc (4 : ℝ) ^ Multiset.card (normalizedFactors b) * ((C₂ + C₃) * D ^ (ε / 2) * (X * F))
+      ≤ C₁ ^ 2 * D ^ (ε / 2) * ((C₂ + C₃) * D ^ (ε / 2) * (X * F)) := by gcongr
+    _ = C₁ ^ 2 * (C₂ + C₃) * D ^ ε * (X * F) := by rw [← hDε]; ring
 
 end Masullo.QRH.MeanSquare
