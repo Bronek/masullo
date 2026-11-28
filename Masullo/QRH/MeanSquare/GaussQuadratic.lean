@@ -295,36 +295,51 @@ private lemma reps_two : Representatives (lattice 1) ((fun x => (2 : ℝ) • x)
 private def quadraticRaySum (q : Fin 2 → ℤ) : ℂ :=
   (∑ x ∈ reps (span {(2 : 𝓔)}), phase (dotProduct x ((eisMatrix (q 0 : ℝ) (q 1)).mulVec x) / 2)) / 2
 
-private theorem quadraticExponentialSum_eq_raySum (h : DeloupTuraevTheorem1) {n : Ideal 𝓔}
-    (hn : n ≠ ⊥) : quadraticExponentialSum n = quadraticRaySum (coords.symm (generator n)) := by
+private theorem element_sum_eq_raySum (h : DeloupTuraevTheorem1) {n : Ideal 𝓔} (z : 𝓔)
+    (hz : z ≠ 0) (hspan : span {z} = n) :
+    (∑ᶠ y : 𝓔 ⧸ n, differentCharacter (eisEmbedding (Quotient.out y)^2 / eisEmbedding z)) /
+      Real.sqrt (absNorm n) = quadraticRaySum (coords.symm z) := by
   classical
+  have hn : n ≠ ⊥ := by simpa only [← hspan, ne_eq, span_singleton_eq_bot] using hz
   let := Ring.HasFiniteQuotients.finiteQuotient hn
   let := Fintype.ofFinite (𝓔 ⧸ n)
-  let q := coords.symm (generator n)
-  have hq : elem q = generator n := elem_coords_symm _
+  let q := coords.symm z
+  have hq : elem q = z := elem_coords_symm _
   have he : complexCoord (vec q) ≠ 0 := by
     rw [← embed_elem, hq]
-    intro he
-    have hz := eisEmbedding_injective (he.trans (map_zero _).symm)
-    exact hn (by simpa [hz] using (span_generator n).symm)
-  have hN : (q 0 : ℝ) ^ 2 - q 0 * q 1 + q 1 ^ 2 = (absNorm n : ℝ) := by
+    exact fun h => hz (eisEmbedding_injective (h.trans (map_zero _).symm))
+  have hN : (q 0 : ℝ)^2 - q 0 * q 1 + q 1^2 = (absNorm n : ℝ) := by
     have hh := complexCoord_normSq (vec q)
-    rw [← embed_elem, hq, ← Complex.sq_norm, norm_eisEmbedding_sq, span_generator] at hh
+    rw [← embed_elem, hq, ← Complex.sq_norm, norm_eisEmbedding_sq, hspan] at hh
     exact hh.symm
-  have hpos : 0 < (q 0 : ℝ) ^ 2 - q 0 * q 1 + q 1 ^ 2 :=
+  have hpos : 0 < (q 0 : ℝ)^2 - q 0 * q 1 + q 1^2 :=
     (complexCoord_normSq (vec q)) ▸ Complex.normSq_pos.mpr he
   have hr := quadratic_sum_reciprocity h (q 0) (q 1) hpos _ (reps n) reps_two
-    (reps_eisMatrix n q (hq ▸ span_generator n))
+    (reps_eisMatrix n q (hq ▸ hspan))
   rw [hN] at hr
-  refine Eq.trans (congrArg (fun z : ℂ => z / Real.sqrt (absNorm n)) ?_) hr
+  refine Eq.trans (congrArg (fun t : ℂ => t / Real.sqrt (absNorm n)) ?_) hr
   rw [reps, Finset.sum_map, finsum_eq_sum_of_fintype]
   refine Finset.sum_congr rfl fun y _ => ?_
-  change quotientDifferentCharacter n (y ^ 2) =
-    phase (-2 * dotProduct (vec (coords.symm (Quotient.out y))) _)
   refine Eq.trans ?_ (eisMatrix_inverse_phase (vec q) (vec (coords.symm (Quotient.out y))) he).symm
   rw [← embed_elem, ← embed_elem, hq, elem_coords_symm]
-  have hh := quotientDifferentCharacter_mk n ((Quotient.out y) ^ 2)
-  simpa only [map_pow, Ideal.Quotient.mk_out] using hh
+
+set_option maxHeartbeats 800000 in
+private theorem quadraticExponentialSum_eq_raySum (h : DeloupTuraevTheorem1) {n : Ideal 𝓔}
+    (hn : n ≠ ⊥) : quadraticExponentialSum n = quadraticRaySum (coords.symm (generator n)) := by
+  have hg : generator n ≠ 0 := fun hz => hn (by simpa [hz] using (span_generator n).symm)
+  have hsum : (∑ᶠ y : 𝓔 ⧸ n, quotientDifferentCharacter n (y^2)) =
+      ∑ᶠ y : 𝓔 ⧸ n, differentCharacter (eisEmbedding (Quotient.out y)^2 / eisEmbedding (generator n)) :=
+    by
+    classical
+    let := Ring.HasFiniteQuotients.finiteQuotient hn
+    let := Fintype.ofFinite (𝓔 ⧸ n)
+    rw [finsum_eq_sum_of_fintype, finsum_eq_sum_of_fintype]
+    refine Finset.sum_congr rfl fun y _ => ?_
+    obtain ⟨x,rfl⟩ := Ideal.Quotient.mk_surjective y
+    have hy := quotientDifferentCharacter_mk n ((Quotient.out (Ideal.Quotient.mk n x))^2)
+    simpa only [map_pow, Ideal.Quotient.mk_out] using hy
+  exact (congrArg (fun t : ℂ => t / Real.sqrt (absNorm n)) hsum).trans
+    (element_sum_eq_raySum h _ hg (span_generator n))
 
 private theorem quadraticRaySum_congr {a b : 𝓔}
     (hc : Ideal.Quotient.mk (span {(4 : 𝓔)}) a = Ideal.Quotient.mk (span {(4 : 𝓔)}) b) :
@@ -396,6 +411,16 @@ theorem quadraticRayValue_of_representatives (quad : DeloupTuraevTheorem1) (a b 
   have ht := reps_eisMatrix J q rfl
   exact (hval a b).trans ((quadratic_sum_reciprocity quad a b hN _ _ hs₀ ht).symm.trans
     (quadratic_sum_reciprocity quad a b hN _ _ hs ht))
+
+/-- The quadratic ray value for an element denominator, with its specified
+associate in the additive character. -/
+theorem quadraticRayValue_eq_element_sum (h : DeloupTuraevTheorem1) {n : Ideal 𝓔} (z : 𝓔)
+    (hz : z ≠ 0) (hspan : span {z} = n) :
+    quadraticRayValue (Ideal.Quotient.mk (span {(4 : 𝓔)}) z) =
+      (∑ᶠ y : 𝓔 ⧸ n, differentCharacter (eisEmbedding (Quotient.out y)^2 / eisEmbedding z)) /
+        Real.sqrt (absNorm n) := by
+  rw [element_sum_eq_raySum h z hz hspan, quadraticRayValue]
+  exact quadraticRaySum_congr (Ideal.Quotient.mk_out _)
 
 end DeloupTuraev
 end Masullo.QRH.MeanSquare

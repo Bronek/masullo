@@ -1,6 +1,7 @@
 import Masullo.QRH.MeanSquare.FamilyReciprocity
 import Masullo.QRH.MeanSquare.FamilySymbol
 import Masullo.QRH.MeanSquare.ReflectionCoefficients
+import Masullo.QRH.MeanSquare.ThetaSupport
 
 /-! # Tame factors of the primary sextic twist -/
 
@@ -467,5 +468,181 @@ theorem sextic_lambda_sq_congr (recip : DunnRadziwillReciprocity) {n m : Ideal �
     sextic n eisLambda ^ 2 = sextic m eisLambda ^ 2 := by
   rw [square_cubic hn, square_cubic hm, (cubic_supplements_congr recip
     (eisPrimary_generator hn.coprime_three) (ray_dvd he.symm (by decide : 9 ∣ 72))).1]
+
+private def localPhase (n : Ideal 𝓔) (z a : 𝓔) (x : 𝓔 ⧸ n) : ℂ :=
+  differentCharacter (eisEmbedding (a * (Quotient.out x)^2) / eisEmbedding z)
+
+private lemma localPhase_mk {n : Ideal 𝓔} {z : 𝓔} (hz : span {z} = n) (a x : 𝓔) :
+    localPhase n z a (Ideal.Quotient.mk n x) = differentCharacter (eisEmbedding (a*x^2) / eisEmbedding z) := by
+  apply differentCharacter_div_congr
+  rw [← mem_span_singleton, hz, ← Ideal.Quotient.eq]
+  simp
+
+private def localSum (n : Ideal 𝓔) (z a : 𝓔) : ℂ := ∑ᶠ x : 𝓔 ⧸ n, localPhase n z a x
+
+private lemma localSum_congr {n : Ideal 𝓔} {z a b : 𝓔} (hz : span {z} = n)
+    (hab : z ∣ a-b) : localSum n z a = localSum n z b := by
+  apply finsum_congr
+  intro x
+  obtain ⟨x,rfl⟩ := Ideal.Quotient.mk_surjective x
+  rw [localPhase_mk hz, localPhase_mk hz]
+  apply differentCharacter_div_congr
+  rw [← sub_mul]
+  exact hab.mul_right _
+
+private theorem localSum_crt {n m : Ideal 𝓔} {c d : 𝓔} (hc : span {c} = n) (hd : span {d} = m)
+    (h : IsCoprime n m) (hc₀ : c ≠ 0) (hd₀ : d ≠ 0) :
+    localSum (n*m) (c*d) 1 = localSum n c d * localSum m d c := by
+  classical
+  have hn : n ≠ ⊥ := by simpa [← hc] using hc₀
+  have hm : m ≠ ⊥ := by simpa [← hd] using hd₀
+  let := Ring.HasFiniteQuotients.finiteQuotient hn
+  let := Ring.HasFiniteQuotients.finiteQuotient hm
+  let := Ring.HasFiniteQuotients.finiteQuotient (mul_ne_zero hn hm)
+  let := Fintype.ofFinite (𝓔 ⧸ n)
+  let := Fintype.ofFinite (𝓔 ⧸ m)
+  let := Fintype.ofFinite (𝓔 ⧸ (n*m))
+  have hu := (isUnit_mk_iff_coprime_span n d).mpr (hd ▸ h)
+  have hv := (isUnit_mk_iff_coprime_span m c).mpr (hc ▸ h.symm)
+  let e := (hu.unit.mulLeft.prodCongr hv.unit.mulLeft).trans (quotientMulEquivQuotientProd n m h).symm.toEquiv
+  have hc' : Ideal.Quotient.mk n c = 0 := Ideal.Quotient.eq_zero_iff_mem.mpr (hc ▸ mem_span_singleton_self c)
+  have hd' : Ideal.Quotient.mk m d = 0 := Ideal.Quotient.eq_zero_iff_mem.mpr (hd ▸ mem_span_singleton_self d)
+  have he (x y : 𝓔) : e (Ideal.Quotient.mk n x, Ideal.Quotient.mk m y) =
+      Ideal.Quotient.mk (n*m) (d*x + c*y) := by
+    apply (quotientMulEquivQuotientProd n m h).injective
+    simp only [e, Equiv.trans_apply, RingEquiv.toEquiv_eq_coe, RingEquiv.coe_toEquiv, RingEquiv.apply_symm_apply]
+    apply Prod.ext <;> simp [Units.mulLeft, hc', hd']
+  have hcd : span {c*d} = n*m := by rw [← span_singleton_mul_span_singleton, hc, hd]
+  have hcE : eisEmbedding c ≠ 0 := fun e => hc₀ (eisEmbedding_injective (e.trans (map_zero _).symm))
+  have hdE : eisEmbedding d ≠ 0 := fun e => hd₀ (eisEmbedding_injective (e.trans (map_zero _).symm))
+  simp only [localSum, finsum_eq_sum_of_fintype]
+  rw [← Equiv.sum_comp e, Fintype.sum_prod_type, Finset.sum_mul_sum]
+  refine sum_congr rfl fun u _ => sum_congr rfl fun v _ => ?_
+  obtain ⟨x,rfl⟩ := Ideal.Quotient.mk_surjective u
+  obtain ⟨y,rfl⟩ := Ideal.Quotient.mk_surjective v
+  rw [he, localPhase_mk hcd, localPhase_mk hc, localPhase_mk hd, one_mul]
+  have hp : eisEmbedding ((d*x+c*y)^2) / eisEmbedding (c*d) =
+      eisEmbedding (d*x^2) / eisEmbedding c + eisEmbedding (c*y^2) / eisEmbedding d + eisEmbedding (2*x*y) := by
+    simp only [map_mul, map_pow, map_add, map_ofNat]
+    field_simp
+    ring
+  rw [hp, differentCharacter_add, differentCharacter_eisEmbedding, mul_one, differentCharacter_add]
+
+private theorem localSum_shift {n : Ideal 𝓔} (hn : Starred n) (a : 𝓔)
+    (ha : IsCoprime n (span {a})) :
+    localSum n (generator n) a = (sextic n a)^3 * localSum n (generator n) 1 := by
+  classical
+  let := Ring.HasFiniteQuotients.finiteQuotient hn.1.1
+  let := Fintype.ofFinite (𝓔 ⧸ n)
+  let ψ := quotientDifferentCharacter n
+  let χ := sexticChar hn.1 ^ 3
+  let u := ((isUnit_mk_iff_coprime_span n a).mpr ha).unit
+  have hu : (u : 𝓔 ⧸ n) = Ideal.Quotient.mk n a := IsUnit.unit_spec _
+  have hφ (d : 𝓔) : localSum n (generator n) d = ∑ x : 𝓔 ⧸ n,
+      (ψ.mulShift (Ideal.Quotient.mk n d)) (x^2) := by
+    rw [localSum, finsum_eq_sum_of_fintype]
+    refine sum_congr rfl fun x _ => ?_
+    obtain ⟨x,rfl⟩ := Ideal.Quotient.mk_surjective x
+    rw [localPhase_mk (span_generator n), AddChar.mulShift_apply, ← map_pow, ← map_mul]
+    exact (quotientDifferentCharacter_mk n (d*x^2)).symm
+  have hψ := quotientDifferentCharacter_isPrimitive hn.1.1
+  have hψu : (ψ.mulShift (u : 𝓔 ⧸ n)).IsPrimitive := by
+    intro b hb
+    rw [AddChar.mulShift_mulShift]
+    exact hψ (fun h => hb ((u.isUnit.mul_right_inj).mp (h.trans (mul_zero _).symm)))
+  have hval : χ u = sextic n a ^ 3 := by rw [hu]; simp only [χ, MulChar.pow_apply' _ (by decide : 3 ≠ 0),
+    sexticChar_apply_mk]
+  have hs : (sextic n a ^ 3)^2 = 1 := by simpa only [quadraticResidue_apply] using quadraticResidue_sq hn.1 ha
+  have hInv : χ⁻¹ u = sextic n a ^ 3 := by
+    rw [MulChar.inv_apply_eq_inv', hval]
+    exact inv_eq_of_mul_eq_one_right (by simpa [sq] using hs)
+  rw [hφ, ← hu, ← gaussSum_three_eq_sum_sq n hn _ hψu, gaussSum_mulShift_eq, hφ, map_one,
+    AddChar.mulShift_one, ← gaussSum_three_eq_sum_sq n hn ψ hψ]
+  change χ⁻¹ u * _ = _
+  rw [hInv]
+
+
+private lemma lambda_dvd_three : eisLambda ∣ (3 : 𝓔) := ⟨-eisLambda, by rw [mul_neg, ← sq, eisLambda_sq, neg_neg]⟩
+
+private lemma lambda_ray_ne_zero (quad : DeloupTuraevTheorem1) :
+    quadraticRayValue (Ideal.Quotient.mk (span {(4 : 𝓔)}) eisLambda) ≠ 0 := by
+  have h := ray_eval quad 1 2 (by norm_num)
+  norm_num [eisLambda] at h ⊢
+  rw [h]
+  have hp : phase (-1) = -1 := by
+    simp [phase, Complex.exp_neg, Complex.exp_pi_mul_I]
+  have hz : phase 0 = 1 := by simp [phase]
+  rw [hp,hz]
+  have hne : phase (1/2:ℝ) ≠ 0 := Complex.exp_ne_zero _
+  intro he
+  apply hne
+  linear_combination he
+
+private lemma good_ray_unit {n : Ideal 𝓔} (hn : AwayFromSix n) :
+    IsUnit (Ideal.Quotient.mk (span {(4 : 𝓔)}) (generator n)) := by
+  have h₂ : IsCoprime n (span {(2 : 𝓔)}) := hn.2.of_isCoprime_of_dvd_right
+    (span_singleton_dvd_span_singleton_iff_dvd.mpr ⟨3, by norm_num⟩)
+  have h₄ : IsCoprime n (span {(4 : 𝓔)}) := by
+    simpa only [span_singleton_pow, show (2 : 𝓔) ^ 2 = 4 by norm_num] using h₂.pow_right (n := 2)
+  exact (isUnit_mk_iff_coprime_span _ _).mpr (by rwa [span_generator, isCoprime_comm])
+
+private lemma lambda_ratio_squarefree (quad : DeloupTuraevTheorem1) {n : Ideal 𝓔} (hn : Starred n) :
+    sextic n eisLambda ^ 3 =
+      quadraticRayValue (Ideal.Quotient.mk (span {(4 : 𝓔)}) (generator n * eisLambda)) /
+        (quadraticRayValue (Ideal.Quotient.mk _ (generator n)) *
+          quadraticRayValue (Ideal.Quotient.mk _ eisLambda)) := by
+  let L := span {eisLambda}
+  have hq : quadraticRayValue (Ideal.Quotient.mk (span {(4 : 𝓔)}) (generator n)) ≠ 0 := by
+    rw [quadraticRayValue_mk quad hn.1.1, ← normalizedGauss_three_eq_quadraticExponentialSum hn]
+    intro hz
+    have h := norm_normalizedGauss_eq_one hn (j := 3) (by decide) (by decide)
+    simp [hz] at h
+  have hg : generator n ≠ 0 := fun hz => hn.1.1 (by simpa [hz] using (span_generator n).symm)
+  have hspan : span {generator n * eisLambda} = n*L := by
+    rw [← span_singleton_mul_span_singleton, span_generator]
+  have hc := localSum_crt (span_generator n) (rfl : span {eisLambda} = L) (coprime_span_lambda hn.1) hg eisLambda_prime.ne_zero
+  rw [localSum_shift hn _ (coprime_span_lambda hn.1),
+    localSum_congr (rfl : span {eisLambda} = L) (lambda_dvd_three.trans (eisPrimary_generator hn.1.coprime_three))] at hc
+  have hQ {m : Ideal 𝓔} {a : 𝓔} (h : span {a} = m) (ha : a ≠ 0) :
+      quadraticRayValue (Ideal.Quotient.mk (span {(4 : 𝓔)}) a) =
+        localSum m a 1 / Real.sqrt (absNorm m) := by
+    simpa only [localSum,localPhase,one_mul,map_pow] using quadraticRayValue_eq_element_sum quad a ha h
+  apply (eq_div_iff (mul_ne_zero hq (lambda_ray_ne_zero quad))).mpr
+  rw [hQ hspan (mul_ne_zero hg eisLambda_prime.ne_zero), hQ (span_generator n) hg,
+    hQ (rfl : span {eisLambda} = L) eisLambda_prime.ne_zero, hc, map_mul, Nat.cast_mul,
+    Real.sqrt_mul (by positivity), Complex.ofReal_mul]
+  ring
+
+private lemma lambda_ratio (quad : DeloupTuraevTheorem1) {n : Ideal 𝓔} (hn : AwayFromSix n) :
+    sextic n eisLambda ^ 3 =
+      quadraticRayValue (Ideal.Quotient.mk (span {(4 : 𝓔)}) (generator n * eisLambda)) /
+        (quadraticRayValue (Ideal.Quotient.mk _ (generator n)) *
+          quadraticRayValue (Ideal.Quotient.mk _ eisLambda)) := by
+  obtain ⟨v,s,rfl,hs⟩ := exists_sq_mul_squarefree n
+  have hv := away_of_dvd hn (show v ∣ v^2*s by exact (dvd_pow_self _ (by decide : 2 ≠ 0)).trans (dvd_mul_right ..))
+  have hs' := away_of_dvd hn (dvd_mul_left s (v^2))
+  have hden : generator (v^2*s) = generator v ^ 2 * generator s := by
+    simp only [sq, generator_mul (hv.mul hv).coprime_three hs'.coprime_three,
+      generator_mul hv.coprime_three hv.coprime_three]
+  have he : sextic (v^2*s) eisLambda ^ 3 = sextic s eisLambda ^ 3 := by
+    have hu : sextic v eisLambda ^ 6 = 1 := by
+      simp only [sextic, ← map_pow, powerResidueSymbol_six_pow_six hv.1 hv.2, ite_eq_left (coprime_span_lambda hv), map_one]
+    rw [sq,sextic_den_mul,sextic_den_mul,mul_pow,← sq,← pow_mul,hu,one_mul]
+  obtain ⟨u,hu⟩ := good_ray_unit hv
+  rw [he, lambda_ratio_squarefree quad ⟨hs',hs⟩, hden]
+  simp only [map_mul,map_pow,← hu]
+  rw [show (u : R₄)^2 * Ideal.Quotient.mk _ (generator s) * Ideal.Quotient.mk _ eisLambda =
+      (Ideal.Quotient.mk _ (generator s) * Ideal.Quotient.mk _ eisLambda) * (u : R₄)^2 by ring,
+    ray_square quad _ u, mul_comm ((u : R₄)^2), ray_square quad _ u]
+
+/-- The ramified sextic supplement at λ depends only on the primary denominator modulo 72. -/
+theorem sextic_lambda_congr (recip : DunnRadziwillReciprocity) (quad : DeloupTuraevTheorem1) {n m : Ideal 𝓔}
+    (hn : AwayFromSix n) (hm : AwayFromSix m)
+    (he : Ideal.Quotient.mk (span {(72 : 𝓔)}) (generator n) = Ideal.Quotient.mk _ (generator m)) :
+    sextic n eisLambda = sextic m eisLambda := by
+  apply eq_of_sq_cube (sextic_lambda_sq_congr recip hn hm he)
+  have he₄ : Ideal.Quotient.mk (span {(4 : 𝓔)}) (generator n) = Ideal.Quotient.mk _ (generator m) :=
+    Ideal.Quotient.eq.mpr (mem_span_singleton.mpr (by simpa using ray_dvd he (by decide : 4 ∣ 72)))
+  rw [lambda_ratio quad hn, lambda_ratio quad hm, map_mul,map_mul,he₄]
 
 end Masullo.QRH.MeanSquare.ReflectionTwist
