@@ -91,6 +91,29 @@ lemma eisensteinQuadraticCharacter_eq_symbol {a b : Ideal 𝓔}
     eisensteinQuadraticCharacter b a = primaryQuadraticSymbol a b := by
   rw [eisensteinQuadraticCharacter_of_good hb, quadraticIdealCharacter_good hb ha]
 
+/-- Index multiplicativity `χ_{gb}(a) = χ_g(a) χ_b(a)` on ideals prime to six, used in
+Goldmakher–Louvel, §4, Lemma 4.6, and §5.1. -/
+theorem eisensteinQuadraticCharacter_mul {g b a : Ideal 𝓔} (hg : AwayFromSix g)
+    (hb : AwayFromSix b) (ha : AwayFromSix a) :
+    eisensteinQuadraticCharacter (g * b) a =
+      eisensteinQuadraticCharacter g a * eisensteinQuadraticCharacter b a := by
+  rw [eisensteinQuadraticCharacter_of_good (hg.mul hb), eisensteinQuadraticCharacter_of_good hg,
+    eisensteinQuadraticCharacter_of_good hb, quadraticIdealCharacter_mul hg hb ha]
+
+/-- On ideals prime to six, `χ_b(a) = 0` exactly when `a` and `b` share a prime. -/
+theorem eisensteinQuadraticCharacter_eq_zero_iff {b a : Ideal 𝓔} (hb : AwayFromSix b)
+    (ha : AwayFromSix a) : eisensteinQuadraticCharacter b a = 0 ↔ ¬ IsCoprime a b := by
+  rw [eisensteinQuadraticCharacter_of_good hb, quadraticIdealCharacter_eq_zero_iff hb ha]
+
+/-- Distinct squarefree indices give a product `χ_b χ̄_c` with value `-1` on an ideal coprime
+to six and to both indices, as required in Goldmakher–Louvel, §4, (E₂). -/
+theorem eisensteinQuadraticCharacter_product_nonprincipal {b c : Ideal 𝓔}
+    (hb : Starred b) (hc : Starred c) (hne : b ≠ c) :
+    ∃ a : Ideal 𝓔, AwayFromSix a ∧ IsCoprime a b ∧ IsCoprime a c ∧
+      eisensteinQuadraticCharacter b a * star (eisensteinQuadraticCharacter c a) = -1 := by
+  rw [eisensteinQuadraticCharacter_of_good hb.1, eisensteinQuadraticCharacter_of_good hc.1]
+  exact quadraticIdealCharacter_product_nonprincipal hb hc hne
+
 theorem eisensteinFamilyRealizes (quad : DeloupTuraevTheorem1) :
     EisensteinFamilyRealizes primaryQuadraticSymbol :=
   ⟨eisensteinQuadraticCharacter, quadraticConductor, eisensteinQuadraticHeckeFamily quad,
@@ -101,8 +124,18 @@ theorem eisensteinFamilyRealizes (quad : DeloupTuraevTheorem1) :
 Math. Proc. Cambridge Philos. Soc. 154 (2013), Theorem 1.1, pp. 194–195,
 specialized to the family `eisensteinQuadraticCharacter` over ℚ(ω) with `c = (72)`.
 The starred sums run over squarefree ideals prime to `c`, with column `b` evaluated at row `a`.
-The group in §4, Lemma 4.5, is fixed. For Lemma 4.2 (E₂), `absNorm_quadraticConductor_le` bounds the
-conductor and `quadraticIdealCharacter_product_nonprincipal` separates distinct columns.
+The printed proof uses four properties of the family beyond Definition 1, all of which
+hold here:
+* the group `G` of §4, Lemma 4.5, is the fixed `QuadraticFamilyClass`, the units modulo 4;
+* the conductor has norm at most `3 N(b)` (`absNorm_quadraticConductor_le`) and lies between
+  `b` and `b` times the prime above three (`dvd_quadraticConductor`,
+  `quadraticConductor_dvd`), so `χ_b(a) = 0` exactly when `a` and `b` share a prime
+  (`eisensteinQuadraticCharacter_eq_zero_iff`);
+* products at distinct indices are nonprincipal
+  (`eisensteinQuadraticCharacter_product_nonprincipal`);
+* the characters are multiplicative in the index (`eisensteinQuadraticCharacter_mul`).
+The premise records that the family satisfies Definition 1, the hypothesis of Theorem 1.1;
+`eisensteinQuadraticHeckeFamily` proves it from `DeloupTuraevTheorem1`.
 <https://arxiv.org/pdf/1112.1642v2#page=2> -/
 def EisensteinGoldmakherLouvel : Prop :=
   IsQuadraticHeckeFamily (span {72}) eisensteinQuadraticCharacter quadraticConductor →

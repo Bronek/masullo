@@ -18,9 +18,10 @@ namespace Masullo.QRH.MeanSquare
 /-- The classical statements used in the reduction. Each field's defining
 proposition gives its source and its normalization. The Goldmakher–Louvel input fixes the
 Eisenstein family. The family-uniform implied constant printed in Theorem 1.1 fails for
-general Definition 1 families. In arXiv v2, §4, duality costs `|G|`. The conductor bound
-and the nonprincipality of products at distinct indices used there are proved here for
-the Eisenstein characters. -/
+general Definition 1 families. In arXiv v2, §4, duality costs `|G|`. The printed proof
+also uses the conductor bound and support, the nonprincipality of products at distinct
+indices, and multiplicativity in the index; `EisensteinGoldmakherLouvel` cites the theorems
+proving these, and the fixed `|G|`, for the Eisenstein characters. -/
 structure PrintedInputs : Prop where
   largeSieve : EisensteinGoldmakherLouvel
   theta : PattersonTheorem81

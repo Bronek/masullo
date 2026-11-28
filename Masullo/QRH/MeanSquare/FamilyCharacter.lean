@@ -61,6 +61,32 @@ lemma quadraticIdealCharacter_good {n a : Ideal 𝓔} (hn : AwayFromSix n) (ha :
     correctedQuadratic_primary hn (eisPrimary_generator ha.coprime_three)]
   exact quadraticResidue_apply hn _
 
+/-- The character is multiplicative in its index on ideals prime to six, as used in
+Goldmakher–Louvel, §4, Lemma 4.6, and §5.1, to split off a common factor of two indices. -/
+theorem quadraticIdealCharacter_mul {g b a : Ideal 𝓔} (hg : AwayFromSix g) (hb : AwayFromSix b)
+    (ha : AwayFromSix a) :
+    quadraticIdealCharacter (hg.mul hb) a =
+      quadraticIdealCharacter hg a * quadraticIdealCharacter hb a := by
+  have hx := eisPrimary_generator ha.coprime_three
+  rw [quadraticIdealCharacter_apply _ ha.1, quadraticIdealCharacter_apply _ ha.1,
+    quadraticIdealCharacter_apply _ ha.1, correctedQuadratic_primary _ hx,
+    correctedQuadratic_primary _ hx, correctedQuadratic_primary _ hx,
+    quadraticResidue_den_mul]
+
+/-- Every prime of `n` divides the conductor. -/
+theorem dvd_quadraticConductor (n : Ideal 𝓔) : n ∣ quadraticConductor n := by
+  unfold quadraticConductor
+  split
+  · exact dvd_rfl
+  · exact dvd_mul_right n _
+
+/-- The conductor has no prime outside `n` other than the ramified prime above three. -/
+theorem quadraticConductor_dvd (n : Ideal 𝓔) : quadraticConductor n ∣ n * lambdaIdeal := by
+  unfold quadraticConductor
+  split
+  · exact dvd_mul_right n _
+  · exact dvd_rfl
+
 lemma quadraticIdealCharacter_isRay {n : Ideal 𝓔} (hn : AwayFromSix n) :
     IsRayCharacter (quadraticConductor n) (quadraticIdealCharacter hn) := by
   classical
@@ -96,6 +122,18 @@ lemma quadraticIdealCharacter_sq {n a : Ideal 𝓔} (hn : AwayFromSix n)
     rw [correctedQuadratic, ite_eq_right h, MonoidHom.mul_apply, mul_pow,
       quadraticResidue_sq hn (hxa.symm ▸ hc.of_mul_right_left.symm), one_mul]
     exact lambdaSign_sq (hxa.symm ▸ hc.of_mul_right_right.symm)
+
+/-- On ideals prime to six the character vanishes exactly at the ideals sharing a prime with
+the index. The duality step of Goldmakher–Louvel, §4, Lemma 4.5, needs this zero set. -/
+theorem quadraticIdealCharacter_eq_zero_iff {n a : Ideal 𝓔} (hn : AwayFromSix n)
+    (ha : AwayFromSix a) : quadraticIdealCharacter hn a = 0 ↔ ¬ IsCoprime a n := by
+  have hl : IsCoprime a lambdaIdeal :=
+    ha.coprime_three.of_isCoprime_of_dvd_right lambdaIdeal_dvd_three
+  have h := ((quadraticIdealCharacter_isRay hn).2.1 a).not
+  rw [not_not, not_and_or, not_not, or_iff_right (show a ≠ 0 from ha.1)] at h
+  rw [h, not_iff_not]
+  exact ⟨fun hc => hc.of_isCoprime_of_dvd_right (dvd_quadraticConductor n),
+    fun hc => (hc.mul_right hl).of_isCoprime_of_dvd_right (quadraticConductor_dvd n)⟩
 
 private lemma prime_test_nonzero {P m : Ideal 𝓔} (hp : Prime P) {x : 𝓔}
     (hc : IsCoprime (span {x}) (P * m)) : x ≠ 0 := by
@@ -222,8 +260,10 @@ private theorem quadraticIdealCharacter_separate {b c : Ideal 𝓔} (hb : Starre
   · rw [hxval c hc.1, quadraticResidue_congr hc.1 (Ideal.mul_le_left (Ideal.mul_le_right
       hxm)), map_one]
 
-/-- Distinct squarefree column indices give a character product with value `-1` on an ideal
-coprime to six and to both indices, as required in Goldmakher–Louvel, §4, (E₂). -/
+/-- For distinct squarefree indices `b ≠ c`, the product of `quadraticIdealCharacter` at `b`
+and the conjugate at `c` has value `-1` on an ideal coprime to six and to both indices, as
+required in Goldmakher–Louvel, §4, (E₂). The family form is
+`eisensteinQuadraticCharacter_product_nonprincipal`. -/
 theorem quadraticIdealCharacter_product_nonprincipal {b c : Ideal 𝓔}
     (hb : Starred b) (hc : Starred c) (hne : b ≠ c) :
     ∃ a : Ideal 𝓔, AwayFromSix a ∧ IsCoprime a b ∧ IsCoprime a c ∧
