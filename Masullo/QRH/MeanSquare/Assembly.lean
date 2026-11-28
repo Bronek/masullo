@@ -1,3 +1,4 @@
+import Masullo.QRH.MeanSquare.Family
 import Masullo.QRH.MeanSquare.GaussNorm
 import Masullo.QRH.MeanSquare.GaussPair
 import Masullo.QRH.MeanSquare.PrimeRows
@@ -26,7 +27,6 @@ structure PrintedInputs : Prop where
 /-- Compose the printed inputs with the outstanding arithmetic and analytic reductions.
 Each arrow names a proof still needed to obtain (A) from `PrintedInputs` alone. -/
 theorem meanSquareA_of_reductions (h : PrintedInputs)
-    (family : DeloupTuraevTheorem1 → EisensteinFamilyRealizes primaryQuadraticSymbol)
     (poisson : GaoZhaoLemma23 → PrimitivePoisson)
     (reflection : PattersonTheorem81 → DunnRadziwillReciprocity → DeloupTuraevTheorem1 →
       DLMFBesselMellin →
@@ -37,7 +37,7 @@ theorem meanSquareA_of_reductions (h : PrintedInputs)
     (firstPoisson : PrimitivePoisson → PairedGaussIdentities → GaussCoefficientBound →
       GapEstimate → FullRowEstimate) :
     Masullo.QRH.MeanSquareA := by
-  have h7 := quadraticSieve_of_goldmakherLouvel h.largeSieve (family h.quadraticGauss)
+  have h7 := quadraticSieve_of_goldmakherLouvel h.largeSieve (eisensteinFamilyRealizes h.quadraticGauss)
   have h5 := reflection h.theta h.cubicReciprocity h.quadraticGauss h.besselMellin h.besselDecay
     h.besselDeriv h.gammaVertical h7
   have hp := poisson h.cosetPoisson
