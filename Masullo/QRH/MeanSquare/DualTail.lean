@@ -20,6 +20,8 @@ Steps toward `DualTailEstimate rowMajorant` from `GapEstimate`.
 * `exists_sum_inv_absNorm_le`: `Σ_{N b ≤ x} 1 / N b ≪ x^s`.
 * `gaoZhaoTransform_eq_cutDualKernel`: the dual kernel of a pair of columns is a cut dual kernel
   `cutDualKernel` for a cut `χ` from `exists_cutoff_exp`.
+* `sum_gcdSplitsLe_eq`: Möbius inversion of the coprimality of a gcd split `(g, z₁, z₂)`, with
+  `g = b e` over the divisors `e ∣ g` and `z₂ = v m₁`, `z₁ = v m₂`.
 * `exists_dualMeanSquareCoprime_le`: `GapEstimate` for columns coprime to `b`, with no lower
   bounds on `K` and `X`.
 * `exists_sum_rows_le`: the rows `(e, v, h)` of a block cover each pair `(f, k) = (e v, e° h)`
@@ -1080,5 +1082,125 @@ lemma gaoZhaoTransform_eq_cutDualKernel (P : SchwartzMap ℝ ℂ) {χ : ℝ → 
     Real.rpow_def_of_pos hx, Real.rpow_def_of_pos (div_pos hq hx), Real.log_div hq.ne' hx.ne',
     Real.log_mul hx₁.ne' hx₂.ne', ← Complex.ofReal_inv, ← Real.exp_neg]
   congr 4 <;> ring
+
+/-! ### The Möbius splits -/
+
+lemma finsum_dvd_eq_sum_idealDivisors {g : Ideal 𝓔} (hg : g ≠ ⊥) (f : Ideal 𝓔 → ℂ) :
+    ∑ᶠ e : {e : Ideal 𝓔 // e ∣ g}, f e = ∑ e ∈ idealDivisors g, f e := by
+  have hs : {e : Ideal 𝓔 | e ∣ g} = ↑(idealDivisors g) := by
+    ext e
+    simp [mem_idealDivisors hg]
+  rw [← finsum_mem_coe_finset, ← hs]
+  exact finsum_set_coe_eq_finsum_mem {e : Ideal 𝓔 | e ∣ g}
+
+lemma sum_idealDivisors_moebius {z : Ideal 𝓔} (hz : z ≠ ⊥) (hsq : Squarefree z)
+    (c : Ideal 𝓔) : open Classical in
+    ∑ v ∈ idealDivisors z, (if v ∣ c then (idealMoebius v : ℂ) else 0) =
+      if IsCoprime c z then 1 else 0 := by
+  classical
+  rw [← finsum_dvd_eq_sum_idealDivisors hz,
+    finsum_dvd_eq_sum hsq (fun e => if e ∣ c then (idealMoebius e : ℂ) else 0)]
+  convert sum_moebius_dvd_ideal hz c
+
+lemma sum_idealDivisors_eq_sum_ite {g : Ideal 𝓔} {X : ℝ} (hg : g ≠ ⊥)
+    (hgX : (absNorm g : ℝ) ≤ X) (f : Ideal 𝓔 → ℂ) : open Classical in
+    ∑ e ∈ idealDivisors g, f e = ∑ e ∈ idealsLe X, if e ∣ g then f e else 0 := by
+  classical
+  rw [← Finset.sum_filter]
+  refine Finset.sum_congr ?_ fun _ _ => rfl
+  ext e
+  rw [mem_idealDivisors hg, Finset.mem_filter, mem_idealsLe ((Nat.cast_nonneg _).trans hgX)]
+  refine ⟨fun h => ⟨?_, h⟩, And.right⟩
+  obtain ⟨c, rfl⟩ := h
+  exact (absNorm_le_absNorm_mul hg).1.trans hgX
+
+/-- The Möbius splits `(b, e, v, m₁, m₂)` of norms at most `X`: starred `g = b e`,
+`z₂ = v m₁`, `z₁ = v m₂` of norms at most `X`, with `g` coprime to `z₂ z₁`. -/
+def moebiusSplitsLe (X : ℝ) :
+    Finset (Ideal 𝓔 × Ideal 𝓔 × Ideal 𝓔 × Ideal 𝓔 × Ideal 𝓔) := by
+  classical
+  exact ((idealsLe X) ×ˢ ((idealsLe X) ×ˢ ((idealsLe X) ×ˢ ((idealsLe X) ×ˢ
+    (idealsLe X))))).filter fun u =>
+      Starred (u.1 * u.2.1) ∧ Starred (u.2.2.1 * u.2.2.2.1) ∧ Starred (u.2.2.1 * u.2.2.2.2) ∧
+      IsCoprime (u.1 * u.2.1) (u.2.2.1 * u.2.2.2.1 * (u.2.2.1 * u.2.2.2.2)) ∧
+      (absNorm (u.1 * u.2.1) : ℝ) ≤ X ∧ (absNorm (u.2.2.1 * u.2.2.2.1) : ℝ) ≤ X ∧
+      (absNorm (u.2.2.1 * u.2.2.2.2) : ℝ) ≤ X
+
+/-- Möbius inversion of the coprimality `z₁ ⊥ z₂` of a gcd split `(g, z₁, z₂)`, with the
+divisor `e ∣ g` written as `g = b e` and `z₂ = v m₁`, `z₁ = v m₂`. -/
+theorem sum_gcdSplitsLe_eq {X : ℝ} (hX : 0 ≤ X)
+    (H : Ideal 𝓔 × Ideal 𝓔 × Ideal 𝓔 → Ideal 𝓔 → ℂ) :
+    ∑ t ∈ gcdSplitsLe X, ∑ e ∈ idealDivisors t.1, H t e =
+      ∑ u ∈ moebiusSplitsLe X, (idealMoebius u.2.2.1 : ℂ) *
+        H (u.1 * u.2.1, u.2.2.1 * u.2.2.2.2, u.2.2.1 * u.2.2.2.1) u.2.1 := by
+  classical
+  set B := idealsLe X with hB
+  set S' := (B ×ˢ (B ×ˢ B)).filter fun t : Ideal 𝓔 × Ideal 𝓔 × Ideal 𝓔 =>
+    Starred t.1 ∧ Starred t.2.1 ∧ Starred t.2.2 ∧ IsCoprime t.1 (t.2.2 * t.2.1)
+  have hT : gcdSplitsLe X = S'.filter fun t => IsCoprime t.2.1 t.2.2 := by
+    ext t
+    simp only [gcdSplitsLe, S', Finset.mem_filter, IsGcdSplit]
+    tauto
+  have hstep : ∀ t ∈ S',
+      (if IsCoprime t.2.1 t.2.2 then ∑ e ∈ idealDivisors t.1, H t e else 0) =
+        ∑ e ∈ B, ∑ v ∈ B, if e ∣ t.1 ∧ v ∣ t.2.1 ∧ v ∣ t.2.2 then
+          (idealMoebius v : ℂ) * H t e else 0 := by
+    rintro ⟨g, z₁, z₂⟩ ht
+    obtain ⟨hbox, hg, h₁, -, -⟩ := Finset.mem_filter.mp ht
+    obtain ⟨hgB, h₁B, -⟩ : g ∈ B ∧ z₁ ∈ B ∧ z₂ ∈ B := by
+      simpa only [Finset.mem_product] using hbox
+    have hco : (if IsCoprime z₁ z₂ then (1 : ℂ) else 0) =
+        ∑ v ∈ B, if v ∣ z₁ ∧ v ∣ z₂ then (idealMoebius v : ℂ) else 0 := by
+      rw [isCoprime_comm, ← sum_idealDivisors_moebius h₁.1.1 h₁.2 z₂,
+        sum_idealDivisors_eq_sum_ite h₁.1.1 ((mem_idealsLe hX).mp h₁B)]
+      refine Finset.sum_congr rfl fun v _ => ?_
+      by_cases hv : v ∣ z₁ <;> simp [hv]
+    calc _ = (if IsCoprime z₁ z₂ then (1 : ℂ) else 0) *
+          ∑ e ∈ idealDivisors g, H (g, z₁, z₂) e := by split_ifs <;> simp
+      _ = _ := by
+        rw [hco, sum_idealDivisors_eq_sum_ite hg.1.1 ((mem_idealsLe hX).mp hgB),
+          Finset.sum_mul_sum, Finset.sum_comm]
+        refine Finset.sum_congr rfl fun e _ => Finset.sum_congr rfl fun v _ => ?_
+        split_ifs <;> simp_all
+  set V := (S' ×ˢ (B ×ˢ B)).filter fun p : (Ideal 𝓔 × Ideal 𝓔 × Ideal 𝓔) × Ideal 𝓔 × Ideal 𝓔 =>
+    p.2.1 ∣ p.1.1 ∧ p.2.2 ∣ p.1.2.1 ∧ p.2.2 ∣ p.1.2.2
+  calc ∑ t ∈ gcdSplitsLe X, ∑ e ∈ idealDivisors t.1, H t e
+      = ∑ t ∈ S', if IsCoprime t.2.1 t.2.2 then ∑ e ∈ idealDivisors t.1, H t e else 0 := by
+        rw [hT, Finset.sum_filter]
+    _ = ∑ t ∈ S', ∑ e ∈ B, ∑ v ∈ B, if e ∣ t.1 ∧ v ∣ t.2.1 ∧ v ∣ t.2.2 then
+          (idealMoebius v : ℂ) * H t e else 0 := Finset.sum_congr rfl hstep
+    _ = ∑ p ∈ V, (idealMoebius p.2.2 : ℂ) * H p.1 p.2.1 := by
+        simp only [V, Finset.sum_filter, Finset.sum_product]
+    _ = _ := by
+      symm
+      refine Finset.sum_bij (fun u _ => ((u.1 * u.2.1, u.2.2.1 * u.2.2.2.2, u.2.2.1 * u.2.2.2.1),
+        (u.2.1, u.2.2.1))) ?_ ?_ ?_ fun _ _ => rfl
+      · rintro ⟨b, e, v, m₁, m₂⟩ hu
+        simp only [moebiusSplitsLe, Finset.mem_filter, Finset.mem_product] at hu
+        obtain ⟨-, hg, hz₂, hz₁, hco, hNg, hNz₂, hNz₁⟩ := hu
+        simp only [V, S', Finset.mem_filter, Finset.mem_product, hB, mem_idealsLe hX]
+        exact ⟨⟨⟨⟨hNg, hNz₁, hNz₂⟩, hg, hz₁, hz₂, hco⟩,
+          (absNorm_le_absNorm_mul hg.1.1).2.trans hNg,
+          (absNorm_le_absNorm_mul hz₂.1.1).1.trans hNz₂⟩,
+          dvd_mul_left e b, dvd_mul_right v m₂, dvd_mul_right v m₁⟩
+      · rintro ⟨b, e, v, m₁, m₂⟩ hu ⟨b', e', v', m₁', m₂'⟩ - h
+        simp only [moebiusSplitsLe, Finset.mem_filter] at hu
+        obtain ⟨-, hg, hz₂, hz₁, -⟩ := hu
+        simp only [Prod.mk.injEq] at h
+        obtain ⟨⟨hbe, h₂, h₁⟩, rfl, rfl⟩ := h
+        obtain rfl := mul_right_cancel₀ (right_ne_zero_of_mul hg.1.1) hbe
+        obtain rfl := mul_left_cancel₀ (left_ne_zero_of_mul hz₁.1.1) h₂
+        obtain rfl := mul_left_cancel₀ (left_ne_zero_of_mul hz₂.1.1) h₁
+        rfl
+      · rintro ⟨⟨g, z₁, z₂⟩, e, v⟩ hp
+        simp only [V, S', Finset.mem_filter, Finset.mem_product, hB, mem_idealsLe hX] at hp
+        obtain ⟨⟨⟨⟨hNg, hNz₁, hNz₂⟩, hg, h₁, h₂, hco⟩, hNe, hNv⟩, ⟨b, rfl⟩, ⟨m₂, rfl⟩,
+          ⟨m₁, rfl⟩⟩ := hp
+        refine ⟨(b, e, v, m₁, m₂), ?_, by simp only [mul_comm b e]⟩
+        simp only [moebiusSplitsLe, Finset.mem_filter, Finset.mem_product, mem_idealsLe hX,
+          mul_comm b e]
+        exact ⟨⟨(absNorm_le_absNorm_mul hg.1.1).2.trans hNg, hNe, hNv,
+          (absNorm_le_absNorm_mul h₂.1.1).2.trans hNz₂,
+          (absNorm_le_absNorm_mul h₁.1.1).2.trans hNz₁⟩, hg, h₂, h₁, hco, hNg, hNz₂, hNz₁⟩
 
 end Masullo.QRH.MeanSquare
