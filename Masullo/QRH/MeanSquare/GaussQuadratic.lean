@@ -359,5 +359,43 @@ theorem quadraticExponentialSum_eq_of_mk_four_eq (h : DeloupTuraevTheorem1)
     quadraticExponentialSum m = quadraticExponentialSum n := by
   rw [← quadraticRayValue_mk h hm, hc, quadraticRayValue_mk h hn]
 
+/-- One set of four lattice representatives computes the quadratic ray value at
+every residue. The two coefficients are in the Eisenstein basis `1, ω`. -/
+theorem quadraticRayValue_representatives :
+    ∃ s, Representatives (lattice 1) ((fun x => (2 : ℝ) • x) '' lattice 1) s ∧
+      ∀ a b : ℤ, quadraticRayValue (Ideal.Quotient.mk (span {(4 : 𝓔)}) ((a : 𝓔) + (b : 𝓔) * eisOmega)) =
+        (∑ x ∈ s, phase (dotProduct x ((eisMatrix (a : ℝ) b).mulVec x) / 2)) / 2 := by
+  refine ⟨reps (span {(2 : 𝓔)}), reps_two, ?_⟩
+  intro a b
+  let x : 𝓔 := a + b * eisOmega
+  have hc : coords.symm x = ![a,b] := coords.symm_apply_eq.mpr rfl
+  rw [quadraticRayValue, quadraticRaySum_congr (Ideal.Quotient.mk_out _)]
+  change quadraticRaySum (coords.symm x) = _
+  rw [hc]
+  rfl
+
+/-- Deloup–Turaev identifies the same value on any representatives modulo two.
+Both evaluations use the same representatives modulo the Eisenstein matrix. -/
+theorem quadraticRayValue_of_representatives (quad : DeloupTuraevTheorem1) (a b : ℤ)
+    (hN : 0 < (a : ℝ)^2 - a*b + b^2)
+    {s : Finset (Fin 2 → ℝ)} (hs : Representatives (lattice 1) ((fun x => (2 : ℝ) • x) '' lattice 1) s) :
+    quadraticRayValue (Ideal.Quotient.mk (span {(4 : 𝓔)}) ((a : 𝓔) + (b : 𝓔)*eisOmega)) =
+      (∑ x ∈ s, phase (dotProduct x ((eisMatrix (a : ℝ) b).mulVec x) / 2)) / 2 := by
+  classical
+  obtain ⟨s₀, hs₀, hval⟩ := quadraticRayValue_representatives
+  let q : Fin 2 → ℤ := ![a,b]
+  let J : Ideal 𝓔 := span {elem q}
+  have hJ : J ≠ ⊥ := by
+    intro he
+    have hz := elem_inj (show elem q = elem 0 by simpa [elem] using (span_singleton_eq_bot.mp he))
+    have ha : a = 0 := congrFun hz 0
+    have hb : b = 0 := congrFun hz 1
+    simp [ha, hb] at hN
+  let := Ring.HasFiniteQuotients.finiteQuotient hJ
+  let := Fintype.ofFinite (𝓔 ⧸ J)
+  have ht := reps_eisMatrix J q rfl
+  exact (hval a b).trans ((quadratic_sum_reciprocity quad a b hN _ _ hs₀ ht).symm.trans
+    (quadratic_sum_reciprocity quad a b hN _ _ hs ht))
+
 end DeloupTuraev
 end Masullo.QRH.MeanSquare
