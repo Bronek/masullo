@@ -8,6 +8,15 @@ import Masullo.QRH.MeanSquare.DualTail
 * `mainSplitTerm_eq`: a main dual term of a Möbius split `(b, e, v, m₁, m₂)` at the row `h`
   is a combination over ray characters of a row weight `splitRowWeight` and a block summand
   `blockTerm` at `ρ = (e, v, h)`.
+* `sum_moebiusSplit_cols_eq`: the columns `(m₁, m₂)` of a Möbius split row are the block
+  columns `blockColumns R₀ X`.
+* `dualMainSum_eq`: `dualMainSum` as a sum over starred `b`, rows `ρ` and ray characters of
+  row weights times blocks of column length `blockLength D' b ρ = D' / (N b F)` with dyadic
+  `F = dyadicNorm ρ`.
+* `exists_norm_dualMainSum_le`: the main dual frequencies are `O(D^(2+θ+ε))`, by
+  `exists_block_le` on each dyadic fibre of rows.
+* `dualTailEstimate_of_gapEstimate` and `fullRowEstimate_of_gapEstimate`: `GapEstimate` and
+  `PairedGaussIdentities` give `DualTailEstimate rowMajorant` and `FullRowEstimate`.
 -/
 
 noncomputable section
@@ -746,5 +755,82 @@ theorem exists_norm_dualMainSum_le (hpg : PairedGaussIdentities) (hgap : GapEsti
       gcongr
       · linarith
       · linarith
+
+/-- A smooth `W` with compact support in `(0, ∞)` vanishes outside some `[r₀, R]` with
+`0 < r₀`. -/
+lemma exists_support_Icc {W : ℝ → ℂ} (hWc : HasCompactSupport W)
+    (hW0 : tsupport W ⊆ Set.Ioi 0) :
+    ∃ r₀ > (0 : ℝ), ∃ R : ℝ, ∀ y, W y ≠ 0 → r₀ ≤ y ∧ y ≤ R := by
+  obtain ⟨R, hR⟩ := hWc.isCompact.bddAbove
+  rcases (tsupport W).eq_empty_or_nonempty with h | h
+  · refine ⟨1, one_pos, R, fun y hy => ?_⟩
+    have := subset_tsupport W hy
+    rw [h] at this
+    exact absurd this (Set.notMem_empty y)
+  · obtain ⟨x, hx, hmin⟩ := hWc.isCompact.exists_isMinOn h continuousOn_id
+    refine ⟨x, hW0 hx, R, fun y hy => ⟨hmin (subset_tsupport W hy), hR (subset_tsupport W hy)⟩⟩
+
+/-- `GapEstimate` bounds the nonzero frequencies of the full square. -/
+theorem dualTailEstimate_of_gapEstimate (hpg : PairedGaussIdentities) (hgap : GapEstimate) :
+    DualTailEstimate rowMajorant := by
+  intro A W hWs hWc hW0 θ hθ hθ1 ε hε
+  obtain ⟨r₀, hr₀, RW, hRW⟩ := exists_support_Icc hWc hW0
+  set R' := max RW 1 with hR'def
+  have hR' : 1 ≤ R' := le_max_right _ _
+  have hR'0 : 0 < R' := by linarith
+  set W' : ℝ → ℂ := fun y => W (R' * y) with hW'def
+  have hW' : ContDiff ℝ ∞ W' := hWs.comp (contDiff_const.mul contDiff_id)
+  have hW'c : HasCompactSupport W' := by
+    simpa only [smul_eq_mul] using hWc.comp_smul hR'0.ne'
+  have hW'r : ∀ y, W' y ≠ 0 → r₀ / R' ≤ y ∧ y ≤ 1 := fun y hy => by
+    obtain ⟨h₁, h₂⟩ := hRW _ hy
+    refine ⟨(div_le_iff₀ hR'0).mpr (by linarith [mul_comm R' y]), ?_⟩
+    have : R' * y ≤ R' * 1 := by linarith [le_max_left RW 1]
+    exact le_of_mul_le_mul_left this hR'0
+  have hW'0 : tsupport W' ⊆ Set.Ioi 0 := by
+    refine (closure_minimal (fun y hy => (hW'r y hy).1) isClosed_Ici).trans fun y hy => ?_
+    exact lt_of_lt_of_le (by positivity) (Set.mem_Ici.mp hy)
+  have hW : ∀ x, W x = W' (x / R') := fun x => by
+    simp only [hW'def, mul_div_cancel₀ _ hR'0.ne']
+  obtain ⟨χ, hχ, hχc, hχe⟩ := exists_cutoff_exp (2 * Real.log (r₀ / (2 * R'))) 0
+  have hχW : ∀ β y₁ y₂ : ℝ, 1 ≤ β → β < 2 → 0 < y₁ → 0 < y₂ →
+      conj (W' (β * y₁)) * W' (β * y₂) ≠ 0 →
+        χ (Real.log y₁ + Real.log y₂) =
+          (Real.exp (-((Real.log y₁ + Real.log y₂) / 2)) : ℂ) := by
+    intro β y₁ y₂ hβ hβ2 hy₁ hy₂ hne
+    have hb : ∀ y, 0 < y → W' (β * y) ≠ 0 →
+        Real.log (r₀ / (2 * R')) ≤ Real.log y ∧ Real.log y ≤ 0 := fun y hy hW' => by
+      obtain ⟨h₁, h₂⟩ := hW'r _ hW'
+      refine ⟨Real.log_le_log (by positivity) ?_, Real.log_nonpos hy.le ?_⟩
+      · rw [div_le_iff₀ (by positivity)]
+        rw [div_le_iff₀ hR'0] at h₁
+        nlinarith
+      · nlinarith
+    obtain ⟨h₁, h₂⟩ := hb y₁ hy₁ (fun h => hne (by rw [h, map_zero, zero_mul]))
+    obtain ⟨h₃, h₄⟩ := hb y₂ hy₂ (fun h => hne (by rw [h, mul_zero]))
+    exact hχe _ ⟨by linarith, by linarith⟩
+  obtain ⟨C₁, hC₁, h₁⟩ := exists_norm_dualTailSum_sub_le rowMajorant A hWs.continuous hWc
+    hθ.le (by positivity : (0 : ℝ) < θ / 4)
+  obtain ⟨C₂, hC₂, h₂⟩ := exists_norm_dualMainSum_le hpg hgap hW' hW'c hW'0
+    (fun y hy => (hW'r y hy).2) hR' hW rowMajorant hχ hχc hχW A hθ (by linarith) hε
+  refine ⟨C₁ + C₂, by positivity, fun D hD => ?_⟩
+  have hD1 : (1 : ℝ) ≤ D := by linarith
+  have hDθ : D ^ (2 + θ) ≤ D ^ (2 + θ + ε) :=
+    Real.rpow_le_rpow_of_exponent_le hD1 (by linarith)
+  calc ‖dualTailSum rowMajorant A W D (D ^ (1 + θ))‖ ≤
+        ‖dualTailSum rowMajorant A W D (D ^ (1 + θ)) - dualMainSum rowMajorant A W D
+            (D ^ (1 + θ)) (D ^ (2 + θ / 4) / D ^ (1 + θ))‖ +
+          ‖dualMainSum rowMajorant A W D (D ^ (1 + θ)) (D ^ (2 + θ / 4) / D ^ (1 + θ))‖ :=
+        norm_le_norm_sub_add _ _
+    _ ≤ C₁ * D ^ (2 + θ + ε) + C₂ * D ^ (2 + θ + ε) := by
+        gcongr
+        · exact (h₁ D hD).trans (by gcongr)
+        · exact h₂ D hD
+    _ = (C₁ + C₂) * D ^ (2 + θ + ε) := by ring
+
+/-- The full mean square of the Möbius rows from `PairedGaussIdentities` and `GapEstimate`. -/
+theorem fullRowEstimate_of_gapEstimate (hpg : PairedGaussIdentities) (hgap : GapEstimate) :
+    FullRowEstimate :=
+  fullRowEstimate_of_dualTail hpg (dualTailEstimate_of_gapEstimate hpg hgap)
 
 end Masullo.QRH.MeanSquare
