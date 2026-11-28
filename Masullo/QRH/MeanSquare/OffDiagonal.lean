@@ -205,24 +205,40 @@ lemma norm_div_natCast_le (x : ℂ) (n : ℕ) : ‖x / (n : ℂ)‖ ≤ ‖x‖ 
   · rw [norm_div, Complex.norm_natCast]
     exact div_le_self (norm_nonneg _) (by exact_mod_cast hn)
 
-/-- The Möbius divisor sum of the zero frequency has at most `2^{ω(g)}` unimodular terms. -/
+/-- A sum over the `2^{ω(g)}` divisors of a squarefree `g` of terms of norm at most `B`. -/
+lemma norm_finsum_dvd_le_of {g : Ideal 𝓔} (hg : Squarefree g) (f : Ideal 𝓔 → ℂ) {B : ℝ}
+    (hB : 0 ≤ B) (hf : ∀ e, e ∣ g → ‖f e‖ ≤ B) :
+    ‖∑ᶠ e : {e : Ideal 𝓔 // e ∣ g}, f e‖ ≤ (2 : ℝ) ^ Multiset.card (normalizedFactors g) * B := by
+  classical
+  have hdvd : ∀ s ∈ (normalizedFactors g).toFinset.powerset, ∏ P ∈ s, P ∣ g := by
+    intro s hs
+    refine (Finset.prod_dvd_prod_of_subset _ _ id (Finset.mem_powerset.mp hs)).trans ?_
+    rw [Finset.prod_eq_multiset_prod, Multiset.toFinset_val, Multiset.map_id]
+    exact (Multiset.prod_dvd_prod_of_le (Multiset.dedup_le _)).trans
+      (prod_normalizedFactors hg.ne_zero).dvd
+  rw [finsum_dvd_eq_sum hg f]
+  refine (norm_sum_le _ _).trans ?_
+  calc ∑ s ∈ (normalizedFactors g).toFinset.powerset, ‖f (∏ P ∈ s, P)‖
+      ≤ ∑ _s ∈ (normalizedFactors g).toFinset.powerset, B :=
+        Finset.sum_le_sum fun s hs => hf _ (hdvd s hs)
+    _ = (2 : ℝ) ^ (normalizedFactors g).toFinset.card * B := by simp
+    _ ≤ _ := by
+        gcongr
+        · norm_num
+        · exact Multiset.toFinset_card_le _
+
+/-- The Möbius divisor sum of the zero frequency has `2^{ω(g)}` terms of norm at most one. -/
 lemma norm_finsum_dvd_le {g : Ideal 𝓔} (hg : Squarefree g) (b c : Ideal 𝓔) :
     ‖∑ᶠ e : {e : Ideal 𝓔 // e ∣ g},
         (idealMoebius e : ℂ) * pairCharacter b c (generator e) / (absNorm e.val : ℂ)‖ ≤
       (2 : ℝ) ^ Multiset.card (normalizedFactors g) := by
-  classical
-  rw [finsum_dvd_eq_sum hg (fun e => (idealMoebius e : ℂ) * pairCharacter b c (generator e) /
-    (absNorm e : ℂ))]
-  refine (norm_sum_le _ _).trans ?_
-  calc ∑ s ∈ (normalizedFactors g).toFinset.powerset, ‖(idealMoebius (∏ P ∈ s, P) : ℂ) *
-        pairCharacter b c (generator (∏ P ∈ s, P)) / (absNorm (∏ P ∈ s, P) : ℂ)‖
-      ≤ ∑ _s ∈ (normalizedFactors g).toFinset.powerset, (1 : ℝ) :=
-        Finset.sum_le_sum fun s _ => (norm_div_natCast_le _ _).trans (by
-          rw [norm_mul]
-          exact (mul_le_mul (norm_idealMoebius_le _) (norm_pairCharacter_le _ _ _)
-            (norm_nonneg _) zero_le_one).trans_eq (one_mul 1))
-    _ = (2 : ℝ) ^ (normalizedFactors g).toFinset.card := by simp
-    _ ≤ _ := pow_le_pow_right₀ (by norm_num) (Multiset.toFinset_card_le _)
+  refine (norm_finsum_dvd_le_of hg (fun e => (idealMoebius e : ℂ) *
+    pairCharacter b c (generator e) / (absNorm e : ℂ)) zero_le_one fun e _ => ?_).trans_eq
+    (mul_one _)
+  refine (norm_div_natCast_le _ _).trans ?_
+  rw [norm_mul]
+  exact (mul_le_mul (norm_idealMoebius_le _) (norm_pairCharacter_le _ _ _)
+    (norm_nonneg _) zero_le_one).trans_eq (one_mul 1)
 
 /-! ### The off-diagonal estimate from the nonzero frequencies -/
 
