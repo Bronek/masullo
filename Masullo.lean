@@ -46,5 +46,6 @@ import Masullo.QRH.MeanSquare.DualTail
 import Masullo.Lattice.Eisenstein
 import Masullo.QRH.MeanSquare.Majorant
 import Masullo.QRH.MeanSquare.TransferKernel
+import Masullo.QRH.MeanSquare.TransferPass
 
 #print RiemannHypothesis
