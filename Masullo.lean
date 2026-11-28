@@ -47,6 +47,7 @@ import Masullo.Lattice.Eisenstein
 import Masullo.QRH.MeanSquare.Majorant
 import Masullo.QRH.MeanSquare.TransferKernel
 import Masullo.QRH.MeanSquare.TransferBlocks
+import Masullo.QRH.MeanSquare.TransferCount
 import Masullo.QRH.MeanSquare.TransferDilation
 import Masullo.QRH.MeanSquare.TransferExpand
 import Masullo.QRH.MeanSquare.TransferFirst
