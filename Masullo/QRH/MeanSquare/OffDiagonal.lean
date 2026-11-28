@@ -205,7 +205,7 @@ lemma norm_div_natCast_le (x : ℂ) (n : ℕ) : ‖x / (n : ℂ)‖ ≤ ‖x‖ 
   · rw [norm_div, Complex.norm_natCast]
     exact div_le_self (norm_nonneg _) (by exact_mod_cast hn)
 
-/-- The Möbius divisor sum of the zero frequency has at most `2^{ω(g)}` unimodular terms. -/
+/-- The Möbius divisor sum of the zero frequency has `2^{ω(g)}` terms of norm at most one. -/
 lemma norm_finsum_dvd_le {g : Ideal 𝓔} (hg : Squarefree g) (b c : Ideal 𝓔) :
     ‖∑ᶠ e : {e : Ideal 𝓔 // e ∣ g},
         (idealMoebius e : ℂ) * pairCharacter b c (generator e) / (absNorm e.val : ℂ)‖ ≤
