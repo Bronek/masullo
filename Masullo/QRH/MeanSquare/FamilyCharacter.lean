@@ -62,7 +62,7 @@ lemma quadraticIdealCharacter_good {n a : Ideal 𝓔} (hn : AwayFromSix n) (ha :
   exact quadraticResidue_apply hn _
 
 /-- The character is multiplicative in its index on ideals prime to six, as used in
-Goldmakher–Louvel, §4, Lemma 4.6, and §5.1, to split off a common factor of two indices. -/
+Goldmakher–Louvel, proof of Lemma 5.1, and §6.1, to split off a common factor of two indices. -/
 theorem quadraticIdealCharacter_mul {g b a : Ideal 𝓔} (hg : AwayFromSix g) (hb : AwayFromSix b)
     (ha : AwayFromSix a) :
     quadraticIdealCharacter (hg.mul hb) a =

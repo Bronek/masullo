@@ -44,8 +44,7 @@ def pattersonPhase (r : Fin 3) : ℂ :=
   else Complex.exp (2 * Real.pi * Complex.I / 9)
 
 /-- The coefficient in Patterson I's normalization uses the conjugate of the
-unnormalized Gauss sum. Part II, p. 217, prints `2g(λ²,c)` without the conjugation bar.
-Here the coefficient follows Part I, Theorem 8.1. -/
+unnormalized Gauss sum, following Part I, Theorem 8.1. -/
 def PattersonRow.coefficient (row : PattersonRow) : ℂ :=
   let q := ‖eisEmbedding row.d / eisEmbedding row.c‖
   match row.layer with
@@ -155,9 +154,10 @@ theorem PattersonAutomorphyWith.conj_div {χ : 𝓔 → 𝓔 → ℂ} {θ : ℂ 
 /-- S. J. Patterson, *A cubic analogue of the theta series*, J. reine angew. Math. 296
 (1977), Theorem 8.1, p. 152, coefficient table and (8.2)–(8.3), restricted to Γ(3)
 using (1.1), p. 125 and (2.1), (2.4)–(2.5), p. 126. The Gauss sum and trace character
-also appear in Part II, (1), p. 217, which prints `2g(λ²,c)` without the conjugation bar;
-the coefficients follow Part I. One function has both the displayed expansion and the
-transformation law. The `HasSum` in `PattersonExpansion` is our reading of Patterson's bare Σ.
+also appear in Part II, (1), p. 217, whose table (2) prints the same conjugated Gauss sums
+in a changed normalization; the coefficients follow Part I. One function has both the
+displayed expansion and the transformation law. The `HasSum` in `PattersonExpansion` is our
+reading of Patterson's bare Σ.
 <https://doi.org/10.1515/crll.1977.296.125> -/
 def PattersonTheorem81 : Prop :=
   ∃ (σ : ℝ) (τ : ℂ → ℂ) (θ : ℂ → ℝ → ℂ),

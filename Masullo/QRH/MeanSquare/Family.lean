@@ -92,7 +92,7 @@ lemma eisensteinQuadraticCharacter_eq_symbol {a b : Ideal 𝓔}
   rw [eisensteinQuadraticCharacter_of_good hb, quadraticIdealCharacter_good hb ha]
 
 /-- Index multiplicativity `χ_{gb}(a) = χ_g(a) χ_b(a)` on ideals prime to six, used in
-Goldmakher–Louvel, §4, Lemma 4.6, and §5.1. -/
+Goldmakher–Louvel, proof of Lemma 5.1, and §6.1. -/
 theorem eisensteinQuadraticCharacter_mul {g b a : Ideal 𝓔} (hg : AwayFromSix g)
     (hb : AwayFromSix b) (ha : AwayFromSix a) :
     eisensteinQuadraticCharacter (g * b) a =
@@ -124,16 +124,22 @@ theorem eisensteinFamilyRealizes (quad : DeloupTuraevTheorem1) :
 Math. Proc. Cambridge Philos. Soc. 154 (2013), Theorem 1.1, pp. 194–195,
 specialized to the family `eisensteinQuadraticCharacter` over ℚ(ω) with `c = (72)`.
 The starred sums run over squarefree ideals prime to `c`, with column `b` evaluated at row `a`.
-The printed proof uses four properties of the family beyond Definition 1, all of which
-hold here:
-* the group `G` of §4, Lemma 4.5, is the fixed `QuadraticFamilyClass`, the units modulo 4;
+The steps of the printed proof checked here, the initial bound (Lemma 4.2), duality
+(Lemma 4.5), the gcd extraction (proof of Lemma 5.1) and the decomposition of §6.1, use four
+properties of the family beyond Definition 1, all of which hold here:
+* the group `G` of Lemma 4.5 is the fixed `QuadraticFamilyClass`, the units modulo 4;
 * the conductor has norm at most `3 N(b)` (`absNorm_quadraticConductor_le`) and lies between
   `b` and `b` times the prime above three (`dvd_quadraticConductor`,
-  `quadraticConductor_dvd`), so `χ_b(a) = 0` exactly when `a` and `b` share a prime
-  (`eisensteinQuadraticCharacter_eq_zero_iff`);
+  `quadraticConductor_dvd`), so for `a` and `b` prime to six, `χ_b(a) = 0` exactly when they
+  share a prime (`eisensteinQuadraticCharacter_eq_zero_iff`);
 * products at distinct indices are nonprincipal
   (`eisensteinQuadraticCharacter_product_nonprincipal`);
 * the characters are multiplicative in the index (`eisensteinQuadraticCharacter_mul`).
+The proof of Lemma 7.2 relies on a further fact not proved here. It writes the value of the
+primitive character `χ_{b₁}χ_{b₂}` modulo `b₁b₂` at `ea₁` as `χ_{b₁}(ea₁) χ_{b₂}(ea₁)`,
+where `ea₁` may contain the prime above three. For this family that factorization fails
+there: for `b₁ = (1 + 6ω)` and `b₂ = (1 - 6ω)` each factor vanishes at that prime and the
+primitive product does not.
 The premise records that the family satisfies Definition 1, the hypothesis of Theorem 1.1;
 `eisensteinQuadraticHeckeFamily` proves it from `DeloupTuraevTheorem1`.
 <https://arxiv.org/pdf/1112.1642v2#page=2> -/

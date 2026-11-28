@@ -121,9 +121,11 @@ Weil's functional at the translate of `φ` by `t` in the logarithmic variable. F
 arbitrarily large `U`, `L_φ(t) ≤ C e^(at)` for all `t ≥ 0` in `[U, (1+δ)U]`. It holds iff the
 trace identity holds for every test function at every width `a' > a`
 (`trace_eq_efFunctional_iff_probeBound` in `Masullo/Probe.lean`), and for `a = 0` iff the Riemann
-hypothesis holds. At `a = 1/2` it holds unconditionally; it is not proved for any smaller `a`. One
-probe suffices: some nonnegative `φ` has transform nonzero at `ρ - 1/2` for every zero `ρ` in the
-strip (`TestFunction.exists_nonneg_forall_hat_ne_zero`), and for any such `φ` its bound alone is
+hypothesis holds. At `a = 1/2` it holds unconditionally, and it is not proved unconditionally for
+any smaller `a`; under the hypotheses `PrintedInputs` below it holds at `a = 5/12`
+(`hasTrace_of_printedInputs` with `trace_eq_efFunctional_iff_probeBound`). One probe suffices:
+some nonnegative `φ` has transform nonzero at `ρ - 1/2` for every zero `ρ` in the strip
+(`TestFunction.exists_nonneg_forall_hat_ne_zero`), and for any such `φ` its bound alone is
 equivalent to there being no zeros at distance more than `a` from the critical line
 (`windowBound_iff`, `exists_windowBound_zero_iff_riemannHypothesis`).
 
@@ -135,12 +137,13 @@ not depend on `Masullo` and can be used separately.
 ## Above width 5/12, conditionally
 
 The smoothed form of Landau's criterion applies to `b = μ ∗ χ₃μ`, whose Dirichlet series is the
-inverse of the Dedekind zeta function of `ℚ(√-3)`: a bound `O(D^β)` on its smoothed sums gives the
-trace identity at every width `a > β - 1/2` (`hasTrace_of_smoothedBound` in
-`Masullo/Smoothed.lean`). Estimate (A) of Proposition 3.1 of OpenAI, *The Quasi-Riemann
-Hypothesis* (5 October 2026), a mean square over the prime ideals of the Eisenstein integers,
-gives that bound for every `β > 11/12` (`Masullo/QRH/StageB.lean`, with the ideal Möbius function
-in `Masullo/QRH/IdealMoebius.lean`), hence the trace identity at every width `a > 5/12`
+inverse of the Dedekind zeta function of `ℚ(√-3)`: for `β ≥ 0`, a bound `O(D^β)` on its sums
+smoothed by every smooth weight of compact support in `(0, ∞)` gives the trace identity at every
+width `a > max(0, β - 1/2)` (`hasTrace_of_smoothedBound` in `Masullo/Smoothed.lean`). The prime-row
+consequence (A) of Proposition 3.1 of OpenAI, *The Quasi-Riemann Hypothesis* (5 October 2026), a
+mean square over the prime ideals of the Eisenstein integers, gives that bound for every
+`β > 11/12` (`Masullo/QRH/StageB.lean`, with the ideal Möbius function in
+`Masullo/QRH/IdealMoebius.lean`), hence the trace identity at every width `a > 5/12`
 (`hasTrace_of_meanSquareA`). Estimate (A) is derived in turn from the seven fields of
 `PrintedInputs` (`meanSquareA_of_printedInputs` and `hasTrace_of_printedInputs` in
 `Masullo/QRH/MeanSquare/Assembly.lean`):
@@ -152,12 +155,12 @@ in `Masullo/QRH/IdealMoebius.lean`), hence the trace identity at every width `a 
 - `cubicGaussCube`: the cube of the cubic Gauss sum, Dunn and Radziwiłł (2024), (1.7)–(1.8);
 - `quadraticGauss`: the reciprocity for quadratic Gauss sums of Deloup and Turaev (2007), Theorem 1;
 - `besselMellin`: the Mellin transform of the modified Bessel function, DLMF 10.43.19;
-- `gammaVertical`: the vertical bound for the gamma function, DLMF 5.11.9.
+- `gammaVertical`: the uniform vertical asymptotic of the gamma function, DLMF 5.11.9.
 
 The result is conditional on these inputs, and none of them is proved here. The Goldmakher–Louvel
 input is stated only for the Eisenstein family with `c = (72)`: their Theorem 1.1 prints a
-constant uniform over each family of their Definition 1, and that form fails for general such
-families (see the docstring of `PrintedInputs`). Sources and contributions are in
+constant uniform across all families of their Definition 1 at fixed `k`, `c` and `ε`, and that
+form fails (see the docstring of `PrintedInputs`). Sources and contributions are in
 [CREDITS.md](CREDITS.md#mean-square-above-512).
 
 ## What is missing
@@ -167,7 +170,7 @@ result this is equivalent to excluding the zeros at distance at least `a`, so it
 rearranging what is here. The operator theory used accepts any exponents in the strip and therefore
 cannot supply it; an arithmetic input is needed. Above width 5/12 that input is reduced to the
 printed results listed above. No zero-free half-plane `re s > θ` with `θ < 1` is proved
-unconditionally, and the widths `0 < a ≤ 5/12` remain open even conditionally.
+unconditionally, and this route does not reach the trace identity at widths `0 < a ≤ 5/12`.
 
 ## Status
 
