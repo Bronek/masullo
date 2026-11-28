@@ -35,6 +35,7 @@ import Masullo.BaezDuarte
 import Masullo.BaezDuarteControls
 import Masullo.QRH.StageB
 import Masullo.QRH.MeanSquare.Assembly
+import Masullo.QRH.MeanSquare.FirstPoisson
 import Masullo.Lattice.Eisenstein
 
 #print RiemannHypothesis
