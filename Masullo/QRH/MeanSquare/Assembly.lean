@@ -16,9 +16,13 @@ import Masullo.QRH.MeanSquare.TransferProof
 namespace Masullo.QRH.MeanSquare
 
 /-- The classical statements used in the reduction. Each field's defining
-proposition gives its source and its normalization. -/
+proposition gives its source and its normalization. The Goldmakher–Louvel input fixes the
+Eisenstein family. The family-uniform implied constant printed in Theorem 1.1 fails for
+general Definition 1 families. In arXiv v2, §4, duality costs `|G|`. The conductor bound
+and the nonprincipality of products at distinct indices used there are proved here for
+the Eisenstein characters. -/
 structure PrintedInputs : Prop where
-  largeSieve : GoldmakherLouvel (CyclotomicField 3 ℚ)
+  largeSieve : EisensteinGoldmakherLouvel
   theta : PattersonTheorem81
   cubicReciprocity : DunnRadziwillReciprocity
   cubicGaussCube : DunnRadziwillGaussCube
@@ -28,8 +32,7 @@ structure PrintedInputs : Prop where
 
 /-- Estimate (A) from the printed inputs alone. -/
 theorem meanSquareA_of_printedInputs (h : PrintedInputs) : Masullo.QRH.MeanSquareA := by
-  have h7 :=
-    quadraticSieve_of_goldmakherLouvel h.largeSieve (eisensteinFamilyRealizes h.quadraticGauss)
+  have h7 := quadraticSieve_of_goldmakherLouvel h.largeSieve h.quadraticGauss
   have h5 := completedEstimate_of_reflection h.theta h.cubicReciprocity h.quadraticGauss
     h.besselMellin h.gammaVertical h7
   have hg := pairedGaussIdentities h.cubicReciprocity h.cubicGaussCube h.quadraticGauss

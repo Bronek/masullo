@@ -44,7 +44,8 @@ def pattersonPhase (r : Fin 3) : ℂ :=
   else Complex.exp (2 * Real.pi * Complex.I / 9)
 
 /-- The coefficient in Patterson I's normalization uses the conjugate of the
-unnormalized Gauss sum. -/
+unnormalized Gauss sum. Part II, p. 217, prints `2g(λ²,c)` without the conjugation bar.
+Here the coefficient follows Part I, Theorem 8.1. -/
 def PattersonRow.coefficient (row : PattersonRow) : ℂ :=
   let q := ‖eisEmbedding row.d / eisEmbedding row.c‖
   match row.layer with
@@ -101,7 +102,8 @@ lemma pattersonCharacter_neg (z : ℂ) : pattersonCharacter (-z) = conj (patters
   congr 1
   norm_num [map_ofNat]
 
-/-- The expansion at infinity in (8.3), indexed by the nonzero elements of λ⁻³𝓔. -/
+/-- The expansion at infinity in (8.3), indexed by the nonzero elements of λ⁻³𝓔.
+We read Patterson's bare Σ as `HasSum` over these frequencies. -/
 def PattersonExpansion (θ : ℂ → ℝ → ℂ) (τ : ℂ → ℂ) (σ : ℝ) : Prop :=
   ∀ z : ℂ, ∀ v : ℝ, 0 < v →
     HasSum (fun m : {a : 𝓔 // a ≠ 0} =>

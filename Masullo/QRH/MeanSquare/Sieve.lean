@@ -5,8 +5,9 @@ import Masullo.QRH.MeanSquare.Rows
 # The quadratic large sieve on ideals
 
 The printed bound uses all squarefree ideals up to each cutoff. The dyadic bound (7)
-follows by extending the column vector by zero. Its arithmetic premise identifies the
-matrix entries of an Eisenstein Hecke family, including the zeros at common factors.
+follows by extending the column vector by zero. The application to the Eisenstein family
+is in `Family.lean`. Goldmakher–Louvel, arXiv v2, §4, Lemma 4.5, pays the order of the
+family's finite group in the duality step.
 -/
 
 open NumberField Ideal
@@ -58,20 +59,6 @@ noncomputable def sieveIdeals (c : Ideal (𝓞 K)) (X : ℝ) : Finset (Ideal (�
 def SieveBound {ι κ : Type*} (rows : Finset ι) (cols : Finset κ) (H : ι → κ → ℂ)
     (B : ℝ) : Prop :=
   ∀ z : κ → ℂ, ∑ a ∈ rows, ‖∑ b ∈ cols, z b * H a b‖ ^ 2 ≤ B * ∑ b ∈ cols, ‖z b‖ ^ 2
-
-/-- L. Goldmakher and B. Louvel, *A quadratic large sieve inequality over number fields*,
-Math. Proc. Cambridge Philos. Soc. 154 (2013), Theorem 1.1, pp. 194–195,
-doi:10.1017/S0305004112000370. Rows are evaluation ideals; columns index the characters.
-The constant is taken per family. The print writes `≪_{k,c,ε}`, but its proof pays `|G|` in the
-duality step (§3), and a constant uniform over all families satisfying Definition 1 is false. -/
-def GoldmakherLouvel (K : Type) [Field K] [NumberField K] : Prop :=
-  ∀ (c : Ideal (𝓞 K)), c ≠ 0 →
-    ∀ (χ : Ideal (𝓞 K) → Ideal (𝓞 K) →*₀ ℂ) (f : Ideal (𝓞 K) → Ideal (𝓞 K)),
-      IsQuadraticHeckeFamily c χ f →
-    ∀ ε : ℝ, 0 < ε → ∃ C : ℝ, 0 ≤ C ∧
-    ∀ M N : ℝ, 1 ≤ M → 1 ≤ N →
-      SieveBound (sieveIdeals c M) (sieveIdeals c N) (fun a b => χ b a)
-        (C * (M * N) ^ ε * (M + N))
 
 /-- Restrict the rows and columns of a large-sieve inequality. -/
 theorem SieveBound.restrict {ι κ : Type*} {r R : Finset ι} {s S : Finset κ}
@@ -163,44 +150,11 @@ private theorem coprime_seventyTwo {a : Ideal 𝓔} (h : IsCoprime a (span {6}))
   rw [span_singleton_pow, span_singleton_dvd_span_singleton_iff_dvd]
   exact ⟨3, by norm_num⟩
 
-private theorem sieveIdeals_subset {X : ℝ} :
+theorem sieveIdeals_six_subset_seventyTwo {X : ℝ} :
     sieveIdeals (span {(6 : 𝓔)}) X ⊆ sieveIdeals (span {72}) X := by
   classical
   intro a ha
   simp only [sieveIdeals, Finset.mem_filter] at ha ⊢
   exact ⟨ha.1, ha.2.1, coprime_seventyTwo ha.2.2⟩
-
-theorem quadraticSieve_of_goldmakherLouvel {symbol : Ideal 𝓔 → Ideal 𝓔 → ℂ}
-    (hGL : GoldmakherLouvel (CyclotomicField 3 ℚ)) (hFamily : EisensteinFamilyRealizes symbol) :
-    QuadraticSieve symbol := by
-  classical
-  obtain ⟨χ, f, hχ, hsymbol⟩ := hFamily
-  intro ε hε
-  have h72 : span {(72 : 𝓔)} ≠ 0 := by simp
-  obtain ⟨C, hC, hGL⟩ := hGL (span {72}) h72 χ f hχ ε hε
-  refine ⟨2 * (2 : ℝ) ^ ε * C, by positivity, ?_⟩
-  intro M N hM hN rows cols hr hc
-  have hr' := hr.trans sieveIdeals_subset
-  have hc' := (hc.trans (Finset.filter_subset _ _)).trans sieveIdeals_subset
-  have h := (hGL M (2 * N) hM (by linarith)).restrict hr' hc'
-  intro z
-  have heq (a) (ha : a ∈ rows) (b) (hb : b ∈ cols) : χ b a = symbol a b := by
-    have har := hr' ha
-    have hbc := hc' hb
-    simp only [sieveIdeals, Finset.mem_filter] at har hbc
-    exact hsymbol a b har.2.1 har.2.2 hbc.2.1 hbc.2.2
-  have hrow (a) (ha : a ∈ rows) : ∑ b ∈ cols, z b * χ b a = ∑ b ∈ cols, z b * symbol a b :=
-    Finset.sum_congr rfl fun b hb => by rw [heq a ha b hb]
-  have hz := h z
-  dsimp only at hz
-  rw [Finset.sum_congr rfl (fun a ha => congrArg (fun t : ℂ => ‖t‖ ^ 2) (hrow a ha))] at hz
-  refine hz.trans (mul_le_mul_of_nonneg_right ?_ (by positivity))
-  have hMN : 0 ≤ M * N := by positivity
-  rw [show M * (2 * N) = (M * N) * 2 by ring, Real.mul_rpow hMN (by norm_num)]
-  have hpos : 0 ≤ C * ((M * N) ^ ε * 2 ^ ε) := by positivity
-  calc
-    _ ≤ C * ((M * N) ^ ε * 2 ^ ε) * (2 * (M + N)) :=
-      mul_le_mul_of_nonneg_left (by linarith) hpos
-    _ = _ := by ring
 
 end Masullo.QRH.MeanSquare
