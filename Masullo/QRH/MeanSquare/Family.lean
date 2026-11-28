@@ -54,19 +54,23 @@ private theorem same_class_product (quad : DeloupTuraevTheorem1) {a b : Ideal �
     linear_combination -(quadraticResidue ha.1 (generator d) * quadraticResidue hb.1 (generator d)) *
       lambdaSign_sq hram
 
-/-- The primitive quadratic characters at the squarefree good ideals realize the
-primary residue symbol, including its zeros at common factors. -/
-theorem eisensteinFamilyRealizes (quad : DeloupTuraevTheorem1) :
-    EisensteinFamilyRealizes primaryQuadraticSymbol := by
-  classical
-  let χ (a : Ideal 𝓔) : Ideal 𝓔 →*₀ ℂ :=
-    if ha : AwayFromSix a then quadraticIdealCharacter ha else quadraticIdealCharacter
-      (show AwayFromSix 1 from ⟨one_ne_zero, isCoprime_one_left⟩)
-  have hχ {a : Ideal 𝓔} (ha : AwayFromSix a) : χ a = quadraticIdealCharacter ha := dite_eq_left ha
-  refine ⟨χ, quadraticConductor, ⟨?_, ?_⟩, ?_⟩
+open Classical in
+/-- The primitive ideal character attached to a good Eisenstein column `b`.
+At ideals meeting six or at the zero ideal we use the character at the unit ideal. -/
+def eisensteinQuadraticCharacter (b : Ideal 𝓔) : Ideal 𝓔 →*₀ ℂ :=
+  if hb : AwayFromSix b then quadraticIdealCharacter hb else
+    quadraticIdealCharacter (show AwayFromSix 1 from ⟨one_ne_zero, isCoprime_one_left⟩)
+
+lemma eisensteinQuadraticCharacter_of_good {b : Ideal 𝓔} (hb : AwayFromSix b) :
+    eisensteinQuadraticCharacter b = quadraticIdealCharacter hb := dite_eq_left hb
+
+/-- The Eisenstein characters satisfy Definition 1 of Goldmakher–Louvel for `c = (72)`. -/
+theorem eisensteinQuadraticHeckeFamily (quad : DeloupTuraevTheorem1) :
+    IsQuadraticHeckeFamily (span {72}) eisensteinQuadraticCharacter quadraticConductor := by
+  constructor
   · intro a hsf hc
     have ha : Starred a := ⟨away_of_coprime_seventyTwo hsf.ne_zero hc, hsf⟩
-    rw [hχ ha.1]
+    rw [eisensteinQuadraticCharacter_of_good ha.1]
     exact ⟨quadraticIdealCharacter_primitive ha, fun _ => quadraticIdealCharacter_sq ha.1⟩
   · refine ⟨QuadraticFamilyClass, inferInstance, inferInstance, familyClass, familySign,
       familyClass_one, ?_, familySign_sq, ?_⟩
@@ -75,11 +79,68 @@ theorem eisensteinFamilyRealizes (quad : DeloupTuraevTheorem1) :
     · intro a b hsa hca hsb hcb hab
       have ha : Starred a := ⟨away_of_coprime_seventyTwo hsa.ne_zero hca, hsa⟩
       have hb : Starred b := ⟨away_of_coprime_seventyTwo hsb.ne_zero hcb, hsb⟩
-      rw [hχ ha.1, hχ hb.1, quadraticIdealCharacter_good ha.1 hb.1, quadraticIdealCharacter_good hb.1 ha.1]
+      rw [eisensteinQuadraticCharacter_of_good ha.1, eisensteinQuadraticCharacter_of_good hb.1,
+        quadraticIdealCharacter_good ha.1 hb.1, quadraticIdealCharacter_good hb.1 ha.1]
       exact ⟨primaryQuadraticSymbol_reciprocity quad ha hb hab, same_class_product quad ha hb hab⟩
-  · intro a b hsa hca hsb hcb
-    have ha := away_of_coprime_seventyTwo hsa.ne_zero hca
-    have hb := away_of_coprime_seventyTwo hsb.ne_zero hcb
-    rw [hχ hb, quadraticIdealCharacter_good hb ha]
+
+/-- The characters agree with the primary residue symbol, including zeros at common factors. -/
+lemma eisensteinQuadraticCharacter_eq_symbol {a b : Ideal 𝓔}
+    (ha : AwayFromSix a) (hb : AwayFromSix b) :
+    eisensteinQuadraticCharacter b a = primaryQuadraticSymbol a b := by
+  rw [eisensteinQuadraticCharacter_of_good hb, quadraticIdealCharacter_good hb ha]
+
+theorem eisensteinFamilyRealizes (quad : DeloupTuraevTheorem1) :
+    EisensteinFamilyRealizes primaryQuadraticSymbol :=
+  ⟨eisensteinQuadraticCharacter, quadraticConductor, eisensteinQuadraticHeckeFamily quad,
+    fun _ _ hsa hca hsb hcb => eisensteinQuadraticCharacter_eq_symbol
+      (away_of_coprime_seventyTwo hsa.ne_zero hca) (away_of_coprime_seventyTwo hsb.ne_zero hcb)⟩
+
+/-- L. Goldmakher and B. Louvel, *A quadratic large sieve inequality over number fields*,
+Math. Proc. Cambridge Philos. Soc. 154 (2013), Theorem 1.1, pp. 194–195,
+specialized to the family `eisensteinQuadraticCharacter` over ℚ(ω) with `c = (72)`.
+The starred sums run over squarefree ideals prime to `c`, with column `b` evaluated at row `a`.
+The group in §4, Lemma 4.5, is fixed. For Lemma 4.2 (E₂), `absNorm_quadraticConductor_le` bounds the
+conductor and `quadraticIdealCharacter_product_nonprincipal` separates distinct columns.
+<https://arxiv.org/pdf/1112.1642v2#page=2> -/
+def EisensteinGoldmakherLouvel : Prop :=
+  IsQuadraticHeckeFamily (span {72}) eisensteinQuadraticCharacter quadraticConductor →
+  ∀ ε : ℝ, 0 < ε → ∃ C : ℝ, 0 ≤ C ∧
+  ∀ M N : ℝ, 1 ≤ M → 1 ≤ N →
+    SieveBound (sieveIdeals (span {72}) M) (sieveIdeals (span {72}) N)
+      (fun a b => eisensteinQuadraticCharacter b a) (C * (M * N) ^ ε * (M + N))
+
+/-- Restrict Theorem 1.1 to the manuscript's dyadic columns and identify its entries. -/
+theorem quadraticSieve_of_goldmakherLouvel (hGL : EisensteinGoldmakherLouvel)
+    (quad : DeloupTuraevTheorem1) : QuadraticSieve primaryQuadraticSymbol := by
+  classical
+  intro ε hε
+  obtain ⟨C, hC, hGL⟩ := hGL (eisensteinQuadraticHeckeFamily quad) ε hε
+  refine ⟨2 * (2 : ℝ) ^ ε * C, by positivity, ?_⟩
+  intro M N hM hN rows cols hr hc
+  have hr' := hr.trans sieveIdeals_six_subset_seventyTwo
+  have hc' := (hc.trans (Finset.filter_subset _ _)).trans sieveIdeals_six_subset_seventyTwo
+  have h := (hGL M (2 * N) hM (by linarith)).restrict hr' hc'
+  intro z
+  have heq (a) (ha : a ∈ rows) (b) (hb : b ∈ cols) :
+      eisensteinQuadraticCharacter b a = primaryQuadraticSymbol a b := by
+    have har := hr' ha
+    have hbc := hc' hb
+    simp only [sieveIdeals, Finset.mem_filter] at har hbc
+    exact eisensteinQuadraticCharacter_eq_symbol (away_of_coprime_seventyTwo har.2.1.ne_zero har.2.2)
+      (away_of_coprime_seventyTwo hbc.2.1.ne_zero hbc.2.2)
+  have hrow (a) (ha : a ∈ rows) : ∑ b ∈ cols, z b * eisensteinQuadraticCharacter b a =
+      ∑ b ∈ cols, z b * primaryQuadraticSymbol a b :=
+    Finset.sum_congr rfl fun b hb => by rw [heq a ha b hb]
+  have hz := h z
+  dsimp only at hz
+  rw [Finset.sum_congr rfl (fun a ha => congrArg (fun t : ℂ => ‖t‖ ^ 2) (hrow a ha))] at hz
+  refine hz.trans (mul_le_mul_of_nonneg_right ?_ (by positivity))
+  have hMN : 0 ≤ M * N := by positivity
+  rw [show M * (2 * N) = (M * N) * 2 by ring, Real.mul_rpow hMN (by norm_num)]
+  have hpos : 0 ≤ C * ((M * N) ^ ε * 2 ^ ε) := by positivity
+  calc
+    _ ≤ C * ((M * N) ^ ε * 2 ^ ε) * (2 * (M + N)) :=
+      mul_le_mul_of_nonneg_left (by linarith) hpos
+    _ = _ := by ring
 
 end Masullo.QRH.MeanSquare

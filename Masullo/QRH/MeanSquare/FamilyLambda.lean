@@ -37,6 +37,9 @@ private def lambdaResidueEquiv : (𝓔 ⧸ lambdaIdeal) ≃+* ZMod 3 := by
   rw [rootSpec.card_quotient_toInteger_sub_one, rootSpec.norm_toInteger_sub_one_of_prime_ne_two' (by decide)]
   decide
 
+lemma absNorm_lambdaIdeal : absNorm lambdaIdeal = 3 := by
+  rw [absNorm_eq_natCard, Nat.card_congr lambdaResidueEquiv.toEquiv, Nat.card_zmod]
+
 private def lambdaResidue : 𝓔 →+* ZMod 3 :=
   lambdaResidueEquiv.toRingHom.comp (Ideal.Quotient.mk lambdaIdeal)
 

@@ -56,17 +56,6 @@ theorem besselMellin_oneThird_scaled (h : DLMFBesselMellin) {s : ℂ} (hs : -(1 
   obtain ⟨hc, hm⟩ := besselMellin_oneThird h hs
   exact ⟨(MellinConvergent.comp_mul_left ha).2 hc, by rw [mellin_comp_mul_left _ _ ha, hm]; rfl⟩
 
-/-- Coefficients in the large-argument expansion, DLMF 10.17.1. -/
-def hankelA (ν : ℂ) (k : ℕ) : ℂ :=
-  (∏ j ∈ Finset.range k, (4 * ν ^ 2 - (2 * (j : ℂ) + 1) ^ 2)) /
-    (k.factorial * 8 ^ k)
-
-/-- Coefficients for the differentiated expansion, DLMF 10.17.8. -/
-def hankelB (ν : ℂ) : ℕ → ℂ
-  | 0 => 1
-  | k + 1 => (∏ j ∈ Finset.range k, (4 * ν ^ 2 - (2 * (j : ℂ) + 1) ^ 2)) *
-      (4 * ν ^ 2 + 4 * ((k : ℂ) + 1) ^ 2 - 1) / ((k + 1).factorial * 8 ^ (k + 1))
-
 /-- Leading positive factor in the large-argument expansion of `K`. -/
 def besselLeading (x : ℝ) : ℝ := Real.sqrt (Real.pi / (2 * x)) * Real.exp (-x)
 
@@ -74,15 +63,6 @@ def besselLeading (x : ℝ) : ℝ := Real.sqrt (Real.pi / (2 * x)) * Real.exp (-
 def HasHankelExpansion (f : ℝ → ℂ) (a : ℕ → ℂ) : Prop :=
   ∀ N : ℕ, (fun x : ℝ => f x / besselLeading x - ∑ k ∈ Finset.range N, a k / (x : ℂ) ^ k)
     =O[atTop] (fun x : ℝ => (x ^ N)⁻¹)
-
-/-- Olver and Maximon, *NIST Handbook* (2010), 10.40.2, p. 255, restricted to positive real
-arguments and fixed complex order. <https://dlmf.nist.gov/10.40.E2> -/
-def DLMFBesselAsymptotic : Prop := ∀ ν : ℂ, HasHankelExpansion (besselK ν) (hankelA ν)
-
-/-- Olver and Maximon, *NIST Handbook* (2010), 10.40.4, p. 255, restricted to the positive
-real axis. The leading sign of the derivative is negative. <https://dlmf.nist.gov/10.40.E4> -/
-def DLMFBesselDerivAsymptotic : Prop :=
-  ∀ ν : ℂ, HasHankelExpansion (fun x => -deriv (besselK ν) x) (hankelB ν)
 
 /-- R. A. Askey and R. Roy, *NIST Handbook* (2010), 5.11.9, p. 141. Both vertical
 directions use the same threshold uniformly over bounded real parts.

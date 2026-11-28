@@ -17,6 +17,14 @@ open Classical in
 def quadraticConductor (n : Ideal 𝓔) : Ideal 𝓔 :=
   if sextic n (-1) ^ 3 = 1 then n else n * lambdaIdeal
 
+/-- The conductor norm bound used for the initial estimate in Goldmakher–Louvel, §4. -/
+theorem absNorm_quadraticConductor_le (b : Ideal 𝓔) :
+    absNorm (quadraticConductor b) ≤ 3 * absNorm b := by
+  unfold quadraticConductor
+  split
+  · omega
+  · rw [map_mul, absNorm_lambdaIdeal, Nat.mul_comm]
+
 open Classical in
 def correctedQuadratic {n : Ideal 𝓔} (hn : AwayFromSix n) : 𝓔 →* ℂ :=
   if sextic n (-1) ^ 3 = 1 then quadraticResidue hn else quadraticResidue hn * lambdaSign.toMonoidHom
@@ -38,14 +46,18 @@ lemma quadraticIdealCharacter_apply {n a : Ideal 𝓔} (hn : AwayFromSix n) (ha 
     quadraticIdealCharacter hn a = correctedQuadratic hn (generator a) :=
   idealCharacterOfElement_apply _ _ ha
 
+private theorem correctedQuadratic_primary {n : Ideal 𝓔} (hn : AwayFromSix n) {x : 𝓔}
+    (hx : eisPrimary x) : correctedQuadratic hn x = quadraticResidue hn x := by
+  classical
+  unfold correctedQuadratic
+  split <;> simp only [MonoidHom.mul_apply, lambdaSign_toMonoidHom,
+    lambdaSign_eq_one_of_eisPrimary hx, mul_one]
+
 lemma quadraticIdealCharacter_good {n a : Ideal 𝓔} (hn : AwayFromSix n) (ha : AwayFromSix a) :
     quadraticIdealCharacter hn a = primaryQuadraticSymbol a n := by
-  classical
-  rw [quadraticIdealCharacter_apply hn ha.1]
-  have hl := lambdaSign_eq_one_of_eisPrimary (eisPrimary_generator ha.coprime_three)
-  unfold correctedQuadratic
-  split <;> simp only [MonoidHom.mul_apply, lambdaSign_toMonoidHom, hl, mul_one,
-    quadraticResidue_apply, sextic, primaryQuadraticSymbol]
+  rw [quadraticIdealCharacter_apply hn ha.1,
+    correctedQuadratic_primary hn (eisPrimary_generator ha.coprime_three)]
+  exact quadraticResidue_apply hn _
 
 lemma quadraticIdealCharacter_isRay {n : Ideal 𝓔} (hn : AwayFromSix n) :
     IsRayCharacter (quadraticConductor n) (quadraticIdealCharacter hn) := by
@@ -153,5 +165,64 @@ theorem quadraticIdealCharacter_primitive {n : Ideal 𝓔} (hn : Starred n) :
       change lambdaSign x ≠ 1
       rw [lambdaSign_congr (mem_span_singleton.mp (Ideal.Quotient.eq.mp hxneg)), lambdaSign_neg_one]
       norm_num
+
+open UniqueFactorizationMonoid in
+private theorem quadraticIdealCharacter_separate {b c : Ideal 𝓔} (hb : Starred b) (hc : Starred c)
+    (hbc : ¬ b ∣ c) :
+    ∃ a : Ideal 𝓔, AwayFromSix a ∧ IsCoprime a b ∧ IsCoprime a c ∧
+      quadraticIdealCharacter hb.1 a = -1 ∧ quadraticIdealCharacter hc.1 a = 1 := by
+  classical
+  have hP : ∃ P : Ideal 𝓔, Prime P ∧ P ∣ b ∧ ¬ P ∣ c := by
+    by_contra! h
+    apply hbc
+    apply (dvd_iff_normalizedFactors_le_normalizedFactors hb.1.1 hc.1.1).mpr
+    apply (Multiset.le_iff_subset ((squarefree_iff_nodup_normalizedFactors hb.1.1).mp hb.2)).mpr
+    intro P hPb
+    obtain ⟨hp, hdiv⟩ := (UniqueFactorizationMonoid.mem_normalizedFactors_iff hb.1.1).mp hPb
+    exact (UniqueFactorizationMonoid.mem_normalizedFactors_iff hc.1.1).mpr ⟨hp, h P hp hdiv⟩
+  obtain ⟨P, hp, ⟨d, hbd⟩, hPc⟩ := hP
+  have hP := away_of_dvd hb.1 (show P ∣ b from ⟨d, hbd⟩)
+  have hd := away_of_dvd hb.1 (hbd ▸ dvd_mul_left d P)
+  have hcop : IsCoprime P c := isCoprime_iff_sup_eq.mpr <| Ideal.isUnit_iff.mp <|
+    (hp.irreducible.isRelPrime_iff_not_dvd.mpr hPc)
+      (dvd_iff_le.mpr le_sup_left) (dvd_iff_le.mpr le_sup_right)
+  let m := d * (c * span {(6 : 𝓔)})
+  have hPm : IsCoprime P m := (coprime_factors (hbd ▸ hb.2)).mul_right (hcop.mul_right hP.2)
+  have hprim {x : 𝓔} (hx : x - 1 ∈ m) : eisPrimary x :=
+    dvd_trans (show (3 : 𝓔) ∣ 6 from ⟨2, by norm_num⟩)
+      (mem_span_singleton.mp (Ideal.mul_le_right (Ideal.mul_le_right hx)))
+  obtain ⟨x, hx, hxm, hxne⟩ := quadratic_prime_test hb.1 hp hP hPm (fun x hx => by
+    rw [correctedQuadratic_primary hb.1 (hprim hx)]
+    subst b
+    rw [quadraticResidue_den_mul hP hd, quadraticResidue_congr hd (Ideal.mul_le_left hx),
+      map_one, mul_one])
+  have hx₀ := prime_test_nonzero hp hx
+  obtain ⟨hxP, hxm'⟩ := IsCoprime.mul_right_iff.mp hx
+  obtain ⟨hxd, hxc₆⟩ := IsCoprime.mul_right_iff.mp hxm'
+  obtain ⟨hxc, hx₆⟩ := IsCoprime.mul_right_iff.mp hxc₆
+  have hxa : IsCoprime (span {x}) b := hbd ▸ hxP.mul_right hxd
+  have hgood : AwayFromSix (span {x}) := ⟨by simpa using hx₀, hx₆⟩
+  have hxval (n : Ideal 𝓔) (hn : AwayFromSix n) :
+      quadraticIdealCharacter hn (span {x}) = quadraticResidue hn x := by
+    rw [quadraticIdealCharacter, idealCharacterOfElement_span _ _ hx₀,
+      correctedQuadratic_primary hn (hprim hxm)]
+  refine ⟨_, hgood, hxa, hxc, ?_, ?_⟩
+  · have hs : quadraticIdealCharacter hb.1 (span {x}) ^ 2 = 1 := by
+      rw [hxval b hb.1]; exact quadraticResidue_sq hb.1 hxa.symm
+    exact (sq_eq_one_iff.mp hs).resolve_left hxne
+  · rw [hxval c hc.1, quadraticResidue_congr hc.1 (Ideal.mul_le_left (Ideal.mul_le_right hxm)), map_one]
+
+/-- Distinct squarefree column indices give a character product with value `-1` on an ideal
+coprime to six and to both indices, as required in Goldmakher–Louvel, §4, (E₂). -/
+theorem quadraticIdealCharacter_product_nonprincipal {b c : Ideal 𝓔}
+    (hb : Starred b) (hc : Starred c) (hne : b ≠ c) :
+    ∃ a : Ideal 𝓔, AwayFromSix a ∧ IsCoprime a b ∧ IsCoprime a c ∧
+      quadraticIdealCharacter hb.1 a * star (quadraticIdealCharacter hc.1 a) = -1 := by
+  by_cases hbc : b ∣ c
+  · have hcb : ¬ c ∣ b := fun h => hne (le_antisymm (le_of_dvd h) (le_of_dvd hbc))
+    obtain ⟨a, ha, hac, hab, he, hf⟩ := quadraticIdealCharacter_separate hc hb hcb
+    exact ⟨a, ha, hab, hac, by simp [he, hf]⟩
+  · obtain ⟨a, ha, hab, hac, he, hf⟩ := quadraticIdealCharacter_separate hb hc hbc
+    exact ⟨a, ha, hab, hac, by simp [he, hf]⟩
 
 end Masullo.QRH.MeanSquare

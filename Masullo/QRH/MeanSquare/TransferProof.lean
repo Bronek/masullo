@@ -6,9 +6,9 @@ import Masullo.QRH.MeanSquare.TransferBlocks
 /-!
 # Proof of `TransferEstimate`
 
-The test `W` is majorized by `exists_transferMajorant`, and two Poisson passes follow:
-* `exists_firstPass_le` and `firstDual_le_secondInput` for the first;
-* `exists_passBound` and `secondDual_le` for the second.
+The Schwartz function from `exists_transferMajorant` bounds the row indicator on `[0, 1]`.
+The first Poisson pass uses `exists_firstPass_le` and `firstDual_le_secondInput`.
+The second uses `exists_passBound` and `secondDual_le`.
 The coprime children are then bounded by `exists_coprimeBlocks_le`. The remaining divisor
 counts of `TransferCount.lean` cost `D^ε`.
 -/
