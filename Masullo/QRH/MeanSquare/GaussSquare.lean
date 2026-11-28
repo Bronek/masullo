@@ -91,8 +91,8 @@ theorem gaussSum_three_eq_sum_sq (n : Ideal 𝓔) : ∀ (hn : Starred n) [Fintyp
     have hb : AwayFromSix p := ⟨hp.ne_zero, hn.1.2.of_mul_left_left⟩
     have hc : AwayFromSix a := ⟨ha, hn.1.2.of_mul_left_right⟩
     have hpa : IsCoprime p a := isCoprime_iff_sup_eq.mpr (Ideal.isUnit_iff.mp
-      (IsRelPrime.of_squarefree_mul hn.2 (dvd_iff_le.mpr le_sup_left) (dvd_iff_le.mpr
-        le_sup_right)))
+      (IsRelPrime.of_squarefree_mul hn.2 (dvd_iff_le.mpr le_sup_left)
+        (dvd_iff_le.mpr le_sup_right)))
     let := Ring.HasFiniteQuotients.finiteQuotient hb.1
     let := Ring.HasFiniteQuotients.finiteQuotient hc.1
     let := Fintype.ofFinite (𝓔 ⧸ p)

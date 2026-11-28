@@ -22,8 +22,8 @@ structure KernelBranchData (B K X : ℝ) (t G : Idl) where
   primes : Finset Idl
   primes_subset : primes ⊆ (normalizedFactors t).toFinset ∪ (normalizedFactors G).toFinset
   choice : Idl → TameBranch
-  simple : ∀ p ∈ primes, p ∉ normalizedFactors t → (normalizedFactors G).count p = 1 → choice p ≠
-    .ordinary
+  simple : ∀ p ∈ primes, p ∉ normalizedFactors t → (normalizedFactors G).count p = 1 →
+    choice p ≠ .ordinary
   a : ℝ
   Q : ℝ
   N : ℝ
@@ -74,8 +74,7 @@ def makeKernelBranch {B K X : ℝ} {t G : Idl} (v : KernelBranchData B K X t G) 
   a := v.a
   Y := v.Q^2*K^2/(v.N*v.L^3*X)
   amplitude_nonneg := v.amplitude_nonneg
-  length_pos :=
-    by
+  length_pos := by
     have := v.Q_pos; have := v.K_pos; have := v.N_pos; have := v.L_pos; have := v.X_pos; positivity
   amplitude := v.amplitude
   length := v.length
@@ -107,8 +106,8 @@ private theorem makeKernelBranch_block {B K X : ℝ} {t G : Idl} (v : KernelBran
     (W : ℝ → ℂ) (e : ℕ × ℕ × ℕ) (k : v.rows) :
     kernelBlockVector W v.rows (squarefreeBand e.2.1) (cubeBand e.2.2) ((e.1:ℤ)-3) (2^e.2.1)
       (v.c e.1) (v.d e.1) ((makeKernelBranch v).u e) k =
-      ∑ b ∈ cubeBand e.2.2, ∑ n ∈ squarefreeBand e.2.1, rawKernelTerm W X v.Q v.N v.L v.c v.d k e.1
-        b n := by
+      ∑ b ∈ cubeBand e.2.2, ∑ n ∈ squarefreeBand e.2.1, rawKernelTerm W X v.Q v.N v.L v.c v.d
+        k e.1 b n := by
   classical
   simp only [kernelBlockVector,PiLp.smul_apply,Complex.real_smul,kernelBlock,
     Int.cast_sub, Int.cast_natCast, Int.cast_ofNat, Finset.mul_sum, rawKernelTerm]
@@ -137,8 +136,8 @@ private theorem hasSum_bands (f : ℕ → Idl → Idl → ℂ)
   simp only [Finset.sum_coe_sort]
   exact ((cubeBand e.2.2).sum_coe_sort (fun b => ∑ n ∈ squarefreeBand e.2.1, f e.1 b n)).symm
 
-theorem makeKernelBranch_rowValue_of_summable {B K X : ℝ} {t G : Idl} (v : KernelBranchData B K X
-    t G)
+theorem makeKernelBranch_rowValue_of_summable {B K X : ℝ} {t G : Idl}
+    (v : KernelBranchData B K X t G)
     (W : ℝ → ℂ) (hs : ∀ k ∈ v.rows, Summable (fun x : ReflectedColumns =>
       rawKernelTerm W X v.Q v.N v.L v.c v.d k x.1 x.2.1 x.2.2)) {k : Idl} (hk : k ∈ v.rows) :
     (makeKernelBranch v).rowValue W k = ∑' x : ReflectedColumns,
@@ -147,8 +146,8 @@ theorem makeKernelBranch_rowValue_of_summable {B K X : ℝ} {t G : Idl} (v : Ker
   let b := makeKernelBranch v
   let f (e : ℕ × ℕ × ℕ) := kernelBlockVector W v.rows (squarefreeBand e.2.1) (cubeBand e.2.2)
     ((e.1:ℤ)-3) (2^e.2.1) (v.c e.1) (v.d e.1) (b.u e)
-  let S (k : v.rows) := ∑' x : ReflectedColumns, rawKernelTerm W X v.Q v.N v.L v.c v.d k x.1 x.2.1
-    x.2.2
+  let S (k : v.rows) := ∑' x : ReflectedColumns, rawKernelTerm W X v.Q v.N v.L v.c v.d k
+    x.1 x.2.1 x.2.2
   have h : HasSum (fun e => fun k : v.rows => f e k) S := Pi.hasSum.mpr (fun k =>
     (hasSum_bands _ (hs k k.property)).congr_fun fun e => makeKernelBranch_block v W e k)
   have h' := (PiLp.continuousLinearEquiv 2 ℂ (fun _ : v.rows =>
@@ -193,8 +192,8 @@ theorem summable_rawKernelTerm {B K X : ℝ} {t G : Idl} (v : KernelBranchData B
   let z := (3:ℝ)^((h:ℤ)-3)*absNorm n*(absNorm b:ℝ)^3*v.N*v.L^3*X/(v.Q*absNorm k)^2
   have hz : 0 < z := by dsimp [z]; positivity
   have hzz : U*(3:ℝ)^h*absNorm b*absNorm n ≤ z := by
-    have hh : (absNorm b:ℝ) ≤ (absNorm b:ℝ)^3 :=
-      by simpa using pow_le_pow_right₀ hb₁ (by decide : 1 ≤ 3)
+    have hh : (absNorm b:ℝ) ≤
+      (absNorm b:ℝ)^3 := by simpa using pow_le_pow_right₀ hb₁ (by decide : 1 ≤ 3)
     dsimp only [z]
     rw [zpow_sub₀ (by norm_num), zpow_natCast]
     calc
@@ -202,8 +201,8 @@ theorem summable_rawKernelTerm {B K X : ℝ} {t G : Idl} (v : KernelBranchData B
       _ = _ := by dsimp [U]; norm_num; ring
   have hkbound : ‖reflectionKernel W 0 0 z‖ ≤ C*(U^2)⁻¹ *
       ((1/9:ℝ)^h * (w b * w n)) := calc
-    _ = ‖reflectionKernel W 0 2 z‖ := congrArg _ (reflectionKernel_shift hΓ (by norm_num) (by
-      norm_num) 0 hW' hz)
+    _ = ‖reflectionKernel W 0 2 z‖ := congrArg _ (reflectionKernel_shift hΓ
+      (by norm_num) (by norm_num) 0 hW' hz)
     _ ≤ C * z^(-(2:ℝ)) := hker W hW' z hz
     _ ≤ C*(U*3^h*absNorm b*absNorm n)^(-(2:ℝ)) := by
       apply mul_le_mul_of_nonneg_left _ hC
@@ -223,15 +222,15 @@ theorem summable_rawKernelTerm {B K X : ℝ} {t G : Idl} (v : KernelBranchData B
     exact pow_le_one₀ (norm_nonneg _) (norm_sextic_le_one _ _)
   have hcol : ‖v.c h b n / (Real.sqrt (absNorm n):ℂ)‖ ≤ v.a := by
     rw [norm_div,Complex.norm_real,Real.norm_of_nonneg (Real.sqrt_nonneg _)]
-    exact (div_le_self (norm_nonneg _) (by simpa using Real.sqrt_le_sqrt hn₁)).trans (v.columns h b
-      hb n hn)
+    exact (div_le_self (norm_nonneg _) (by simpa using Real.sqrt_le_sqrt hn₁)).trans
+      (v.columns h b hb n hn)
   have hinv : ‖(absNorm b:ℂ)⁻¹‖ ≤ 1 := by
     rw [norm_inv,Complex.norm_natCast]
     exact inv_le_one_of_one_le₀ hb₁
   change ‖_‖ ≤ 3*v.a*C*(U^2)⁻¹ * ((1/9:ℝ)^h*(w b*w n))
   dsimp only [rawKernelTerm]
-  simp only [norm_mul,Complex.norm_real,Real.norm_of_nonneg (Real.rpow_nonneg (by
-    norm_num : 0 ≤ (3:ℝ)) _)]
+  simp only [norm_mul,Complex.norm_real,Real.norm_of_nonneg (Real.rpow_nonneg
+    (by norm_num : 0 ≤ (3:ℝ)) _)]
   calc
     _ ≤ 3*1*(1*v.a*1) * (C*(U^2)⁻¹*((1/9:ℝ)^h*(w b*w n))) := by
       gcongr

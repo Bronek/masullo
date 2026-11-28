@@ -27,11 +27,11 @@ theorem absNorm_quadraticConductor_le (b : Ideal 𝓔) :
 
 open Classical in
 def correctedQuadratic {n : Ideal 𝓔} (hn : AwayFromSix n) : 𝓔 →* ℂ :=
-  if sextic n (-1) ^ 3 = 1 then quadraticResidue hn else quadraticResidue hn *
-    lambdaSign.toMonoidHom
+  if sextic n (-1) ^ 3 = 1 then quadraticResidue hn else quadraticResidue hn
+    * lambdaSign.toMonoidHom
 
-@[simp] private lemma lambdaSign_toMonoidHom (x : 𝓔) : lambdaSign.toMonoidHom x = lambdaSign x
-    := rfl
+@[simp] private lemma lambdaSign_toMonoidHom (x : 𝓔) : lambdaSign.toMonoidHom x =
+    lambdaSign x := rfl
 
 private lemma correctedQuadratic_units {n : Ideal 𝓔} (hn : AwayFromSix n) (v : 𝓔ˣ) :
     correctedQuadratic hn v = 1 := by
@@ -101,19 +101,19 @@ private lemma prime_test_nonzero {P m : Ideal 𝓔} (hp : Prime P) {x : 𝓔}
     (hc : IsCoprime (span {x}) (P * m)) : x ≠ 0 := by
   rintro rfl
   have h := hc.of_mul_right_left
-  exact hp.not_isUnit (isCoprime_zero_left.mp (by
-    simpa only [span_singleton_zero, Ideal.zero_eq_bot] using h))
+  exact hp.not_isUnit (isCoprime_zero_left.mp
+    (by simpa only [span_singleton_zero, Ideal.zero_eq_bot] using h))
 
 private lemma quadratic_prime_test {P m n : Ideal 𝓔} (hn : AwayFromSix n)
     (hp : Prime P) (hP : AwayFromSix P) (hc : IsCoprime P m)
     (hlocal : ∀ x : 𝓔, x - 1 ∈ m → correctedQuadratic hn x = quadraticResidue hP x) :
-    ∃ x : 𝓔, IsCoprime (span {x}) (P * m) ∧ x - 1 ∈ m ∧ quadraticIdealCharacter hn (span {x}) ≠ 1
-      := by
+    ∃ x : 𝓔, IsCoprime (span {x}) (P * m) ∧ x - 1 ∈ m ∧ quadraticIdealCharacter hn
+      (span {x}) ≠ 1 := by
   obtain ⟨z, hz⟩ := exists_sexticChar_cube_ne_one hP hp
   obtain ⟨x, hx, hm, hxm⟩ := exists_prime_test hc z
   refine ⟨x, hxm, hm, ?_⟩
-  rw [quadraticIdealCharacter, idealCharacterOfElement_span _ _ (prime_test_nonzero hp hxm),
-    hlocal x hm]
+  rw [quadraticIdealCharacter, idealCharacterOfElement_span _ _ (prime_test_nonzero hp
+    hxm), hlocal x hm]
   change (sexticChar hP ^ 3) (Ideal.Quotient.mk P x) ≠ 1
   rwa [hx, MulChar.pow_apply' _ (by decide : 3 ≠ 0)]
 
@@ -143,8 +143,8 @@ theorem quadraticIdealCharacter_primitive {n : Ideal 𝓔} (hn : Starred n) :
     subst n
     rw [quadraticResidue_den_mul hP hm, quadraticResidue_congr hm hx, map_one, mul_one]
   · rw [quadraticConductor, ite_eq_right he] at hfac
-    have hsf : Squarefree (P * m) := hfac ▸ squarefree_mul_iff.mpr ⟨hram.isRelPrime, hn.2,
-      lambdaIdeal_prime.squarefree⟩
+    have hsf : Squarefree (P * m) := hfac ▸ squarefree_mul_iff.mpr ⟨hram.isRelPrime,
+      hn.2, lambdaIdeal_prime.squarefree⟩
     have hcop := coprime_factors hsf
     rcases hp.dvd_or_dvd (show P ∣ n * lambdaIdeal from ⟨m, hfac⟩) with hpn | hpl
     · obtain ⟨d, hd⟩ := hpn
@@ -159,8 +159,8 @@ theorem quadraticIdealCharacter_primitive {n : Ideal 𝓔} (hn : Starred n) :
       rw [quadraticResidue_den_mul hP hd', quadraticResidue_congr hd' (Ideal.mul_le_left hx),
         map_one, mul_one, show lambdaSign.toMonoidHom x = 1 from
           lambdaSign_eq_one_of_dvd_sub_one (mem_span_singleton.mp (Ideal.mul_le_right hx)), mul_one]
-    · have heq : P = lambdaIdeal := associated_iff_eq.mp (hp.associated_of_dvd lambdaIdeal_prime
-        hpl)
+    · have heq : P = lambdaIdeal := associated_iff_eq.mp (hp.associated_of_dvd
+        lambdaIdeal_prime hpl)
       subst P
       have hm : n = m := mul_left_cancel₀ lambdaIdeal_prime.ne_zero (by rwa [mul_comm n] at hfac)
       obtain ⟨x, hx, hx₁, hxc⟩ := exists_prime_test hcop (-1)
@@ -219,8 +219,8 @@ private theorem quadraticIdealCharacter_separate {b c : Ideal 𝓔} (hb : Starre
   · have hs : quadraticIdealCharacter hb.1 (span {x}) ^ 2 = 1 := by
       rw [hxval b hb.1]; exact quadraticResidue_sq hb.1 hxa.symm
     exact (sq_eq_one_iff.mp hs).resolve_left hxne
-  · rw [hxval c hc.1, quadraticResidue_congr hc.1 (Ideal.mul_le_left (Ideal.mul_le_right hxm)),
-      map_one]
+  · rw [hxval c hc.1, quadraticResidue_congr hc.1 (Ideal.mul_le_left (Ideal.mul_le_right
+      hxm)), map_one]
 
 /-- Distinct squarefree column indices give a character product with value `-1` on an ideal
 coprime to six and to both indices, as required in Goldmakher–Louvel, §4, (E₂). -/

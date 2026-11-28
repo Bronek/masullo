@@ -62,14 +62,14 @@ theorem fixedBranchConversion {τ : ℂ → ℂ} (ht : PattersonCoefficients τ)
       row_phases := by
         intro h b _ k hk
         rw [norm_mul,norm_div,Complex.norm_real,Real.norm_of_nonneg hH.le]
-        exact (mul_le_mul ((div_le_one hH).mpr (hR k hk).2.2.2.2.2) (norm_branchRow F η.val u i h
-          b k)
+        exact (mul_le_mul ((div_le_one hH).mpr (hR k hk).2.2.2.2.2)
+          (norm_branchRow F η.val u i h b k)
           (norm_nonneg _) zero_le_one).trans_eq (one_mul _) }
   refine ⟨fun u i η => makeKernelBranch (v u i η), fun _ _ _ => Subset.rfl,?_⟩
   intro k hk
   have hk₆ := (hR k hk).2.1.1
-  rw [branchSum_extracted ht hΓ (hW.of_le (by decide : 6 ≤ 14)) (zero_lt_one.trans_le hX) hk₆ D r T
-    G F hgood]
+  rw [branchSum_extracted ht hΓ (hW.of_le (by decide : 6 ≤ 14)) (zero_lt_one.trans_le hX) hk₆
+    D r T G F hgood]
   simp_rw [Finset.mul_sum]
   refine sum_congr (ext fun _ => by simp) fun u _ => sum_congr rfl fun i _ =>
     sum_congr rfl fun η _ => ?_
@@ -78,8 +78,8 @@ theorem fixedBranchConversion {τ : ℂ → ℂ} (ht : PattersonCoefficients τ)
   intro z
   rw [extendIndex_indexTerm_eq_rawKernelTerm τ W X (BranchBudget.Q D F) _ ψ hk₆
     (norm_conductor D F k) F j η.val u i z.1 z.2.1 z.2.2]
-  exact (rawKernelTerm_scale W X (BranchBudget.Q D F) (BranchBudget.N i F η.val) (BranchBudget.L F
-    η.val)
+  exact (rawKernelTerm_scale W X (BranchBudget.Q D F) (BranchBudget.N i F η.val)
+    (BranchBudget.L F η.val)
     hH a (branchColumn τ ψ F j η.val u i) (branchRow F η.val u i) k z.1 z.2.1 z.2.2).symm
 
 end ReflectionSieve

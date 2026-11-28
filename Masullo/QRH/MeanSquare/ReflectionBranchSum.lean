@@ -37,8 +37,8 @@ absolutely convergent ideal sums. This form matches the branch count in (16). -/
 theorem branchSum_extracted {τ : ℂ → ℂ} (ht : PattersonCoefficients τ)
     (hΓ : DLMFGammaVertical) {J : TestInterval} {W : ℝ → ℂ} (hw : UnitTest J 6 W)
     {X : ℝ} (hX : 0 < X) {k : Idl} (hk : AwayFromSix k) {h : RayResidue 7} (D : FixedCusp h)
-    (r : ReflectionCRT.Residue (72*eisLambda^7)) (T G : Idl) (F : Finset Idl) (hF : ∀ p ∈ F,
-      AwayFromSix p ∧ Prime p) :
+    (r : ReflectionCRT.Residue (72*eisLambda^7)) (T G : Idl) (F : Finset Idl)
+      (hF : ∀ p ∈ F, AwayFromSix p ∧ Prime p) :
     let j := fun p => exponent T G p % 6
     let ψ := fun m => classWeight D r F (ReflectionCRT.red (8*eisLambda^9) m)
     let c := D.c * (generator k * ∏ p ∈ F, generator p)

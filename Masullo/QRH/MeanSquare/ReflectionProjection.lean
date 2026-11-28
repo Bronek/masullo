@@ -19,8 +19,8 @@ private abbrev Index := {m : 𝓔 // m ≠ 0}
 /-- A test of compact support leaves finitely many numerators in the frequency lattice. -/
 theorem pattersonTest_hasFiniteSupport {I : TestInterval} {j : ℕ} {V : ℝ → ℂ}
     (hV : UnitTest I j V) {X : ℝ} (hX : 0 < X) :
-    Function.HasFiniteSupport (fun m : {m : 𝓔 // m ≠ 0} => V (normSq (pattersonFrequency m)/X))
-      := by
+    Function.HasFiniteSupport (fun m : {m : 𝓔 // m ≠ 0} =>
+      V (normSq (pattersonFrequency m)/X)) := by
   have hT := tendsto_norm_pattersonFrequency.eventually_gt_atTop (Real.sqrt (I.hi * X))
   have he : ∀ᶠ m in cofinite, V (normSq (pattersonFrequency m) / X) = 0 := by
     filter_upwards [hT] with m hm
@@ -46,8 +46,8 @@ private theorem primaryIndex_injective : Function.Injective primaryIndex := by
   intro m n h
   have hg : generator m.val = generator n.val :=
     mul_left_cancel₀ (pow_ne_zero _ eisLambda_prime.ne_zero) (congrArg Subtype.val h)
-  exact Subtype.ext ((span_generator _).symm.trans ((congrArg (fun a : 𝓔 => span {a}) hg).trans
-    (span_generator _)))
+  exact Subtype.ext ((span_generator _).symm.trans ((congrArg (fun a : 𝓔 =>
+    span {a}) hg).trans (span_generator _)))
 
 private theorem pattersonFrequency_cube_mul (a : 𝓔) :
     pattersonFrequency (eisLambda ^ 3 * a) = eisEmbedding a := by

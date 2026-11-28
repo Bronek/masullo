@@ -108,13 +108,13 @@ private theorem mellin_entire_at_cusp {f g : ℝ → ℂ} {N : ℝ} (hN : 0 < N)
     rw [hfg v hv, norm_mul, norm_div, norm_pow, norm_real, Real.norm_of_nonneg hv.le,
       Real.norm_of_nonneg (Real.rpow_nonneg hv.le _)]
     have hnv : 0 < N*v := mul_pos hN hv
-    simp only [Real.inv_rpow hnv.le, Real.rpow_neg hnv.le, inv_inv, Real.mul_rpow hN.le
-      hv.le] at hvB
-    rw [Real.norm_of_nonneg (mul_nonneg (Real.rpow_nonneg hN.le _) (Real.rpow_nonneg hv.le
-      _))] at hvB
+    simp only [Real.inv_rpow hnv.le, Real.rpow_neg hnv.le, inv_inv,
+      Real.mul_rpow hN.le hv.le] at hvB
+    rw [Real.norm_of_nonneg (mul_nonneg (Real.rpow_nonneg hN.le _)
+      (Real.rpow_nonneg hv.le _))] at hvB
     calc
-      _ ≤ (‖K‖ / v^2) * (C * (N ^ (q+2) * v ^ (q+2))) := mul_le_mul_of_nonneg_left hvB (by
-        positivity)
+      _ ≤ (‖K‖ / v^2) * (C * (N ^ (q+2) * v ^ (q+2))) := mul_le_mul_of_nonneg_left hvB
+        (by positivity)
       _ = _ := by rw [Real.rpow_add hv, Real.rpow_two]; field_simp
   have hd (s : ℂ) := mellin_differentiableAt_of_isBigO_rpow hc (hf (-(s.re+1)))
     (lt_add_one s.re) (h₀ (-(s.re-1))) (by linarith : s.re-1 < s.re)
@@ -127,8 +127,8 @@ private def horizontalTerm (τ : ℂ → ℂ) (barred : Bool) (z : ℂ) (m : Fre
   horizontalMode (orientedFrequency barred (pattersonFrequency m)) (cuspCoefficient τ z
     (pattersonFrequency m)) v
 
-private theorem horizontal_majorant {τ : ℂ → ℂ} (ht : PattersonCoefficients τ) (barred : Bool) (z
-    : ℂ)
+private theorem horizontal_majorant {τ : ℂ → ℂ} (ht : PattersonCoefficients τ)
+    (barred : Bool) (z : ℂ)
     (hK : ∀ δ : ℝ, 0 < δ → ∃ C : ℝ, 0 ≤ C ∧ ∀ x : ℝ, δ ≤ x →
       ‖besselK (1/3) x‖ ≤ C * Real.exp (-(x/2))) {δ : ℝ} (hδ : 0 < δ) :
     ∃ b : ℝ, 0 < b ∧ ∃ g : FrequencyIndex → ℝ, Summable g ∧ (∀ m, 0 ≤ g m) ∧
@@ -167,16 +167,16 @@ private theorem horizontal_majorant {τ : ℂ → ℂ} (ht : PattersonCoefficien
   simp only [horizontalTerm, horizontalMode, norm_mul, norm_I, norm_conj, norm_cuspCoefficient,
     norm_orientedFrequency, Complex.norm_real, Real.norm_of_nonneg hv₀.le,
     Real.norm_of_nonneg Real.pi_pos.le, norm_ofNat, mul_one]
-  change 2*Real.pi*t*‖conj (τ (pattersonFrequency m))/27‖ * (v * ‖besselK (1/3)
-    (4*Real.pi*t*v)‖) ≤ _
+  change 2*Real.pi*t*‖conj (τ (pattersonFrequency m))/27‖ * (v *
+    ‖besselK (1/3) (4*Real.pi*t*v)‖) ≤ _
   calc
     _ ≤ 2*Real.pi*t*t^(1/3:ℝ) * (v * (C * (Real.exp (-(Real.pi*δ)*t) * Real.exp (-b*v)))) := by
       gcongr
       exact ht.norm_normalized_le _
     _ = _ := by dsimp only [g]; rw [Real.rpow_add ht₀, Real.rpow_one]; dsimp [t]; ring
 
-private theorem horizontalSeries_analytic {τ : ℂ → ℂ} (ht : PattersonCoefficients τ) (barred :
-    Bool) (z : ℂ)
+private theorem horizontalSeries_analytic {τ : ℂ → ℂ} (ht : PattersonCoefficients τ)
+    (barred : Bool) (z : ℂ)
     (hK : ∀ δ : ℝ, 0 < δ → ∃ C : ℝ, 0 ≤ C ∧ ∀ x : ℝ, δ ≤ x →
       ‖besselK (1/3) x‖ ≤ C * Real.exp (-(x/2)))
     (hcont : ∀ x : ℝ, 0 < x → ContinuousAt (besselK (1/3)) x) :
@@ -202,14 +202,14 @@ private theorem horizontalSeries_analytic {τ : ℂ → ℂ} (ht : PattersonCoef
       · intro m u hu
         apply (hB m u hu.1.le).trans
         have hu₀ : 0 ≤ u := by linarith [hu.1]
-        have he := Real.exp_le_one_iff.mpr (mul_nonpos_of_nonpos_of_nonneg (neg_nonpos.mpr hb.le)
-          hu₀)
+        have he := Real.exp_le_one_iff.mpr (mul_nonpos_of_nonpos_of_nonneg
+          (neg_nonpos.mpr hb.le) hu₀)
         exact mul_le_mul_of_nonneg_left ((mul_le_of_le_one_right hu₀ he).trans hu.2.le) (hpos m)
     exact ((hc v hvU).continuousAt (isOpen_Ioo.mem_nhds hvU)).continuousWithinAt
   · intro p
     obtain ⟨b, hb, g, hg, hpos, hB⟩ := horizontal_majorant ht barred z hK (δ := 1) zero_lt_one
-    have hres : pattersonHorizontalSeries τ barred z =O[atTop] fun v : ℝ => v * Real.exp (-b*v)
-      := by
+    have hres : pattersonHorizontalSeries τ barred z =O[atTop] fun v : ℝ => v *
+      Real.exp (-b*v) := by
       refine isBigO_iff.mpr ⟨∑' m, g m, ?_⟩
       filter_upwards [eventually_ge_atTop 1] with v hv
       have hv₀ : 0 ≤ v := by linarith
@@ -423,8 +423,8 @@ theorem norm_pattersonCuspScalar {a b c d : 𝓔} (hdet : a*d-b*c=1)
   let χ := cubicChar hn ha.coprime_three
   have hu : IsUnit (Ideal.Quotient.mk n c) := (isUnit_mk_iff_coprime_span n c).mpr
     ((Ideal.isCoprime_span_singleton_iff a c).mpr hab)
-  have hχ : ‖χ hu.unit‖ = 1 := Complex.norm_eq_one_of_mem_rootsOfUnity (χ.apply_mem_rootsOfUnity
-    hu.unit)
+  have hχ : ‖χ hu.unit‖ = 1 := Complex.norm_eq_one_of_mem_rootsOfUnity
+    (χ.apply_mem_rootsOfUnity hu.unit)
   have hmult : ‖pattersonMultiplier a c‖ = 1 := by
     simpa only [χ, hu.unit_spec, cubicChar_mk, pattersonMultiplier, ite_eq_right hc,
       cubicSymbol] using hχ
@@ -449,20 +449,20 @@ theorem PattersonExpansion.norm_completed_on_strip {θ : ℂ → ℝ → ℂ} {�
 
 /-- Patterson's theorem supplies one coefficient function whose translated Dirichlet
 series continue to entire functions and satisfy the reflected formula at every cusp. -/
-theorem PattersonTheorem81.exists_cusp_continuation (h : PattersonTheorem81) (hB :
-    DLMFBesselMellin) :
+theorem PattersonTheorem81.exists_cusp_continuation (h : PattersonTheorem81)
+    (hB : DLMFBesselMellin) :
     ∃ τ : ℂ → ℂ, PattersonCoefficients τ ∧ ∀ a b c d : 𝓔,
       a*d-b*c=1 → eisPrimary a → (3:𝓔) ∣ b → (3:𝓔) ∣ c → eisPrimary d → c ≠ 0 →
       let z := eisEmbedding a / eisEmbedding c
       let z' := -eisEmbedding d / eisEmbedding c
       let η := pattersonCuspScalar (fun a c => conj (pattersonMultiplier a c)) a c
       ‖η‖ = 1 ∧ Differentiable ℂ (continuedPattersonDirichlet τ true z) ∧
-        (∀ s : ℂ, 1 < s.re → continuedPattersonDirichlet τ true z s = pattersonCuspDirichlet τ true
-          z s) ∧
+        (∀ s : ℂ, 1 < s.re → continuedPattersonDirichlet τ true z s =
+          pattersonCuspDirichlet τ true z s) ∧
         ∀ s : ℂ, s.re < 0 → continuedPattersonDirichlet τ true z s =
           η * ((‖eisEmbedding c‖ ^ 2 : ℝ) : ℂ) ^ (1-2*s) *
-            (reflectionGammaFactor (1-s) / reflectionGammaFactor s) * pattersonCuspDirichlet τ false
-              z' (1-s) := by
+            (reflectionGammaFactor (1-s) / reflectionGammaFactor s) *
+              pattersonCuspDirichlet τ false z' (1-s) := by
   obtain ⟨σ, τ, θ, -, ht, he, hχ⟩ := h
   refine ⟨τ, ht, ?_⟩
   intro a b c d hdet ha hb hc₃ hd hc

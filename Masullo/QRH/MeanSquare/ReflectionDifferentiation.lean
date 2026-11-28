@@ -30,8 +30,8 @@ private def kDerivIntegrand (x t : ℝ) : ℂ := -Real.cosh t * kIntegrand x t
 
 private theorem hasDerivAt_kIntegrand (x t : ℝ) :
     HasDerivAt (kIntegrand · t) (kDerivIntegrand x t) x := by
-  have h := (((hasDerivAt_id x).neg.mul_const (Real.cosh t)).exp.mul_const (Real.cosh (t /
-    3))).ofReal_comp
+  have h := (((hasDerivAt_id x).neg.mul_const (Real.cosh t)).exp.mul_const (Real.cosh
+    (t / 3))).ofReal_comp
   convert h using 1 <;> dsimp [kDerivIntegrand, kIntegrand]
   push_cast
   ring
@@ -86,16 +86,16 @@ theorem hasDerivAt_besselK_oneThird {x : ℝ} (hx : 0 < x) :
   let δ := x / 8
   have hδ : 0 < δ := by positivity
   let bound (t : ℝ) := δ⁻¹ ^ 2 * Real.exp (-δ * t)
-  have hB : IntegrableOn bound (Ioi 0) := (integrableOn_exp_mul_Ioi (neg_lt_zero.mpr hδ)
-    0).const_mul _
+  have hB : IntegrableOn bound (Ioi 0) := (integrableOn_exp_mul_Ioi
+    (neg_lt_zero.mpr hδ) 0).const_mul _
   let μ := volume.restrict (Ioi (0 : ℝ))
   have ha : ∀ᵐ t ∂μ, 0 < t := ae_restrict_mem measurableSet_Ioi
   have hmeas (y : ℝ) : AEStronglyMeasurable (kIntegrand y) μ := by
     exact (by unfold kIntegrand; fun_prop : Continuous (kIntegrand y)).aestronglyMeasurable
   have hmeas' (y : ℝ) : AEStronglyMeasurable (kDerivIntegrand y) μ := by
     exact (by
-      unfold kDerivIntegrand kIntegrand; fun_prop : Continuous (kDerivIntegrand
-      y)).aestronglyMeasurable
+      unfold kDerivIntegrand kIntegrand; fun_prop :
+        Continuous (kDerivIntegrand y)).aestronglyMeasurable
   have hI : Integrable (kIntegrand x) μ := hB.mono' (hmeas _) (ha.mono fun t ht =>
     (kIntegrand_bounds hδ (by dsimp [δ]; linarith) ht.le).1)
   have hs : Ioi (4 * δ) ∈ 𝓝 x := Ioi_mem_nhds (by dsimp [δ]; linarith)
@@ -238,8 +238,8 @@ private theorem fderiv_thetaTerm {l a : ℂ} (hl : l ≠ 0) (p : U) (hp : 0 < p.
   have h₂ : ‖ContinuousLinearMap.toSpanSingleton ℝ
       (E (reL p) * (2 * Real.pi * Complex.I * ((2 * 1 : ℝ) : ℂ))) ∘L reL‖ ≤ k := by
     apply (ContinuousLinearMap.opNorm_comp_le _ _).trans
-    rw [ContinuousLinearMap.norm_toSpanSingleton, norm_mul, hPhase, norm_pattersonCharacter,
-      one_mul]
+    rw [ContinuousLinearMap.norm_toSpanSingleton, norm_mul, hPhase,
+      norm_pattersonCharacter, one_mul]
     simp only [mul_one, norm_mul, Complex.norm_I, Complex.norm_ofNat, Complex.norm_real,
       Real.norm_of_nonneg Real.pi_pos.le, Real.norm_ofNat]
     dsimp [k]
@@ -261,8 +261,8 @@ private theorem frequency_pos (m : PattersonIndex) : 0 < ‖pattersonFrequency m
   rw [pattersonFrequency, norm_pos_iff]
   apply div_ne_zero
   · exact (map_ne_zero_iff eisEmbedding eisEmbedding_injective).mpr m.2
-  · exact pow_ne_zero _ ((map_ne_zero_iff eisEmbedding eisEmbedding_injective).mpr
-      eisLambda_prime.ne_zero)
+  · exact pow_ne_zero _ ((map_ne_zero_iff eisEmbedding
+      eisEmbedding_injective).mpr eisLambda_prime.ne_zero)
 
 set_option maxHeartbeats 1000000 in
 private theorem exists_thetaTerm_majorant {τ : ℂ → ℂ} (ht : PattersonCoefficients τ)
@@ -365,15 +365,15 @@ def normalizedThetaMode (τ : ℂ → ℂ) (v : ℝ) (m : 𝓔) : ℂ :=
   conj (τ (pattersonFrequency m)) / 27 * v *
     besselK (1 / 3) (4 * Real.pi * ‖pattersonFrequency m‖ * v)
 
-theorem PattersonCoefficients.summable_normalizedThetaMode {τ : ℂ →
-    ℂ} (ht : PattersonCoefficients τ)
+theorem PattersonCoefficients.summable_normalizedThetaMode {τ : ℂ → ℂ}
+    (ht : PattersonCoefficients τ)
     {v : ℝ} (hv : 0 < v) (s : ℝ) :
     Summable fun m : 𝓔 => ‖normalizedThetaMode τ v m‖ * ‖pattersonFrequency m‖ ^ s := by
   obtain ⟨C, hC, hB⟩ := exists_besselK_oneThird_bound (δ := 1) zero_lt_one
   have hb : 0 < 2 * Real.pi * v := by positivity
   have hk : 0 < 4 * Real.pi * v := by positivity
-  apply ((summable_pattersonFrequency_rpow_exp (1/3 + s) hb).mul_left
-    (v*C)).of_norm_bounded_eventually
+  apply ((summable_pattersonFrequency_rpow_exp (1/3 +
+    s) hb).mul_left (v*C)).of_norm_bounded_eventually
   filter_upwards [tendsto_norm_pattersonFrequency.eventually_ge_atTop (8/(4*Real.pi*v)),
     tendsto_norm_pattersonFrequency.eventually_gt_atTop 0] with m hm hm₀
   set t := ‖pattersonFrequency m‖
@@ -393,8 +393,8 @@ theorem PattersonCoefficients.summable_normalizedThetaMode {τ : ℂ →
 
 /-- The directional sum obtained by differentiating the normalized expansion converges
 absolutely. -/
-theorem PattersonCoefficients.summable_normalized_horizontal {τ : ℂ →
-    ℂ} (ht : PattersonCoefficients τ)
+theorem PattersonCoefficients.summable_normalized_horizontal {τ : ℂ → ℂ}
+    (ht : PattersonCoefficients τ)
     (z u : ℂ) {v : ℝ} (hv : 0 < v) :
     Summable fun m : {m : 𝓔 // m ≠ 0} => normalizedThetaMode τ v m *
       pattersonCharacter (pattersonFrequency m * z) *
@@ -414,14 +414,14 @@ theorem PattersonCoefficients.summable_normalized_horizontal {τ : ℂ →
 theorem PattersonExpansion.hasDerivAt_normalized_horizontal {θ : ℂ → ℝ → ℂ} {τ : ℂ → ℂ} {σ : ℝ}
     (he : PattersonExpansion θ τ σ) (ht : PattersonCoefficients τ) (z u : ℂ) {v : ℝ} (hv : 0 < v) :
     HasDerivAt (fun t : ℝ => conj (θ (z + t*u) v) / 27)
-      (∑' m : {m : 𝓔 // m ≠ 0}, normalizedThetaMode τ v m * pattersonCharacter (pattersonFrequency
-        m*z) *
+      (∑' m : {m : 𝓔 // m ≠ 0}, normalizedThetaMode τ v m *
+        pattersonCharacter (pattersonFrequency m*z) *
         (4 * Real.pi * Complex.I * ((pattersonFrequency m*u).re : ℂ))) 0 := by
   have ha : Summable fun m : PattersonIndex => ‖normalizedThetaMode τ v m‖ := by
     simpa only [Function.comp_def, Real.rpow_zero, mul_one] using
       (ht.summable_normalizedThetaMode hv 0).subtype (· ≠ 0)
-  have ha₁ : Summable fun m : PattersonIndex => ‖normalizedThetaMode τ v m‖ * ‖pattersonFrequency m‖
-    := by
+  have ha₁ : Summable fun m : PattersonIndex => ‖normalizedThetaMode τ v m‖ *
+    ‖pattersonFrequency m‖ := by
     simpa only [Function.comp_def, Real.rpow_one] using
       (ht.summable_normalizedThetaMode hv 1).subtype (· ≠ 0)
   have H := hasDerivAt_patterson_sum _ _ ha ha₁ z u

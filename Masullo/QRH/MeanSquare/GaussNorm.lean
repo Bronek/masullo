@@ -75,8 +75,8 @@ theorem norm_gaussCoefficient_le_one {n : Ideal 𝓔} (hn : AwayFromSix n) :
   let := Fintype.ofFinite (𝓔 ⧸ n)
   have hN : 0 < (absNorm n : ℝ) := by
     exact_mod_cast Nat.pos_of_ne_zero (absNorm_eq_zero_iff.not.mpr hn.1)
-  have h := norm_gaussSum_le_sqrt_card (sexticChar hn ^ 2) (quotientDifferentCharacter_isPrimitive
-    hn.1)
+  have h := norm_gaussSum_le_sqrt_card (sexticChar hn ^
+    2) (quotientDifferentCharacter_isPrimitive hn.1)
   rw [← Nat.card_eq_fintype_card, ← Ideal.absNorm_eq_natCard] at h
   have hα : ‖angularFactor n‖ ≤ 1 := by
     simp [angularFactor, div_self_le_one]

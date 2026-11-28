@@ -79,13 +79,13 @@ private theorem card_branchIndex {C U : Type*} [Fintype C] [Fintype U]
   have hF : ∀ F : r.fixedPrimes.powerset, F.val.card ≤ r.fixedPrimes.card :=
     fun F => card_le_card (mem_powerset.mp F.2)
   have bound (F : r.fixedPrimes.powerset) : Fintype.card (TameAssignment r.exponent F.val) ≤
-      3 ^ r.fixedPrimes.card := (card_tameAssignment _ _).trans (Nat.pow_le_pow_right (by
-        decide) (hF F))
+      3 ^ r.fixedPrimes.card := (card_tameAssignment _ _).trans (Nat.pow_le_pow_right
+        (by decide) (hF F))
   let n := Fintype.card U * 2 * 3 ^ r.fixedPrimes.card
   have havg : ∀ c : C, Fintype.card (RaySupport (r.ray c)) ≤ Fintype.card (RayResidue 7) :=
     fun c => Fintype.card_subtype_le _
-  have hsum : (∑ F : r.fixedPrimes.powerset, Fintype.card U * (2 * Fintype.card (TameAssignment
-    r.exponent F.val)))
+  have hsum : (∑ F : r.fixedPrimes.powerset, Fintype.card U * (2 *
+    Fintype.card (TameAssignment r.exponent F.val)))
       ≤ 2 ^ r.fixedPrimes.card * n := calc
     _ ≤ ∑ _ : r.fixedPrimes.powerset, n := by
       apply sum_le_sum
@@ -97,15 +97,15 @@ private theorem card_branchIndex {C U : Type*} [Fintype C] [Fintype U]
     _ = _ := by simp [card_powerset]
   calc
     _ = ∑ c : C, Fintype.card (RaySupport (r.ray c)) *
-        ∑ F : r.fixedPrimes.powerset, Fintype.card U * (2 * Fintype.card (TameAssignment r.exponent
-          F.val)) := by
+        ∑ F : r.fixedPrimes.powerset, Fintype.card U * (2 *
+          Fintype.card (TameAssignment r.exponent F.val)) := by
       simp [BranchIndex, Fintype.card_sigma, Fintype.card_prod]
     _ ≤ ∑ _ : C, Fintype.card (RayResidue 7) * (2 ^ r.fixedPrimes.card * n) := by
       apply sum_le_sum
       intro c _
       exact Nat.mul_le_mul (havg c) hsum
-    _ = (Fintype.card C * Fintype.card (RayResidue 7) * Fintype.card U * 2) * 6 ^ r.fixedPrimes.card
-      := by
+    _ = (Fintype.card C * Fintype.card (RayResidue 7) * Fintype.card U * 2) * 6 ^
+      r.fixedPrimes.card := by
       simp only [sum_const, card_univ, nsmul_eq_mul, Nat.cast_id, n]
       rw [show 6 = 2*3 by decide, Nat.mul_pow]
       ring
@@ -187,10 +187,10 @@ theorem squarefreeBranchRepresentation_of_rows {C U : Type*} [Fintype C] [Fintyp
   intro A hA hK
   obtain ⟨r⟩ := hs H X u g ξ W hH hX hg hW A hA hK
   obtain ⟨n,b,hn,hrow⟩ := r.assemble
-  refine ⟨n, fun i => (b i).enlarge (zero_le_one.trans hB) (le_max_left ..) (zero_le_one.trans hX),
-    ?_, hrow⟩
-  have hn' : (n : ℝ) ≤ (N : ℝ) * 6 ^ ((normalizedFactors (span {(6:𝓔)} * span {g})).toFinset.card)
-    := by
+  refine ⟨n, fun i => (b i).enlarge (zero_le_one.trans hB) (le_max_left ..)
+    (zero_le_one.trans hX), ?_, hrow⟩
+  have hn' : (n : ℝ) ≤ (N : ℝ) * 6 ^ ((normalizedFactors (span {(6:𝓔)} *
+    span {g})).toFinset.card) := by
     exact_mod_cast hn
   exact hn'.trans (mul_le_mul_of_nonneg_right (le_max_right ..) (by positivity))
 
@@ -214,8 +214,8 @@ def FixedBranchConversion (τ : ℂ → ℂ) : Prop :=
   ∀ (R : Finset Idl) (q : QuadraticFamilyClass) (a : Idl → ℂ)
     (hR : ∀ k ∈ R, k ∈ sieveIdeals (span {(6 : 𝓔)}) K ∧ Starred k ∧
       IsCoprime k t ∧ IsCoprime k y ∧ familyClass k = q ∧ ‖a k‖ ≤ 1 + Fintype.card (RayResidue 7)),
-    ∃ b : 𝓔ˣ → Fin 2 → TameAssignment (fun p => exponent T G p % 6) F → SquarefreeKernelBranch B K X
-      t y,
+    ∃ b : 𝓔ˣ → Fin 2 → TameAssignment (fun p => exponent T G p % 6) F →
+      SquarefreeKernelBranch B K X t y,
       (∀ ν e η, (b ν e η).rows ⊆ R) ∧
       ∀ k (hk : k ∈ R), a k * branchSum D r T G F (hR k hk).2.1.1 τ W X =
         ∑ ν, ∑ e, ∑ η, (b ν e η).rowValue W k
@@ -224,8 +224,8 @@ def FixedBranchConversion (τ : ℂ → ℂ) : Prop :=
 squarefree branch representation, including its uniform cardinality bound. -/
 theorem squarefreeBranchRepresentation_of_conversion {θ : ℂ → ℝ → ℂ} {τ : ℂ → ℂ} {σ : ℝ}
     (he : PattersonExpansion θ τ σ) (ht : PattersonCoefficients τ)
-    (hχ : PattersonAutomorphyWith pattersonMultiplier θ) (hB : DLMFBesselMellin) (hΓ :
-      DLMFGammaVertical)
+    (hχ : PattersonAutomorphyWith pattersonMultiplier θ) (hB : DLMFBesselMellin)
+      (hΓ : DLMFGammaVertical)
     (hR : DunnRadziwillReciprocity) (quad : DeloupTuraevTheorem1) (conv : FixedBranchConversion τ) :
     SquarefreeBranchRepresentation := by
   let : Fintype RowClass := Fintype.ofFinite _
@@ -248,8 +248,8 @@ theorem squarefreeBranchRepresentation_of_conversion {θ : ℂ → ℝ → ℂ} 
   intro hK
   obtain ⟨T,G,cl,hT,hG,hTt,hGy,hcl,hI⟩ := completed_row_inversion he ht hχ hB hΓ hR quad ξ u ht₀ hg
   let R₀ (c : RowClass) := R.filter (fun k => cl k = c)
-  have hrow {c : RowClass} {k : Idl} (hk : k ∈ R₀ c) := selected_row_properties htM (mem_filter.mp
-    hk).1
+  have hrow {c : RowClass} {k : Idl} (hk : k ∈ R₀ c) := selected_row_properties htM
+    (mem_filter.mp hk).1
   choose φ hφ hI using hI
   have hc (c : RowClass) (k : R₀ c) := hI c (hrow k.2).1 (hrow k.2).2.1
     (hrow k.2).2.2.1 (mem_filter.mp k.2).2

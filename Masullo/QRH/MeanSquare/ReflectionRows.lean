@@ -98,12 +98,12 @@ private lemma row_cover {K : ℝ} (hK : 1 ≤ K) {k : 𝓔} (hk : k ∈ elementR
     (le_mul_of_one_le_right (sq_nonneg _) hNs).trans hprod
   have hvK : (absNorm v : ℝ) ≤ K := by nlinarith
   have hspan : span {generator s * generator v ^ 2} = span {k} := by
-    rw [← span_singleton_mul_span_singleton, ← span_singleton_pow, span_generator, span_generator,
-      mul_comm, he]
+    rw [← span_singleton_mul_span_singleton, ← span_singleton_pow, span_generator,
+      span_generator, mul_comm, he]
   obtain ⟨u, hu⟩ := span_singleton_eq_span_singleton.mp hspan
   refine ⟨v, mem_filter.mpr ⟨(mem_idealsLe (by linarith)).mpr hvK, hv₀, hcut⟩, u, s,
-    mem_filter.mpr ⟨(mem_idealsLe (by positivity)).mpr ((le_div_iff₀ (by positivity)).mpr ?_),
-      hs⟩, ?_⟩
+    mem_filter.mpr ⟨(mem_idealsLe (by positivity)).mpr ((le_div_iff₀
+      (by positivity)).mpr ?_), hs⟩, ?_⟩
   · rwa [mul_comm]
   · simpa only [mul_comm, mul_left_comm, mul_assoc] using hu
 
@@ -138,8 +138,8 @@ private lemma inverse_square_dyadic {A : ℝ}
         exact inv_anti₀ (by positivity) (pow_le_pow_left₀ hp.le hNv.le 2)
       _ = B.card / L ^ 2 := by simp [div_eq_mul_inv]
       _ ≤ A * (L * 2) / L ^ 2 := div_le_div_of_nonneg_right
-        ((Nat.cast_le.mpr (card_le_card (sdiff_subset : B ⊆ _))).trans (hA _ (by linarith))) (by
-          positivity)
+        ((Nat.cast_le.mpr (card_le_card (sdiff_subset : B ⊆ _))).trans (hA _ (by linarith)))
+          (by positivity)
       _ = _ := by field_simp
     rw [pow_succ, ← sum_sdiff hsub]
     calc
@@ -173,8 +173,8 @@ theorem summable_inverse_square : Summable (fun v : Ideal 𝓔 => ((absNorm v : 
 
 private theorem cover_sum {K : ℝ} (hK : 1 ≤ K) (T : 𝓔 → ℝ) (hT : ∀ k, 0 ≤ T k) :
     ∑ k ∈ elementRows K, T k ≤ ∑ v ∈ squareDivisors K, ∑ u : 𝓔ˣ,
-      ∑ s ∈ squarefreeRows (K / (absNorm v : ℝ) ^ 2), T ((u : 𝓔) * generator s * generator v ^
-        2) := by
+      ∑ s ∈ squarefreeRows (K / (absNorm v : ℝ) ^ 2), T ((u : 𝓔) * generator s *
+        generator v ^ 2) := by
   classical
   let S (v : Ideal 𝓔) := squarefreeRows (K / (absNorm v : ℝ) ^ 2)
   let P := (squareDivisors K).sigma (fun v => (univ : Finset 𝓔ˣ) ×ˢ S v)
@@ -193,8 +193,8 @@ private lemma generator_ne {v : Ideal 𝓔} (hv : v ≠ 0) : generator v ≠ 0 :
 
 /-- Extract the square part of each row and absorb it into the auxiliary element.
 Its norm grows by `(Nv)²` while the squarefree row length falls by the same factor. -/
-theorem completedEstimate_of_squarefree (hsq : SquarefreeCompletedEstimate) : CompletedEstimate
-    := by
+theorem completedEstimate_of_squarefree (hsq : SquarefreeCompletedEstimate)
+    : CompletedEstimate := by
   classical
   intro C₀ hC₀ ε hε
   obtain ⟨j, hj⟩ := hsq (2 * C₀) (by linarith) ε hε
@@ -223,8 +223,8 @@ theorem completedEstimate_of_squarefree (hsq : SquarefreeCompletedEstimate) : Co
     have hH : 1 ≤ H v := (one_le_div (by positivity)).mpr hcut
     have hHK : H v ≤ K := div_le_self hKp.le (one_le_pow₀ hNv)
     have hN : (elementNorm (G v) : ℝ) = absNorm f * (absNorm v : ℝ) ^ 2 := by
-      simp only [elementNorm, G, ← span_singleton_mul_span_singleton, ← span_singleton_pow,
-        span_generator,
+      simp only [elementNorm, G, ← span_singleton_mul_span_singleton,
+        ← span_singleton_pow, span_generator,
         map_mul, map_pow, Nat.cast_mul, Nat.cast_pow]
     have hNG : (elementNorm (G v) : ℝ) ≤ D ^ (2 * C₀) := calc
       _ = _ := hN
@@ -233,8 +233,8 @@ theorem completedEstimate_of_squarefree (hsq : SquarefreeCompletedEstimate) : Co
     have h := hsf D (H v) X u (G v) ξ W hD hH (hHK.trans (hKD.trans hD₂)) hX (hXD.trans hD₂)
       (mul_ne_zero (generator_ne hf.1.1) (pow_ne_zero _ (generator_ne hv₀))) hNG hW
     calc
-      _ = ∑ s ∈ squarefreeRows (H v), ‖completedAtElement ξ W X ((u : 𝓔) * generator s) (G v)‖ ^ 2
-        := by
+      _ = ∑ s ∈ squarefreeRows (H v), ‖completedAtElement ξ W X ((u : 𝓔) *
+        generator s) (G v)‖ ^ 2 := by
         refine sum_congr rfl fun s _ => ?_
         rw [completedSum_eq_atElement, completedAtElement_shift_square]
       _ ≤ _ := h

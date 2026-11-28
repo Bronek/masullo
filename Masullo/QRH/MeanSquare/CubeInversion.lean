@@ -89,8 +89,8 @@ theorem completedSum_eq_sum_cubeIdeals {I : TestInterval} {j : ℕ} {W : ℝ →
       rw [← mul_div_assoc, div_lt_one hN]
       exact (mul_le_mul_of_nonneg_right (le_max_left _ _) hX.le).trans_lt h
     exact (Function.mem_support.mp hb) (by
-      simp only [normalizedColumn, columnSum_eq_zero_of_short hW (div_pos hX hN) hs, zero_div,
-        mul_zero])
+      simp only [normalizedColumn, columnSum_eq_zero_of_short hW (div_pos hX hN) hs,
+        zero_div, mul_zero])
 
 open Classical in
 /-- Sum the ideal Möbius function over the divisors of a nonzero ideal. The
@@ -111,8 +111,8 @@ theorem sum_idealMoebius_dividing {n : Ideal 𝓔} (hn : n ≠ 0) (S : Finset (I
     refine Finset.sum_bij_ne_zero (fun T _ _ => ∏ p ∈ T, p) ?_ ?_ ?_ ?_
     · intro T hT _
       have hsub := mem_powerset.mp hT
-      have hd : (∏ p ∈ T, p) ∣ n := (dvd_iff_normalizedFactors_le_normalizedFactors (h₀ hsub)
-        hn).mpr (by
+      have hd : (∏ p ∈ T, p) ∣ n := (dvd_iff_normalizedFactors_le_normalizedFactors
+        (h₀ hsub) hn).mpr (by
         rw [hN hsub]
         exact (Finset.val_le_iff.mpr hsub).trans (Multiset.dedup_le _))
       exact mem_filter.mpr ⟨hS _ hd, hd⟩
@@ -125,8 +125,8 @@ theorem sum_idealMoebius_dividing {n : Ideal 𝓔} (hn : n ≠ 0) (S : Finset (I
       have hnd := (squarefree_iff_nodup_normalizedFactors hsf.ne_zero).mp hsf
       let T := (normalizedFactors b).toFinset
       have hsub : T ⊆ P := Multiset.toFinset_subset.mpr
-        (Multiset.subset_of_le ((dvd_iff_normalizedFactors_le_normalizedFactors hsf.ne_zero hn).mp
-          hd))
+        (Multiset.subset_of_le ((dvd_iff_normalizedFactors_le_normalizedFactors
+          hsf.ne_zero hn).mp hd))
       refine ⟨T, mem_powerset.mpr hsub, by simp, ?_⟩
       rw [prod_eq_multiset_prod, Multiset.map_id', Multiset.toFinset_val, hnd.dedup]
       exact associated_iff_eq.mp (prod_normalizedFactors hsf.ne_zero)
@@ -177,8 +177,8 @@ private theorem sum_cube_factors {Y : ℝ} {b : Ideal 𝓔} (hb : AwayFromSix b)
 
 /-- All completing products with cube norm at most `Y` cancel except the unit ideal. -/
 private theorem sum_moebius_cube_factors {Y : ℝ} (hY : 1 ≤ Y) (v : Ideal 𝓔 → ℂ) :
-    ∑ b ∈ cubeIdeals Y, ∑ d ∈ cubeIdeals (Y / cubeNorm b), (idealMoebius b : ℂ) * v (b*d) = v 1
-      := by
+    ∑ b ∈ cubeIdeals Y, ∑ d ∈ cubeIdeals (Y / cubeNorm b), (idealMoebius b : ℂ) *
+      v (b*d) = v 1 := by
   classical
   have hf := Finset.sum_congr (s₁ := cubeIdeals Y) rfl (fun b hb =>
     sum_cube_factors (Y := Y) (mem_cubeIdeals.mp hb).1 (fun n => (idealMoebius b : ℂ) * v n))

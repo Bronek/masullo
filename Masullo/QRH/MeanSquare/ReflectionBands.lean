@@ -36,8 +36,8 @@ theorem mem_cubeBand {b : Idl} {i : ℕ} :
   rw [cubeBand,mem_filter]
   have h : (absNorm b : ℝ) ∈ Ico ((2:ℝ)^i) (2*2^i) ↔ b ≠ 0 ∧ Nat.log 2 (absNorm b) = i := by
     rw [band_iff]; simp
-  exact ⟨fun hx => h.mp hx.2,fun hx => ⟨(mem_idealsLe (by positivity)).mpr (h.mpr hx).2.le,h.mpr
-    hx⟩⟩
+  exact ⟨fun hx => h.mp hx.2,fun hx => ⟨(mem_idealsLe (by positivity)).mpr
+    (h.mpr hx).2.le,h.mpr hx⟩⟩
 
 theorem mem_squarefreeBand {n : Idl} {i : ℕ} :
     n ∈ squarefreeBand i ↔ Starred n ∧ Nat.log 2 (absNorm n) = i := by
@@ -52,8 +52,8 @@ theorem mem_squarefreeBand {n : Idl} {i : ℕ} :
 abbrev ReflectedColumns := ℕ × {b : Idl // b ≠ 0} × {n : Idl // Starred n}
 
 /-- Each pair belongs to one and only one pair of dyadic norm bands. -/
-def bandEquiv : (Σ e : ℕ × ℕ × ℕ, (cubeBand e.2.2) × (squarefreeBand e.2.1)) ≃ ReflectedColumns
-    where
+def bandEquiv :
+    (Σ e : ℕ × ℕ × ℕ, (cubeBand e.2.2) × (squarefreeBand e.2.1)) ≃ ReflectedColumns where
   toFun x := (x.1.1,⟨x.2.1.val,(mem_cubeBand.mp x.2.1.property).1⟩,
     ⟨x.2.2.val,(mem_squarefreeBand.mp x.2.2.property).1⟩)
   invFun x := ⟨(x.1,Nat.log 2 (absNorm x.2.2.val),Nat.log 2 (absNorm x.2.1.val)),
@@ -145,11 +145,11 @@ theorem tsum_split_index (f : ReflectedIndex → ℂ) (hf : Summable f) :
     hz x (by simpa using hx))).mp
     ((hf.comp_injective hi).congr (fun x => (he x).symm))
   calc
-    _ = ∑' x : Subtype J₀, F x := (hi.tsum_eq (fun a _ => hsur a)).symm.trans (tsum_congr fun x =>
-      (he x).symm)
+    _ = ∑' x : Subtype J₀, F x := (hi.tsum_eq (fun a _ =>
+      hsur a)).symm.trans (tsum_congr fun x => (he x).symm)
     _ = ∑' x, F x := Subtype.val_injective.tsum_eq fun x hx => ⟨⟨x,by_contra fun h =>
       hx (hz x h)⟩,rfl⟩
-    _ = _ := hs.tsum_prod.trans (tsum_congr fun u => (hs.prod_factor u).tsum_prod.trans (by
-      rw [tsum_fintype]))
+    _ = _ := hs.tsum_prod.trans (tsum_congr fun u => (hs.prod_factor u).tsum_prod.trans
+      (by rw [tsum_fintype]))
 
 end Masullo.QRH.MeanSquare.ReflectionSieve
