@@ -1,4 +1,5 @@
 import Masullo.QRH.MeanSquare.CubeTail
+import Masullo.QRH.MeanSquare.DualAssembly
 import Masullo.QRH.MeanSquare.Family
 import Masullo.QRH.MeanSquare.GaussNorm
 import Masullo.QRH.MeanSquare.GaussPair
@@ -24,13 +25,11 @@ structure PrintedInputs : Prop where
   besselMellin : DLMFBesselMellin
   gammaVertical : DLMFGammaVertical
 
-/-- Compose the printed inputs with the outstanding arithmetic and analytic reductions.
-Each arrow names a proof still needed to obtain (A) from `PrintedInputs` alone. -/
+/-- Compose the printed inputs with the outstanding analytic reduction.
+The `transfer` arrow names the proof still needed to obtain (A) from `PrintedInputs` alone. -/
 theorem meanSquareA_of_reductions (h : PrintedInputs)
     (transfer : PrimitivePoisson → PairedGaussIdentities → GaussCoefficientBound →
-      TransferEstimate)
-    (firstPoisson : PrimitivePoisson → PairedGaussIdentities → GaussCoefficientBound →
-      GapEstimate → FullRowEstimate) :
+      TransferEstimate) :
     Masullo.QRH.MeanSquareA := by
   have h7 :=
     quadraticSieve_of_goldmakherLouvel h.largeSieve (eisensteinFamilyRealizes h.quadraticGauss)
@@ -42,6 +41,6 @@ theorem meanSquareA_of_reductions (h : PrintedInputs)
   have h₁ := unitRowEstimate_of_gaussCoefficientBound hn
   have h4 := gapEstimate_of_tail_transfer h₁ (cubeTailEstimate_of_completedEstimate hn h5)
     (transfer hp hg hn)
-  exact meanSquareA_of_fullRows (firstPoisson hp hg hn h4)
+  exact meanSquareA_of_fullRows (fullRowEstimate_of_gapEstimate hg h4)
 
 end Masullo.QRH.MeanSquare
