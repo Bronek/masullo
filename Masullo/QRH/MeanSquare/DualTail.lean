@@ -9,6 +9,8 @@ Steps toward `DualTailEstimate rowMajorant` from `GapEstimate`.
   units, a combination of `ξ(x) conj η(y)` over ray characters `ξ, η`.
 * `exists_dilated_separated_le₂`: the separation of dilated kernels for a pair of coefficient
   families, by four-term polarization.
+* `exists_norm_tsum_far_le`: the dual frequencies beyond a radius contribute a negative power
+  of the radius.
 -/
 
 noncomputable section
@@ -193,5 +195,72 @@ theorem exists_dilated_separated_le₂ {w : ℝ → ℂ} (hw : ContDiff ℝ ∞ 
     _ ≤ (1 / 4) * ∑ _k : Fin 4, C * A * (2 * M₁ + 2 * M₂) := by
         gcongr with k; exact hd k
     _ = 2 * C * A * (M₁ + M₂) := by simp; ring
+
+/-! ### Far dual frequencies -/
+
+/-- The dual frequencies `h` with `N h > R` of a Gao-Zhao transform at scale `Q / Y` contribute
+`O((Q / Y + 1) (Q / (Y R))^k)` for every `k`. -/
+theorem exists_norm_tsum_far_le (P : SchwartzMap ℝ ℂ) (k : ℕ) :
+    ∃ C ≥ (0 : ℝ), ∀ v : 𝓔 → ℂ, (∀ h, ‖v h‖ ≤ 1) → ∀ Y Q R : ℝ, 0 < Y → 0 < Q → 0 < R →
+      Summable (fun h : 𝓔 => if R < (elementNorm h : ℝ) then
+        v h * gaoZhaoTransform P (Real.sqrt (Y * elementNorm h / Q)) else 0) ∧
+      ‖∑' h : 𝓔, if R < (elementNorm h : ℝ) then
+        v h * gaoZhaoTransform P (Real.sqrt (Y * elementNorm h / Q)) else 0‖ ≤
+        C * (Q / Y + 1) * (Q / (Y * R)) ^ k := by
+  classical
+  obtain ⟨B₁, hB₁⟩ := exists_pow_mul_norm_gaoZhaoTransform_le P (2 * (k + 0))
+  obtain ⟨B₂, hB₂⟩ := exists_pow_mul_norm_gaoZhaoTransform_le P (2 * (k + 2))
+  have hB₁0 : 0 ≤ B₁ := (by positivity : (0 : ℝ) ≤ 0 ^ (2 * (k + 0)) *
+    ‖gaoZhaoTransform P 0‖).trans (hB₁ 0 le_rfl)
+  have hB₂0 : 0 ≤ B₂ := (by positivity : (0 : ℝ) ≤ 0 ^ (2 * (k + 2)) *
+    ‖gaoZhaoTransform P 0‖).trans (hB₂ 0 le_rfl)
+  obtain ⟨C, hC, hsum⟩ := exists_sum_decay_le
+  refine ⟨C * (B₁ + B₂), by positivity, fun v hv Y Q R hY hQ hR => ?_⟩
+  set S₀ := Y * R / Q with hS₀
+  have hS₀0 : 0 < S₀ := by positivity
+  set φ : ℝ → ℝ := fun r => if S₀ < r then ‖gaoZhaoTransform P (Real.sqrt r)‖ else 0
+  have hφ0 : ∀ r, 0 ≤ φ r := fun r => by simp only [φ]; split_ifs <;> positivity
+  have hdec : ∀ (m : ℕ) (B : ℝ), 0 ≤ B → (∀ t : ℝ, 0 ≤ t → t ^ (2 * (k + m)) *
+      ‖gaoZhaoTransform P t‖ ≤ B) → ∀ r, r ^ m * φ r ≤ B / S₀ ^ k := by
+    intro m B hB0 hB r
+    by_cases hr : S₀ < r
+    · have hr0 : 0 < r := hS₀0.trans hr
+      have h := hB (Real.sqrt r) (Real.sqrt_nonneg r)
+      rw [pow_mul, Real.sq_sqrt hr0.le] at h
+      simp only [φ, ite_eq_left hr]
+      rw [le_div_iff₀ (by positivity)]
+      calc r ^ m * ‖gaoZhaoTransform P (Real.sqrt r)‖ * S₀ ^ k
+          ≤ r ^ m * ‖gaoZhaoTransform P (Real.sqrt r)‖ * r ^ k := by gcongr
+        _ = r ^ (k + m) * ‖gaoZhaoTransform P (Real.sqrt r)‖ := by ring
+        _ ≤ B := h
+    · simp only [φ, ite_eq_right hr, mul_zero]; positivity
+  have h0 : ∀ r, φ r ≤ B₁ / S₀ ^ k := fun r => by simpa using hdec 0 B₁ hB₁0 hB₁ r
+  have h2 : ∀ r, r ^ 2 * φ r ≤ B₂ / S₀ ^ k := hdec 2 B₂ hB₂0 hB₂
+  set Z := Q / Y with hZ
+  have hZ0 : 0 < Z := by positivity
+  have hfs : ∀ s : Finset 𝓔, ∑ h ∈ s, φ (elementNorm h / Z) ≤
+      C * (B₁ / S₀ ^ k + B₂ / S₀ ^ k) * (Z + 1) :=
+    hsum φ h0 (by positivity) h2 (by positivity) Z hZ0
+  have hφs : Summable fun h : 𝓔 => φ (elementNorm h / Z) :=
+    summable_of_sum_le (fun h => hφ0 _) hfs
+  have hpt : ∀ h : 𝓔, ‖if R < (elementNorm h : ℝ) then
+      v h * gaoZhaoTransform P (Real.sqrt (Y * elementNorm h / Q)) else 0‖ ≤
+        φ (elementNorm h / Z) := by
+    intro h
+    have hiff : R < (elementNorm h : ℝ) ↔ S₀ < elementNorm h / Z := by
+      rw [hS₀, hZ, div_div_eq_mul_div, div_lt_div_iff_of_pos_right hQ, mul_comm Y,
+        mul_lt_mul_iff_of_pos_right hY]
+    have harg : Y * elementNorm h / Q = elementNorm h / Z := by rw [hZ]; field_simp
+    simp only [φ, ← hiff, harg]
+    split_ifs
+    · rw [norm_mul]; exact mul_le_of_le_one_left (norm_nonneg _) (hv h)
+    · simp
+  have hs : Summable (fun h : 𝓔 => if R < (elementNorm h : ℝ) then
+      v h * gaoZhaoTransform P (Real.sqrt (Y * elementNorm h / Q)) else 0) :=
+    Summable.of_norm_bounded hφs hpt
+  refine ⟨hs, (norm_tsum_le_tsum_norm hs.norm).trans ?_⟩
+  refine (hs.norm.tsum_le_tsum hpt hφs).trans ((hφs.tsum_le_of_sum_le hfs).trans_eq ?_)
+  rw [hS₀, hZ, ← add_div, div_pow, div_eq_mul_inv, inv_div]
+  ring
 
 end Masullo.QRH.MeanSquare
