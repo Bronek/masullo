@@ -131,3 +131,19 @@ of L-Functions*, Theorem 8.3), Codex corrected the counting in review, and a Cla
 formalised the sufficient direction (`trace_eq_efFunctional_of_selfRecurrent`).
 Claude Fable observed in review that measure `T^(1-δ)` of good shifts suffices, and a Claude Opus
 subagent generalised the proof (`trace_eq_efFunctional_of_sparselyRecurrent`).
+
+## Mean square above 5/12
+
+`Masullo/QRH/` follows the reduction in OpenAI, *The Quasi-Riemann Hypothesis* (5 October 2026),
+from the mean-square estimate (A) of its Proposition 3.1 to the trace identity at every width above
+5/12; only that part of the preprint was used. `hasTrace_of_printedInputs` in
+`Masullo/QRH/MeanSquare/Assembly.lean` derives (A) from printed results that enter as named
+hypotheses with their exact sources: Patterson's theta coefficients (Theorem 8.1, 1977), cubic
+reciprocity and the cube of the cubic Gauss sum (Dunn–Radziwiłł), the quadratic Gauss sum of
+Deloup–Turaev (Theorem 1), the Bessel Mellin transform and vertical gamma bounds of the DLMF, and the
+quadratic large sieve of Goldmakher–Louvel specialised to the Eisenstein family of conductor 72.
+The printed uniform-constant form of the Goldmakher–Louvel bound is false, so that hypothesis states
+only the per-family case used here. The transforms follow Gao–Zhao's coordinates.
+OpenAI Codex proved the reflection step and the Goldmakher–Louvel specialisation; Claude Opus
+subagents proved the first Poisson pass, the majorant and the transfer estimate. Each was reviewed
+by the other model, and Claude Fable audited the assembled chain.
