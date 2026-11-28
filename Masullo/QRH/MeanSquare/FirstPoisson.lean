@@ -1,3 +1,4 @@
+import Masullo.QRH.MeanSquare.CosetPoisson
 import Masullo.QRH.MeanSquare.PrimitivePoisson
 import Masullo.QRH.MeanSquare.PrimeRows
 import Masullo.QRH.MeanSquare.UnitRows
@@ -14,7 +15,7 @@ correlations `pairRowSum`. The diagonal costs `O(Y)` per column
 noncomputable section
 
 open NumberField Ideal UniqueFactorizationMonoid
-open scoped ComplexConjugate ContDiff
+open scoped ComplexConjugate ContDiff SchwartzMap FourierTransform
 
 namespace Masullo.QRH.MeanSquare
 
@@ -25,6 +26,25 @@ structure IsRowMajorant (P : SchwartzMap ℝ ℂ) : Prop where
   im_eq : ∀ x, (P x).im = 0
   re_nonneg : ∀ x, 0 ≤ x → 0 ≤ (P x).re
   one_le_re : ∀ x ∈ Set.Icc (0 : ℝ) 1, 1 ≤ (P x).re
+
+/-- The bump equal to one on `[-1, 1]` and supported in `[-2, 2]`. -/
+def rowBump : ContDiffBump (0 : ℝ) := ⟨1, 2, one_pos, one_lt_two⟩
+
+/-- The bump `rowBump` as a complex Schwartz map. -/
+def rowMajorant : SchwartzMap ℝ ℂ :=
+  HasCompactSupport.toSchwartzMap (f := fun x => (rowBump x : ℂ))
+    (rowBump.hasCompactSupport.comp_left Complex.ofReal_zero)
+    (Complex.ofRealCLM.contDiff.comp rowBump.contDiff)
+
+lemma rowMajorant_apply (x : ℝ) : rowMajorant x = (rowBump x : ℂ) := rfl
+
+theorem isRowMajorant_rowMajorant : IsRowMajorant rowMajorant where
+  im_eq x := by rw [rowMajorant_apply, Complex.ofReal_im]
+  re_nonneg x _ := by rw [rowMajorant_apply, Complex.ofReal_re]; exact rowBump.nonneg
+  one_le_re x hx := by
+    rw [rowMajorant_apply, Complex.ofReal_re, rowBump.one_of_mem_closedBall]
+    simp only [Metric.mem_closedBall, dist_zero_right, Real.norm_eq_abs, abs_le]
+    exact ⟨by change -1 ≤ x; linarith [hx.1], hx.2⟩
 
 /-! ### Summability and the lattice mass of a Schwartz weight -/
 
@@ -239,13 +259,16 @@ lemma norm_pairRowSum_le (P : SchwartzMap ℝ ℂ) {Y : ℝ} (hY : 0 < Y) (n₁ 
 
 /-! ### Primitive Poisson for the off-diagonal correlations -/
 
+/-- The divisor sum over the exclusion `g` on the right side of `PrimitivePoisson`. -/
+def dualExclusion (P : SchwartzMap ℝ ℂ) (Y : ℝ) (b c g : Ideal 𝓔) : ℂ :=
+  ∑ᶠ e : {e : Ideal 𝓔 // e ∣ g},
+    (idealMoebius e : ℂ) * pairCharacter b c (generator e) / (absNorm e.val : ℂ) *
+      ∑' h : 𝓔, conj (pairCharacter b c h) * gaoZhaoTransform P
+        (Real.sqrt (Y * elementNorm h / ((absNorm e.val : ℝ) * absNorm (b * c))))
+
 /-- The right side of `PrimitivePoisson` for the pair `(b, c)` with exclusion `g`. -/
 def poissonDual (P : SchwartzMap ℝ ℂ) (Y : ℝ) (b c g : Ideal 𝓔) : ℂ :=
-  (Y : ℂ) * pairGauss b c / Real.sqrt (absNorm (b * c)) *
-    ∑ᶠ e : {e : Ideal 𝓔 // e ∣ g},
-      (idealMoebius e : ℂ) * pairCharacter b c (generator e) / (absNorm e.val : ℂ) *
-        ∑' h : 𝓔, conj (pairCharacter b c h) * gaoZhaoTransform P
-          (Real.sqrt (Y * elementNorm h / ((absNorm e.val : ℝ) * absNorm (b * c))))
+  (Y : ℂ) * pairGauss b c / Real.sqrt (absNorm (b * c)) * dualExclusion P Y b c g
 
 lemma sextic_mul_conj {g : Ideal 𝓔} (hg : AwayFromSix g) (y : 𝓔) : open Classical in
     sextic g y * conj (sextic g y) = if IsCoprime (span {y}) g then 1 else 0 := by
@@ -260,7 +283,8 @@ theorem pairRowSum_eq_poisson {g z₁ z₂ : Ideal 𝓔} (hg : Starred g) (h₁ 
     (P : SchwartzMap ℝ ℂ) {Y : ℝ} (hY : 0 < Y) :
     pairRowSum P Y (g * z₁) (g * z₂) = poissonDual P Y z₂ z₁ g := by
   classical
-  rw [pairRowSum, poissonDual, ← primitivePoisson z₂ z₁ g h₂ h₁ hg h12.symm hgz P Y hY]
+  rw [pairRowSum, poissonDual, dualExclusion,
+    ← primitivePoisson z₂ z₁ g h₂ h₁ hg h12.symm hgz P Y hY]
   refine tsum_congr fun y => ?_
   have : sextic (g * z₁) y * conj (sextic (g * z₂) y) =
       (sextic g y * conj (sextic g y)) * pairCharacter z₂ z₁ y := by
@@ -318,12 +342,65 @@ theorem moebius_mul_pairGauss {A : (𝓔 ⧸ span {(72 : 𝓔)}) → (𝓔 ⧸ s
   push_cast
   linear_combination ((idealMoebius z₁ : ℂ) * idealMoebius z₂ * pairGauss z₂ z₁) * hsq
 
-/-! ### The reduction of the full rows to the off-diagonal correlations -/
+/-- The radial transform of a Schwartz weight decays faster than every power. -/
+theorem exists_pow_mul_norm_gaoZhaoTransform_le (P : 𝓢(ℝ, ℂ)) (k : ℕ) :
+    ∃ C, ∀ t : ℝ, 0 ≤ t → t ^ k * ‖gaoZhaoTransform P t‖ ≤ C := by
+  obtain ⟨C, -, hC⟩ := (𝓕 (radialSchwartz P one_pos)).decay k 0
+  refine ⟨(√3 / 2) ^ k * (2 / √3) * C, fun t ht => ?_⟩
+  have h3 : (0 : ℝ) < √3 := by positivity
+  set ξ : ℂ := ((2 / √3 * t : ℝ) : ℂ)
+  have hξ : ‖ξ‖ = 2 / √3 * t := by
+    rw [Complex.norm_real, Real.norm_of_nonneg (by positivity)]
+  have hF := fourier_radialSchwartz P one_pos ξ
+  rw [hξ, Real.sqrt_one, one_mul, show 2 / √3 * t * (√3 / 2) = t by field_simp] at hF
+  have hT : ‖gaoZhaoTransform P t‖ = 2 / √3 * ‖𝓕 (radialSchwartz P one_pos) ξ‖ := by
+    rw [hF, norm_mul, norm_mul, Complex.ofReal_one, norm_one, one_mul, Complex.norm_div,
+      Complex.norm_two, Complex.norm_real, Real.norm_of_nonneg h3.le]
+    field_simp
+  have h := hC ξ
+  rw [norm_iteratedFDeriv_zero, hξ] at h
+  rw [hT, show t ^ k = (√3 / 2) ^ k * (2 / √3 * t) ^ k by rw [← mul_pow]; field_simp]
+  calc (√3 / 2) ^ k * (2 / √3 * t) ^ k * (2 / √3 * ‖𝓕 (radialSchwartz P one_pos) ξ‖)
+      = (√3 / 2) ^ k * (2 / √3) * ((2 / √3 * t) ^ k * ‖𝓕 (radialSchwartz P one_pos) ξ‖) := by
+        ring
+    _ ≤ _ := by gcongr
 
 open Classical in
 /-- The Möbius column of `FullRowEstimate`, restricted to the starred ideals. -/
 def moebiusCoeff (W : ℝ → ℂ) (D : ℝ) (n : Ideal 𝓔) : ℂ :=
   if Starred n then (idealMoebius n : ℂ) * W (absNorm n / D) else 0
+
+/-- Each off-diagonal term is a primitive Poisson dual weighted by the Gauss coefficients of
+the cofactors. The hypothesis is the first clause of `PairedGaussIdentities`. -/
+theorem moebiusCoeff_mul_pairRowSum
+    {A : (𝓔 ⧸ span {(72 : 𝓔)}) → (𝓔 ⧸ span {(72 : 𝓔)}) → ℂ}
+    (hA : ∀ b c : Ideal 𝓔, Starred b → Starred c → IsCoprime b c →
+      (idealMoebius b : ℂ) * idealMoebius c * pairGauss b c =
+        gaussCoefficient b * conj (gaussCoefficient c) *
+          A (Ideal.Quotient.mk _ (generator b)) (Ideal.Quotient.mk _ (generator c)))
+    (P : SchwartzMap ℝ ℂ) (W : ℝ → ℂ) {D Y : ℝ} (hY : 0 < Y)
+    {g z₁ z₂ : Ideal 𝓔} (hg : Starred g) (h₁ : Starred z₁) (h₂ : Starred z₂)
+    (h12 : IsCoprime z₁ z₂) (hgz : IsCoprime g (z₂ * z₁)) :
+    moebiusCoeff W D (g * z₁) * conj (moebiusCoeff W D (g * z₂)) *
+        pairRowSum P Y (g * z₁) (g * z₂) =
+      W (absNorm (g * z₁) / D) * conj (W (absNorm (g * z₂) / D)) *
+        ((Y : ℂ) / Real.sqrt (absNorm (z₂ * z₁))) *
+        (gaussCoefficient z₂ * conj (gaussCoefficient z₁) *
+          A (Ideal.Quotient.mk _ (generator z₂)) (Ideal.Quotient.mk _ (generator z₁))) *
+        dualExclusion P Y z₂ z₁ g := by
+  classical
+  have hs₁ : Starred (g * z₁) :=
+    ⟨hg.1.mul h₁.1, squarefree_mul_iff.mpr ⟨(isCoprime_iff_gcd.mp
+      (hgz.of_mul_right_right)).symm ▸ isUnit_one |> gcd_isUnit_iff_isRelPrime.mp, hg.2, h₁.2⟩⟩
+  have hs₂ : Starred (g * z₂) :=
+    ⟨hg.1.mul h₂.1, squarefree_mul_iff.mpr ⟨(isCoprime_iff_gcd.mp
+      (hgz.of_mul_right_left)).symm ▸ isUnit_one |> gcd_isUnit_iff_isRelPrime.mp, hg.2, h₂.2⟩⟩
+  rw [pairRowSum_eq_poisson hg h₁ h₂ h12 hgz P hY, poissonDual,
+    ← moebius_mul_pairGauss hA hg h₁ h₂ h12 hgz]
+  simp only [moebiusCoeff, ite_eq_left hs₁, ite_eq_left hs₂, map_mul, map_intCast]
+  ring
+
+/-! ### The reduction of the full rows to the off-diagonal correlations -/
 
 /-- The off-diagonal part of the expanded `P`-weighted square of the Möbius rows. -/
 def offDiagonalSum (P : SchwartzMap ℝ ℂ) (W : ℝ → ℂ) (D Y : ℝ) : ℂ := open Classical in
@@ -461,5 +538,10 @@ theorem fullRowEstimate_of_offDiagonal {P : SchwartzMap ℝ ℂ} (hP : IsRowMajo
     _ ≤ (A * R' * M ^ 2 * CP + Coff) * D ^ (2 + θ + ε) := by
         rw [add_mul]
         gcongr
+
+/-- The full Möbius row estimate follows from the off-diagonal estimate for `rowMajorant`. -/
+theorem fullRowEstimate_of_offDiagonalEstimate (hoff : OffDiagonalEstimate rowMajorant) :
+    FullRowEstimate :=
+  fullRowEstimate_of_offDiagonal isRowMajorant_rowMajorant hoff
 
 end Masullo.QRH.MeanSquare
