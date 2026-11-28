@@ -496,4 +496,255 @@ theorem dualMainSum_eq (hres : ResidueMultiplicative)
     rintro ⟨hu, -⟩
     exact absurd ((mem_moebiusSplitsLe hD'.le).mp hu).2.1.of_mul_left hb
 
+/-! ### The bound on the main dual frequencies -/
+
+lemma norm_rayCharacter_le_one (ξ : RayCharacter) (x : Q₇₂) : ‖ξ x‖ ≤ 1 := by
+  classical
+  by_cases hx : IsUnit x
+  · let := Ring.HasFiniteQuotients.finiteQuotient (I := span {(72 : 𝓔)}) (by simp)
+    have hpow := pow_card_eq_one' (x := hx.unit)
+    have hχ := congrArg (fun u : Q₇₂ˣ => ξ (u : Q₇₂)) hpow
+    simp only [Units.val_pow_eq_pow_val, hx.unit_spec, map_pow, Units.val_one, map_one] at hχ
+    exact (isOfFinOrder_iff_pow_eq_one.mpr ⟨_, Nat.card_pos, hχ⟩).norm_eq_one.le
+  · simp [ξ.map_nonunit hx]
+
+lemma norm_splitRowWeight_le (ξ η : RayCharacter) {Y X : ℝ} (hY : 0 ≤ Y) (hX : 0 ≤ X)
+    {ρ : Ideal 𝓔 × Ideal 𝓔 × 𝓔} (hv : Starred ρ.2.1) :
+    ‖splitRowWeight ξ η Y X ρ‖ ≤ Y / ((absNorm ρ.1 : ℝ) * absNorm ρ.2.1 * X) := by
+  have ha := gaussCoefficientBound _ hv
+  have hs := norm_sextic_le_one ρ.2.1 ρ.2.2
+  have hξ := norm_rayCharacter_le_one ξ (Ideal.Quotient.mk _ (generator ρ.2.1))
+  have hη := norm_rayCharacter_le_one η (Ideal.Quotient.mk _ (generator ρ.2.1))
+  have hq : 0 ≤ Y / ((absNorm ρ.1 : ℝ) * absNorm ρ.2.1 * X) := by positivity
+  unfold splitRowWeight
+  simp only [norm_mul, Complex.norm_real, Real.norm_of_nonneg hq, RCLike.norm_conj]
+  calc _ ≤ 1 * 1 * (Y / ((absNorm ρ.1 : ℝ) * absNorm ρ.2.1 * X)) * (1 * 1 * 1 * 1 * (1 * 1)) := by
+        gcongr <;> exact norm_idealMoebius_le _
+    _ = _ := by ring
+
+lemma elementNorm_generator_mul (e : Ideal 𝓔) (h : 𝓔) :
+    elementNorm (generator e * h) = absNorm e * elementNorm h := by
+  unfold elementNorm
+  rw [← Ideal.span_singleton_mul_span_singleton, map_mul, span_generator]
+
+/-- Reordering the rows `(e, v, h)` of `dualMainSum_eq` past the ray characters, as one sum over
+the rows that satisfy `p`. -/
+lemma sum_rows_comm {ι κ σ : Type*} [Fintype σ] (B : Finset ι) (E : Finset κ)
+    (p : ι → ι → κ → Prop) [∀ e v h, Decidable (p e v h)] (f : ι → ι → κ → σ → σ → ℂ) :
+    ∑ e ∈ B, ∑ v ∈ B, ∑ h ∈ E, ∑ ξ, ∑ η, (if p e v h then f e v h ξ η else 0) =
+      ∑ ξ, ∑ η, ∑ ρ ∈ (B ×ˢ (B ×ˢ E)).filter (fun ρ => p ρ.1 ρ.2.1 ρ.2.2),
+        f ρ.1 ρ.2.1 ρ.2.2 ξ η := by
+  simp only [Finset.sum_filter, Finset.sum_product]
+  exact (sum_comm₂₃ _ _ _ _ _ _).symm
+
+/-- The main dual frequencies at `Y = D^(1+θ)` and `R = D^(2+θ/4) / Y` are `O(D^(2+θ+ε))`, for
+`W = W'(· / R')` with `W'` vanishing beyond `1` and a cut `χ` equal to `e^{-s/2}` wherever `W'`
+meets two columns dilated by `β ∈ [1, 2)`. -/
+theorem exists_norm_dualMainSum_le (hpg : PairedGaussIdentities) (hgap : GapEstimate)
+    {W W' χ : ℝ → ℂ} (hW' : ContDiff ℝ ∞ W') (hW'c : HasCompactSupport W')
+    (hW'0 : tsupport W' ⊆ Set.Ioi 0) (hW'1 : ∀ y, W' y ≠ 0 → y ≤ 1) {R' : ℝ} (hR' : 1 ≤ R')
+    (hW : ∀ x, W x = W' (x / R')) (P : SchwartzMap ℝ ℂ) (hχ : ContDiff ℝ ∞ χ)
+    (hχc : HasCompactSupport χ)
+    (hχW : ∀ β y₁ y₂ : ℝ, 1 ≤ β → β < 2 → 0 < y₁ → 0 < y₂ →
+      conj (W' (β * y₁)) * W' (β * y₂) ≠ 0 →
+        χ (Real.log y₁ + Real.log y₂) = (Real.exp (-((Real.log y₁ + Real.log y₂) / 2)) : ℂ))
+    (A : Q₇₂ → Q₇₂ → ℂ) {θ : ℝ} (hθ : 0 < θ) (hθ1 : θ ≤ 1) {ε : ℝ} (hε : 0 < ε) :
+    ∃ C ≥ (0 : ℝ), ∀ D : ℝ, 2 ≤ D →
+      ‖dualMainSum P A W D (D ^ (1 + θ)) (D ^ (2 + θ / 4) / D ^ (1 + θ))‖ ≤
+        C * D ^ (2 + θ + ε) := by
+  classical
+  have hmul : ∀ b c : Ideal 𝓔, Starred b → Starred c → IsCoprime b c →
+      gaussCoefficient (b * c) = gaussCoefficient b * gaussCoefficient c *
+        sextic c (generator b) ^ 4 := by
+    obtain ⟨_, _, h⟩ := hpg
+    exact fun b c hb hc hbc => (h b c hb hc hbc).2.2
+  obtain ⟨α, hα⟩ := exists_rayCharacter_expansion A
+  set δ := ε / 4 with hδ
+  have hδ0 : 0 < δ := by positivity
+  obtain ⟨R₁, CB, hCB, hblock⟩ := exists_block_le hpg hgap hW' hW'c hW'0 P hχ hχc
+    (half_pos hθ) hδ0
+  obtain ⟨CH, hCH, hharm⟩ := exists_sum_inv_absNorm_le hδ0
+  set R₀ := max R₁ 1
+  set Sα := ∑ ξ, ∑ η, ‖α ξ η‖ with hSα
+  have hSα0 : 0 ≤ Sα := by positivity
+  have hl2 : 0 < Real.log 2 := Real.log_pos one_lt_two
+  set L := 1 + 1 / (δ * Real.log 2) with hL
+  have hL0 : 0 ≤ L := by positivity
+  refine ⟨L * Sα * CB * CH * R' ^ (1 + 3 * δ), by positivity, fun D hD => ?_⟩
+  set D' := R' * D with hD'
+  set Y := D ^ (1 + θ) with hY
+  set R := D ^ (2 + θ / 4) / D ^ (1 + θ) with hR
+  have hD0 : 0 < D := by linarith
+  have hDD' : D ≤ D' := le_mul_of_one_le_left hD0.le hR'
+  have hD'2 : 2 ≤ D' := hD.trans hDD'
+  have hD'0 : 0 < D' := by linarith
+  have hY0 : 0 < Y := by positivity
+  have hR0 : 0 ≤ R := by positivity
+  have hR₀ : 1 ≤ R₀ := le_max_right _ _
+  have hRle : R ≤ D' * D' ^ (-(θ / 2)) := by
+    rw [← Real.rpow_one_add' hD'0.le (by linarith), ← sub_eq_add_neg, hR, ← Real.rpow_sub hD0]
+    calc D ^ (2 + θ / 4 - (1 + θ)) ≤ D ^ (1 - θ / 2) :=
+          Real.rpow_le_rpow_of_exponent_le (by linarith) (by linarith)
+      _ ≤ D' ^ (1 - θ / 2) := Real.rpow_le_rpow hD0.le hDD' (by linarith)
+  set J := Nat.log 2 ⌊D'⌋₊ with hJdef
+  have h2J : (2 : ℝ) ^ J ≤ D' := by
+    have := Nat.pow_log_le_self 2 (Nat.floor_pos.mpr (by linarith : (1 : ℝ) ≤ D')).ne'
+    exact (by exact_mod_cast this : ((2 ^ J : ℕ) : ℝ) ≤ ⌊D'⌋₊).trans' (by push_cast; rfl)
+      |>.trans (Nat.floor_le hD'0.le)
+  have hJ : ((J + 1 : ℕ) : ℝ) ≤ L * D' ^ δ := by
+    have hlog : (J : ℝ) * Real.log 2 ≤ D' ^ δ / δ := by
+      rw [← Real.log_pow]
+      exact (Real.log_le_log (by positivity) h2J).trans (Real.log_le_rpow_div hD'0.le hδ0)
+    have h1 : 1 ≤ D' ^ δ := Real.one_le_rpow (by linarith) hδ0.le
+    have h3 := (le_div_iff₀ hδ0).mp hlog
+    have h4 : (J : ℝ) ≤ D' ^ δ / (δ * Real.log 2) := by
+      rw [le_div_iff₀ (by positivity)]
+      linarith [show (J : ℝ) * (δ * Real.log 2) = J * Real.log 2 * δ by ring]
+    have h5 : L * D' ^ δ = D' ^ δ + D' ^ δ / (δ * Real.log 2) := by rw [hL]; ring
+    push_cast
+    linarith
+  have hfib : ∀ b ∈ (idealsLe D').filter Starred, ∀ ξ η : RayCharacter,
+      ∀ j ∈ Finset.range (J + 1),
+      ‖∑ ρ ∈ ((idealsLe D' ×ˢ (idealsLe D' ×ˢ elementRows R)).filter fun ρ =>
+          Starred (b * ρ.1 * ρ.2.1) ∧ (absNorm (b * ρ.1 * ρ.2.1) : ℝ) ≤ D' ∧
+            ρ.2.2 ∈ elementRows (R * absNorm ρ.1 / (absNorm (b * ρ.1) : ℝ) ^ 2)).filter
+          (fun ρ => Nat.log 2 (absNorm (ρ.1 * ρ.2.1)) = j),
+        α ξ η * splitRowWeight ξ η Y (blockLength D' b ρ) ρ *
+          ∑ m₁ ∈ blockColumns R₀ (blockLength D' b ρ),
+            ∑ m₂ ∈ blockColumns R₀ (blockLength D' b ρ),
+              blockTerm P χ W' ξ η b Y (blockLength D' b ρ) (dyadicNorm ρ) ρ m₁ m₂‖ ≤
+        ‖α ξ η‖ * (Y * absNorm b / D') * (CB * D' ^ δ * (D' / absNorm b) ^ 2) := by
+    intro b hb ξ η j hj
+    obtain ⟨hbD, hbs⟩ := Finset.mem_filter.mp hb
+    have hNb := natCast_absNorm_pos hbs.1.1
+    have hNb1 : (1 : ℝ) ≤ absNorm b := by
+      exact_mod_cast Nat.one_le_iff_ne_zero.mpr (absNorm_eq_zero_iff.not.mpr hbs.1.1)
+    have hbD' : (absNorm b : ℝ) ≤ D' := (mem_idealsLe hD'0.le).mp hbD
+    set F : ℝ := 2 ^ j with hFdef
+    set X := D' / (absNorm b * F) with hXdef
+    have hF1 : (1 : ℝ) ≤ F := one_le_pow₀ one_le_two
+    have hF0 : 0 < F := by positivity
+    have hX : 0 < X := by positivity
+    have hXF : X * F = D' / absNorm b := by rw [hXdef]; field_simp
+    have hFD : F ≤ D' :=
+      (pow_le_pow_right₀ one_le_two (Nat.lt_succ_iff.mp (Finset.mem_range.mp hj))).trans h2J
+    set T := ((idealsLe D' ×ˢ (idealsLe D' ×ˢ elementRows R)).filter fun ρ =>
+          Starred (b * ρ.1 * ρ.2.1) ∧ (absNorm (b * ρ.1 * ρ.2.1) : ℝ) ≤ D' ∧
+            ρ.2.2 ∈ elementRows (R * absNorm ρ.1 / (absNorm (b * ρ.1) : ℝ) ^ 2)).filter
+          (fun ρ => Nat.log 2 (absNorm (ρ.1 * ρ.2.1)) = j) with hT
+    have hmem : ∀ ρ ∈ T, Starred (b * (ρ.1 * ρ.2.1)) ∧
+        ρ.2.2 ∈ elementRows (R * absNorm ρ.1 / (absNorm (b * ρ.1) : ℝ) ^ 2) ∧
+        dyadicNorm ρ = F := fun ρ hρ => by
+      obtain ⟨hρ', hlogj⟩ := Finset.mem_filter.mp hρ
+      obtain ⟨-, hst, -, hρh⟩ := Finset.mem_filter.mp hρ'
+      refine ⟨by rwa [← mul_assoc], hρh, ?_⟩
+      unfold dyadicNorm
+      rw [hlogj]
+    have hsrw : ∀ ρ ∈ T, ‖splitRowWeight ξ η Y X ρ‖ ≤ Y * absNorm b / D' := fun ρ hρ => by
+      obtain ⟨hst, -, hdy⟩ := hmem ρ hρ
+      have hev : ρ.1 * ρ.2.1 ≠ ⊥ := hst.of_mul_right.1.1
+      have hle := dyadicNorm_le hev
+      rw [hdy] at hle
+      refine (norm_splitRowWeight_le ξ η hY0.le hX.le hst.of_mul_right.of_mul_right).trans ?_
+      rw [← Nat.cast_mul, ← map_mul absNorm ρ.1 ρ.2.1]
+      calc Y / ((absNorm (ρ.1 * ρ.2.1) : ℝ) * X) ≤ Y / (F * X) := by gcongr
+        _ = Y * absNorm b / D' := by rw [hXdef]; field_simp
+    have hK : R / (absNorm b : ℝ) ^ 2 ≤ X * F * D' ^ (-(θ / 2)) := by
+      rw [hXF]
+      calc R / (absNorm b : ℝ) ^ 2 ≤ R / absNorm b :=
+            div_le_div_of_nonneg_left hR0 hNb (by nlinarith)
+        _ ≤ D' * D' ^ (-(θ / 2)) / absNorm b := by gcongr
+        _ = D' / absNorm b * D' ^ (-(θ / 2)) := by ring
+    have hrow : ∀ ρ ∈ T, ρ.1 ≠ ⊥ ∧ Starred (ρ.1 * ρ.2.1) ∧
+        F ≤ (absNorm (ρ.1 * ρ.2.1) : ℝ) ∧ (absNorm (ρ.1 * ρ.2.1) : ℝ) < 2 * F ∧
+        generator ρ.1 * ρ.2.2 ∈ elementRows (R / (absNorm b : ℝ) ^ 2) := fun ρ hρ => by
+      obtain ⟨hst, hρh, hdy⟩ := hmem ρ hρ
+      have hev : ρ.1 * ρ.2.1 ≠ ⊥ := hst.of_mul_right.1.1
+      have he : ρ.1 ≠ ⊥ := left_ne_zero_of_mul hev
+      have hNe := natCast_absNorm_pos he
+      obtain ⟨hh0, hh⟩ := (mem_elementRows (by positivity)).mp hρh
+      refine ⟨he, hst.of_mul_right, hdy ▸ dyadicNorm_le hev, hdy ▸ lt_two_mul_dyadicNorm ρ,
+        (mem_elementRows (by positivity)).mpr ⟨mul_ne_zero (fun h0 => he ?_) hh0, ?_⟩⟩
+      · rw [← span_generator ρ.1, h0, Ideal.span_singleton_eq_bot.mpr rfl]
+      · rw [elementNorm_generator_mul, Nat.cast_mul]
+        rw [map_mul absNorm b ρ.1, Nat.cast_mul] at hh
+        calc (absNorm ρ.1 : ℝ) * elementNorm ρ.2.2 ≤
+              absNorm ρ.1 * (R * absNorm ρ.1 / ((absNorm b : ℝ) * absNorm ρ.1) ^ 2) := by
+              gcongr
+          _ = R / (absNorm b : ℝ) ^ 2 := by field_simp
+    calc _ = ‖∑ ρ ∈ T, α ξ η * splitRowWeight ξ η Y X ρ *
+          ∑ m₁ ∈ blockColumns R₀ X, ∑ m₂ ∈ blockColumns R₀ X,
+            blockTerm P χ W' ξ η b Y X F ρ m₁ m₂‖ := by
+          refine congrArg norm (Finset.sum_congr rfl fun ρ hρ => ?_)
+          have hdy := (hmem ρ hρ).2.2
+          have hbl : blockLength D' b ρ = X := by unfold blockLength; rw [hdy]
+          rw [hbl, hdy]
+      _ ≤ ∑ ρ ∈ T, ‖α ξ η‖ * (Y * absNorm b / D') *
+          ‖∑ m₁ ∈ blockColumns R₀ X, ∑ m₂ ∈ blockColumns R₀ X,
+            blockTerm P χ W' ξ η b Y X F ρ m₁ m₂‖ := by
+          refine (norm_sum_le _ _).trans (Finset.sum_le_sum fun ρ hρ => ?_)
+          rw [norm_mul, norm_mul]
+          gcongr
+          exact hsrw ρ hρ
+      _ = ‖α ξ η‖ * (Y * absNorm b / D') * ∑ ρ ∈ T,
+          ‖∑ m₁ ∈ blockColumns R₀ X, ∑ m₂ ∈ blockColumns R₀ X,
+            blockTerm P χ W' ξ η b Y X F ρ m₁ m₂‖ := by rw [Finset.mul_sum]
+      _ ≤ ‖α ξ η‖ * (Y * absNorm b / D') * (CB * D' ^ δ * (X * F) ^ 2) := by
+          have hXFD : X * F ≤ D' := by rw [hXF]; exact div_le_self hD'0.le hNb1
+          have hB := hblock R₀ D' (R / (absNorm b : ℝ) ^ 2) X F ξ η b T (rowShift Y X)
+            (le_max_left _ _) hD'2 hX hF1 hFD hXFD hK hbs hbD' hrow
+          gcongr
+          exact hB
+      _ = _ := by rw [hXF]
+  rw [dualMainSum_eq residueMultiplicative hmul hα P hD0 hD'0 (W' := W') (χ := χ)
+    (fun x => by rw [hW, div_div, mul_comm D R']) (fun x hx => (div_le_one hD'0).mp (hW'1 _ hx))
+    hχW hY0 hR0 hR₀]
+  simp only [sum_rows_comm, Prod.mk.eta]
+  calc _ ≤ ∑ b ∈ (idealsLe D').filter Starred, ∑ ξ, ∑ η, ∑ j ∈ Finset.range (J + 1),
+        ‖α ξ η‖ * (Y * absNorm b / D') * (CB * D' ^ δ * (D' / absNorm b) ^ 2) := by
+        refine (norm_sum_le _ _).trans (Finset.sum_le_sum fun b hb => ?_)
+        refine (norm_sum_le _ _).trans (Finset.sum_le_sum fun ξ _ => ?_)
+        refine (norm_sum_le _ _).trans (Finset.sum_le_sum fun η _ => ?_)
+        have hmaps : ∀ ρ ∈ (idealsLe D' ×ˢ (idealsLe D' ×ˢ elementRows R)).filter (fun ρ =>
+            Starred (b * ρ.1 * ρ.2.1) ∧ (absNorm (b * ρ.1 * ρ.2.1) : ℝ) ≤ D' ∧
+              ρ.2.2 ∈ elementRows (R * absNorm ρ.1 / (absNorm (b * ρ.1) : ℝ) ^ 2)),
+            Nat.log 2 (absNorm (ρ.1 * ρ.2.1)) ∈ Finset.range (J + 1) := by
+          intro ρ hρ
+          obtain ⟨-, hst, hND, -⟩ := Finset.mem_filter.mp hρ
+          rw [mul_assoc] at hst hND
+          have hle := (absNorm_le_absNorm_mul hst.1.1).2.trans hND
+          refine Finset.mem_range.mpr (Nat.lt_succ_of_le (Nat.log_mono_right ?_))
+          exact Nat.le_floor hle
+        rw [← Finset.sum_fiberwise_of_maps_to hmaps]
+        exact (norm_sum_le _ _).trans (Finset.sum_le_sum fun j hj => hfib b hb ξ η j hj)
+    _ = ∑ b ∈ (idealsLe D').filter Starred,
+        ((J + 1 : ℕ) : ℝ) * Sα * (CB * D' ^ δ * Y * D') * (absNorm b : ℝ)⁻¹ := by
+      refine Finset.sum_congr rfl fun b hb => ?_
+      have hNb := natCast_absNorm_pos (Finset.mem_filter.mp hb).2.1.1
+      simp only [Finset.sum_const, Finset.card_range, nsmul_eq_mul, hSα, Finset.sum_mul,
+        Finset.mul_sum]
+      refine Finset.sum_congr rfl fun ξ _ => Finset.sum_congr rfl fun η _ => ?_
+      push_cast
+      field_simp
+    _ ≤ ((J + 1 : ℕ) : ℝ) * Sα * (CB * D' ^ δ * Y * D') * (CH * D' ^ δ) := by
+      rw [← Finset.mul_sum]
+      gcongr
+      exact (Finset.sum_le_sum_of_subset_of_nonneg (Finset.filter_subset _ _)
+        fun _ _ _ => by positivity).trans (hharm D' (by linarith))
+    _ ≤ (L * D' ^ δ) * Sα * (CB * D' ^ δ * Y * D') * (CH * D' ^ δ) := by gcongr
+    _ = L * Sα * CB * CH * (D' ^ δ * D' ^ δ * D' ^ δ * D') * Y := by ring
+    _ = L * Sα * CB * CH * R' ^ (1 + 3 * δ) * D ^ (2 + θ + 3 * δ) := by
+      rw [show D' ^ δ * D' ^ δ * D' ^ δ * D' = D' ^ (1 + 3 * δ) by
+        rw [show 1 + 3 * δ = δ + δ + δ + 1 by ring, Real.rpow_add hD'0, Real.rpow_add hD'0,
+          Real.rpow_add hD'0, Real.rpow_one],
+        hD', Real.mul_rpow (by linarith) hD0.le, hY]
+      have : D ^ (1 + 3 * δ) * D ^ (1 + θ) = D ^ (2 + θ + 3 * δ) := by
+        rw [← Real.rpow_add hD0]; ring_nf
+      rw [← this]
+      ring
+    _ ≤ L * Sα * CB * CH * R' ^ (1 + 3 * δ) * D ^ (2 + θ + ε) := by
+      gcongr
+      · linarith
+      · linarith
+
 end Masullo.QRH.MeanSquare
