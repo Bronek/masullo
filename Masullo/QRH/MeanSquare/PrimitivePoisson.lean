@@ -371,18 +371,18 @@ lemma finsum_dvd_eq_sum {g : Ideal 𝓔} (hg : Squarefree g) (f : Ideal 𝓔 →
 
 open Classical in
 /-- Möbius inversion of the coprimality indicator over the divisors of a squarefree ideal. -/
-lemma sum_moebius_dvd {g : Ideal 𝓔} (hg : g ≠ ⊥) (y : 𝓔) :
+lemma sum_moebius_dvd_ideal {g : Ideal 𝓔} (hg : g ≠ ⊥) (c : Ideal 𝓔) :
     ∑ s ∈ (normalizedFactors g).toFinset.powerset,
-      (if ∏ P ∈ s, P ∣ span {y} then (idealMoebius (∏ P ∈ s, P) : ℂ) else 0) =
-      if IsCoprime (span {y}) g then 1 else 0 := by
+      (if ∏ P ∈ s, P ∣ c then (idealMoebius (∏ P ∈ s, P) : ℂ) else 0) =
+      if IsCoprime c g then 1 else 0 := by
   set F := (normalizedFactors g).toFinset
-  set Fy := F.filter (· ∣ span {y})
+  set Fc := F.filter (· ∣ c)
   have h1 : ∀ s ∈ F.powerset,
-      (if ∏ P ∈ s, P ∣ span {y} then (idealMoebius (∏ P ∈ s, P) : ℂ) else 0) =
-        if s ⊆ Fy then (((-1 : ℤ) ^ s.card : ℤ) : ℂ) else 0 := by
+      (if ∏ P ∈ s, P ∣ c then (idealMoebius (∏ P ∈ s, P) : ℂ) else 0) =
+        if s ⊆ Fc then (((-1 : ℤ) ^ s.card : ℤ) : ℂ) else 0 := by
     intro s hs
     have hs' := Finset.mem_powerset.mp hs
-    have hiff : ∏ P ∈ s, P ∣ span {y} ↔ s ⊆ Fy := by
+    have hiff : ∏ P ∈ s, P ∣ c ↔ s ⊆ Fc := by
       constructor
       · intro h P hP
         exact Finset.mem_filter.mpr ⟨hs' hP, (Finset.dvd_prod_of_mem _ hP).trans h⟩
@@ -391,12 +391,12 @@ lemma sum_moebius_dvd {g : Ideal 𝓔} (hg : g ≠ ⊥) (y : 𝓔) :
           fun P hP => (Finset.mem_filter.mp (h hP)).2
     rw [if_congr hiff rfl rfl, idealMoebius_prod_subset hs']
   rw [Finset.sum_congr rfl h1, ← Finset.sum_filter]
-  have hfil : F.powerset.filter (· ⊆ Fy) = Fy.powerset := by
+  have hfil : F.powerset.filter (· ⊆ Fc) = Fc.powerset := by
     ext s
     simp only [Finset.mem_filter, Finset.mem_powerset]
     exact ⟨fun h => h.2, fun h => ⟨h.trans (Finset.filter_subset _ _), h⟩⟩
   rw [hfil, ← Int.cast_sum, Finset.sum_powerset_neg_one_pow_card]
-  have hiff : Fy = ∅ ↔ IsCoprime (span {y}) g := by
+  have hiff : Fc = ∅ ↔ IsCoprime c g := by
     rw [Finset.eq_empty_iff_forall_notMem]
     constructor
     · intro h
@@ -409,10 +409,18 @@ lemma sum_moebius_dvd {g : Ideal 𝓔} (hg : g ≠ ⊥) (y : 𝓔) :
         ((UniqueFactorizationMonoid.mem_normalizedFactors_iff hg).mpr ⟨hP, dvd_iff_le.mpr hgM⟩),
         dvd_iff_le.mpr (le_sup_left.trans hle)⟩)
     · intro hc P hP
-      obtain ⟨hPF, hPy⟩ := Finset.mem_filter.mp hP
+      obtain ⟨hPF, hPc⟩ := Finset.mem_filter.mp hP
       exact (prime_of_mem_factors hPF).not_isUnit
-        (hc.isUnit_of_dvd' hPy (dvd_of_mem_normalizedFactors (Multiset.mem_toFinset.mp hPF)))
-  by_cases h : IsCoprime (span {y}) g <;> simp [hiff, h]
+        (hc.isUnit_of_dvd' hPc (dvd_of_mem_normalizedFactors (Multiset.mem_toFinset.mp hPF)))
+  by_cases h : IsCoprime c g <;> simp [hiff, h]
+
+open Classical in
+/-- `sum_moebius_dvd_ideal` for a principal ideal. -/
+lemma sum_moebius_dvd {g : Ideal 𝓔} (hg : g ≠ ⊥) (y : 𝓔) :
+    ∑ s ∈ (normalizedFactors g).toFinset.powerset,
+      (if ∏ P ∈ s, P ∣ span {y} then (idealMoebius (∏ P ∈ s, P) : ℂ) else 0) =
+      if IsCoprime (span {y}) g then 1 else 0 :=
+  sum_moebius_dvd_ideal hg _
 
 /-! ### The primitive Poisson formula -/
 

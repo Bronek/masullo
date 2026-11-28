@@ -16,6 +16,8 @@ Steps toward `DualTailEstimate rowMajorant` from `GapEstimate`.
   `dualExclusionMain` up to such a power.
 * `exists_dualMeanSquareCoprime_le`: `GapEstimate` for columns coprime to `b`, with no lower
   bounds on `K` and `X`.
+* `mainSummand_eq`: after the Möbius substitution `c = v m₁`, `b = v m₂`, the arithmetic factor
+  of a main dual term factors into a row weight and twisted columns `m₁`, `m₂`.
 -/
 
 noncomputable section
@@ -463,5 +465,75 @@ theorem exists_dualMeanSquareCoprime_le (hpg : PairedGaussIdentities) (hgap : Ga
   calc (4 : ℝ) ^ Multiset.card (normalizedFactors b) * ((C₂ + C₃) * D ^ (ε / 2) * (X * F))
       ≤ C₁ ^ 2 * D ^ (ε / 2) * ((C₂ + C₃) * D ^ (ε / 2) * (X * F)) := by gcongr
     _ = C₁ ^ 2 * (C₂ + C₃) * D ^ ε * (X * F) := by rw [← hDε]; ring
+
+/-! ### The arithmetic factor of a main dual term -/
+
+lemma conj_sextic_eq_pow_five {n : Ideal 𝓔} (hn : AwayFromSix n) {a : 𝓔}
+    (ha : IsCoprime n (span {a})) : conj (sextic n a) = sextic n a ^ 5 := by
+  have h6 : sextic n a ^ 6 = 1 := by
+    simp only [sextic, ← map_pow, powerResidueSymbol_six_pow_six hn.1 hn.2, ite_eq_left ha,
+      map_one]
+  have h1 : sextic n a * conj (sextic n a) = 1 := by
+    rw [Complex.mul_conj', norm_sextic_of_coprime hn ha]; norm_num
+  linear_combination (sextic n a ^ 5) * h1 - conj (sextic n a) * h6
+
+lemma sextic_pow {n : Ideal 𝓔} (hn : AwayFromSix n) (x : 𝓔) (k : ℕ) :
+    sextic n (x ^ k) = sextic n x ^ k := by
+  induction k with
+  | zero => simp [sextic_one hn]
+  | succ k ih => rw [pow_succ, sextic_mul hn, ih, pow_succ]
+
+/-- The arithmetic factor of a main dual term at `c = v m₁`, `b = v m₂` and the divisor `e`
+of the gcd. The ray correction `A` is expanded in ray characters `ξ, η`; the row `k = e° h`
+and the twist ideal `f = e v` give the twisted columns. -/
+lemma mainSummand_eq (hres : ResidueMultiplicative)
+    (hmul : ∀ b c : Ideal 𝓔, Starred b → Starred c → IsCoprime b c →
+      gaussCoefficient (b * c) = gaussCoefficient b * gaussCoefficient c *
+        sextic c (generator b) ^ 4)
+    {A : Q₇₂ → Q₇₂ → ℂ} {α : RayCharacter → RayCharacter → ℂ}
+    (hα : ∀ x y : Q₇₂, IsUnit x → IsUnit y → A x y = ∑ ξ, ∑ η, α ξ η * ξ x * conj (η y))
+    {e v m₁ m₂ : Ideal 𝓔} (he : AwayFromSix e) (hv : Starred v) (hm₁ : Starred m₁)
+    (hm₂ : Starred m₂) (hvm₁ : IsCoprime v m₁) (hvm₂ : IsCoprime v m₂) (hev : IsCoprime e v)
+    (hem₁ : IsCoprime e m₁) (hem₂ : IsCoprime e m₂) (h : 𝓔) :
+    gaussCoefficient (v * m₁) * conj (gaussCoefficient (v * m₂)) *
+        A (Ideal.Quotient.mk _ (generator (v * m₁))) (Ideal.Quotient.mk _ (generator (v * m₂))) *
+        (pairCharacter (v * m₁) (v * m₂) (generator e) *
+          conj (pairCharacter (v * m₁) (v * m₂) h)) =
+      ∑ ξ, ∑ η, α ξ η * (gaussCoefficient v * conj (gaussCoefficient v) *
+          ξ (Ideal.Quotient.mk _ (generator v)) * conj (η (Ideal.Quotient.mk _ (generator v))) *
+          (sextic v h * conj (sextic v h))) *
+        ((gaussCoefficient m₁ * twist ξ (generator e * h) (e * v) m₁) *
+          conj (gaussCoefficient m₂ * twist η (generator e * h) (e * v) m₂)) := by
+  have h3 : ∀ {n : Ideal 𝓔}, AwayFromSix n → IsCoprime n (span {3}) := fun hn =>
+    hn.coprime_three
+  have hgen : ∀ {n : Ideal 𝓔}, AwayFromSix n → generator (v * n) = generator v * generator n :=
+    fun hn => hres.generator_mul (h3 hv.1) (h3 hn)
+  have hgev : generator (e * v) = generator e * generator v := hres.generator_mul (h3 he) (h3 hv.1)
+  have hce : ∀ {n : Ideal 𝓔}, IsCoprime e n → IsCoprime n (span {generator e}) := fun hn => by
+    rw [span_generator]; exact hn.symm
+  rw [hα _ _ (isUnit_mk_generator (hv.1.mul hm₁.1)) (isUnit_mk_generator (hv.1.mul hm₂.1)),
+    hgen hm₁.1, hgen hm₂.1, hmul v m₁ hv hm₁ hvm₁, hmul v m₂ hv hm₂ hvm₂, Finset.mul_sum,
+    Finset.sum_mul]
+  refine Finset.sum_congr rfl fun ξ _ => ?_
+  rw [Finset.mul_sum, Finset.sum_mul]
+  refine Finset.sum_congr rfl fun η _ => ?_
+  have harg : generator e * h * (generator e * generator v) ^ 4 =
+      h * generator e ^ 5 * generator v ^ 4 := by ring
+  simp only [twist, hm₁.1, hm₂.1, ite_true, hgev, harg, pairCharacter, sextic_mul_right,
+    map_mul, map_pow, sextic_mul hm₁.1, sextic_mul hm₂.1, sextic_pow hm₁.1, sextic_pow hm₂.1,
+    Complex.conj_conj]
+  have h₂ : conj (sextic m₂ (generator e)) ^ 5 = sextic m₂ (generator e) := by
+    rw [← map_pow, ← conj_sextic_eq_pow_five hm₂.1 (hce hem₂), Complex.conj_conj]
+  rw [← conj_sextic_eq_pow_five hm₁.1 (hce hem₁), h₂]
+  have hvu : conj (sextic v (generator e)) * sextic v (generator e) = 1 := by
+    rw [mul_comm, Complex.mul_conj', norm_sextic_of_coprime hv.1 (hce hev)]; norm_num
+  linear_combination (gaussCoefficient v * gaussCoefficient m₁ * sextic m₁ (generator v) ^ 4 *
+      (conj (gaussCoefficient v) * conj (gaussCoefficient m₂) *
+        conj (sextic m₂ (generator v)) ^ 4) *
+      (α ξ η * (ξ (Ideal.Quotient.mk _ (generator v)) * ξ (Ideal.Quotient.mk _ (generator m₁))) *
+        (conj (η (Ideal.Quotient.mk _ (generator v))) *
+          conj (η (Ideal.Quotient.mk _ (generator m₂))))) *
+      (conj (sextic m₁ (generator e)) * sextic m₂ (generator e) *
+        (sextic v h * sextic m₁ h * (conj (sextic v h) * conj (sextic m₂ h))))) * hvu
 
 end Masullo.QRH.MeanSquare
