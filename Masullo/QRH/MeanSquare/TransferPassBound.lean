@@ -234,6 +234,28 @@ lemma passRows_ne_bot {X : ℝ} {r : Ideal 𝓔 × Ideal 𝓔 × Ideal 𝓔} (hr
     simpa [Ideal.zero_eq_bot] using (Finset.mem_filter.mp hr).2.1.2.ne_zero
   exact ⟨hs, fun h => hs (by rw [h, mul_bot])⟩
 
+/-- The dual rows on which the twist `φ` survives in the row factor. -/
+def liveRows (φ : Ideal 𝓔 → ℂ) (X : ℝ) : Finset (Ideal 𝓔 × Ideal 𝓔 × Ideal 𝓔) := by
+  classical
+  exact (passRows X).filter fun r => φ (r.1 * r.2.1) ≠ 0 ∧ φ r.2.2 ≠ 0
+
+lemma passCoefficient_eq_zero {κ κ' φ : Ideal 𝓔 → ℂ} {p : ℕ}
+    {α : RayCharacter → RayCharacter → ℂ} {ℓ Y : ℝ} {r : Ideal 𝓔 × Ideal 𝓔 × Ideal 𝓔}
+    (hr : ¬ (φ (r.1 * r.2.1) ≠ 0 ∧ φ r.2.2 ≠ 0)) (h : 𝓔) (ξ η : RayCharacter) :
+    passCoefficient κ κ' φ p α ℓ Y r h ξ η = 0 := by
+  rw [not_and_or, not_not, not_not] at hr
+  rcases hr with hr | hr <;> simp [passCoefficient, passRowFactor, hr]
+
+lemma sum_liveRows_eq {M : Type*} [AddCommMonoid M] {φ : Ideal 𝓔 → ℂ} {X : ℝ}
+    {f : Ideal 𝓔 × Ideal 𝓔 × Ideal 𝓔 → M}
+    (hf : ∀ r ∈ passRows X, ¬ (φ (r.1 * r.2.1) ≠ 0 ∧ φ r.2.2 ≠ 0) → f r = 0) :
+    ∑ r ∈ liveRows φ X, f r = ∑ r ∈ passRows X, f r := by
+  classical
+  unfold liveRows
+  convert Finset.sum_filter_of_ne fun r hr h => ?_
+  by_contra hc
+  exact h (hf r hr hc)
+
 /-- A weighted family of `P`-weighted mean squares of pass columns is bounded by its zero
 frequencies and by the mean squares of the dual columns, uniformly over tests. -/
 theorem exists_passBound (hres : ResidueMultiplicative) (I : TestInterval) (j : ℕ)
@@ -245,7 +267,7 @@ theorem exists_passBound (hres : ResidueMultiplicative) (I : TestInterval) (j : 
       (∀ n, ‖κ n‖ ≤ 1) → (∀ n, ‖κ' n‖ ≤ 1) → (∀ o n, ‖φ o n‖ ≤ 1) → UnitTest I j V →
       (∀ o ∈ O, 0 ≤ w o ∧ 0 < Y o ∧ 0 < ℓ o ∧ 0 ≤ X o) → 0 ≤ M →
       (∀ U, UnitTest I j U → ∀ ξ : RayCharacter,
-        ∑ o ∈ O, ∑ r ∈ passRows (X o),
+        ∑ o ∈ O, ∑ r ∈ liveRows (φ o) (X o),
           ∑ h ∈ elementRows (passCap I.hi (Y o) (ℓ o) (r.1 * r.2.1) r.2.1),
             w o * (Y o * absNorm (r.1 * r.2.1) / (ℓ o * absNorm r.2.1)) *
               ‖∑ x ∈ passCols (X o) r, dualCoeff κ' (φ o) p p' ξ (r.1 * r.2.1) r.2.1 r.2.2 h x *
@@ -280,10 +302,10 @@ theorem exists_passBound (hres : ResidueMultiplicative) (I : TestInterval) (j : 
     elementRows (passCap I.hi (Y o) (ℓ o) (r.1 * r.2.1) r.2.1) with hE
   set F : Ω → Ideal 𝓔 × Ideal 𝓔 × Ideal 𝓔 → 𝓔 → RayCharacter → RayCharacter → ℝ :=
     fun o r h ξ η => ‖passForm κ' (φ o) p p' P V (ℓ o) (Y o) (X o) r h ξ η‖ with hF
-  have hform : ∀ ξ η, ∑ o ∈ O, w o * ∑ r ∈ passRows (X o), ∑ h ∈ E o r, Wt o r * F o r h ξ η ≤
+  have hform : ∀ ξ η, ∑ o ∈ O, w o * ∑ r ∈ liveRows (φ o) (X o), ∑ h ∈ E o r, Wt o r * F o r h ξ η ≤
       Cs * (M + M) := by
     intro ξ η
-    set rows := O.sigma fun o => (passRows (X o)).sigma fun r => E o r
+    set rows := O.sigma fun o => (liveRows (φ o) (X o)).sigma fun r => E o r
     have hpos : ∀ ρ ∈ rows, 0 ≤ w ρ.1 * Wt ρ.1 ρ.2.1 ∧
         0 < passScale (Y ρ.1) (ℓ ρ.1) (ρ.2.1.1 * ρ.2.1.2.1) ρ.2.1.2.1 ρ.2.2 := by
       intro ρ hρ
@@ -291,7 +313,7 @@ theorem exists_passBound (hres : ResidueMultiplicative) (I : TestInterval) (j : 
       simp only [rows, Finset.mem_sigma] at hρ
       obtain ⟨ho, hr, hh⟩ := hρ
       obtain ⟨hw, hY, hℓ, -⟩ := hO o ho
-      obtain ⟨hg, he⟩ := passRows_ne_bot hr
+      obtain ⟨hg, he⟩ := passRows_ne_bot (Finset.mem_filter.mp hr).1
       have hcap : 0 ≤ passCap I.hi (Y o) (ℓ o) (r.1 * r.2.1) r.2.1 := by
         unfold passCap; positivity
       have hh0 := ((mem_elementRows hcap).mp hh).1
@@ -327,11 +349,13 @@ theorem exists_passBound (hres : ResidueMultiplicative) (I : TestInterval) (j : 
     ring
   have htail : ∀ o ∈ O, ‖∑ t ∈ passSplits (X o), passDual κ κ' (φ o) p Corr V (ℓ o) (Y o) t *
       dualExclusionTail P (Y o) t.2.2 t.2.1 t.1‖ ≤
-      ∑ ξ, ∑ η, ‖α ξ η‖ * ∑ r ∈ passRows (X o), ∑ h ∈ E o r, Wt o r * F o r h ξ η := by
+      ∑ ξ, ∑ η, ‖α ξ η‖ * ∑ r ∈ liveRows (φ o) (X o), ∑ h ∈ E o r, Wt o r * F o r h ξ η := by
     intro o ho
     obtain ⟨-, hY, hℓ, hX⟩ := hO o ho
-    rw [sum_passDual_tail_eq_rows hres hκ' (hφ o) hα hT hVs hℓ hY hX]
-    calc _ ≤ ∑ r ∈ passRows (X o), ∑ h ∈ E o r, ∑ ξ, ∑ η, ‖α ξ η‖ * (Wt o r * F o r h ξ η) := by
+    rw [sum_passDual_tail_eq_rows hres hκ' (hφ o) hα hT hVs hℓ hY hX,
+      ← sum_liveRows_eq fun r _ hc => Finset.sum_eq_zero fun h _ => Finset.sum_eq_zero
+        fun ξ _ => Finset.sum_eq_zero fun η _ => by rw [passCoefficient_eq_zero hc, zero_mul]]
+    calc _ ≤ ∑ r ∈ liveRows (φ o) (X o), ∑ h ∈ E o r, ∑ ξ, ∑ η, ‖α ξ η‖ * (Wt o r * F o r h ξ η) := by
           refine (norm_sum_le _ _).trans (Finset.sum_le_sum fun r _ => ?_)
           refine (norm_sum_le _ _).trans (Finset.sum_le_sum fun h _ => ?_)
           refine (norm_sum_le _ _).trans (Finset.sum_le_sum fun ξ _ => ?_)
@@ -350,7 +374,7 @@ theorem exists_passBound (hres : ResidueMultiplicative) (I : TestInterval) (j : 
     refine (norm_sum_passZero_le hκn hκ'n (hφn o) hVn P (ℓ o) hY.le hX).trans (le_of_eq ?_)
     rw [hK₀]; ring
   calc _ ≤ ∑ o ∈ O, (w o * ∑ ξ, ∑ η, ‖α ξ η‖ *
-          ∑ r ∈ passRows (X o), ∑ h ∈ E o r, Wt o r * F o r h ξ η + K₀ * (w o * Y o *
+          ∑ r ∈ liveRows (φ o) (X o), ∑ h ∈ E o r, Wt o r * F o r h ξ η + K₀ * (w o * Y o *
             ∑ g ∈ starredLe (X o), (2 : ℝ) ^ Multiset.card (normalizedFactors g))) := by
         refine Finset.sum_le_sum fun o ho => ?_
         obtain ⟨hw, hY, -, hX⟩ := hO o ho
@@ -364,7 +388,7 @@ theorem exists_passBound (hres : ResidueMultiplicative) (I : TestInterval) (j : 
               exact add_le_add (mul_le_mul_of_nonneg_left (htail o ho) hw)
                 ((mul_le_mul_of_nonneg_left (hzero o ho) hw).trans_eq (by ring))
     _ = ∑ ξ, ∑ η, ‖α ξ η‖ * ∑ o ∈ O, w o *
-          ∑ r ∈ passRows (X o), ∑ h ∈ E o r, Wt o r * F o r h ξ η + K₀ * S := by
+          ∑ r ∈ liveRows (φ o) (X o), ∑ h ∈ E o r, Wt o r * F o r h ξ η + K₀ * S := by
         rw [Finset.sum_add_distrib, hS, Finset.mul_sum]
         congr 1
         simp only [Finset.mul_sum]
