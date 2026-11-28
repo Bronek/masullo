@@ -88,7 +88,7 @@ trace phase on the frequency in `λ⁻³𝓔`. -/
 def rayShift (h : RayResidue 7) : ℂ :=
   eisEmbedding (eisLambda ^ 2 * Quotient.out h) / eisEmbedding (8 * eisLambda ^ 7)
 
-private theorem rayAddChar_eq_translate (h : RayResidue 7) (m : 𝓔) :
+theorem rayAddChar_eq_translate (h : RayResidue 7) (m : 𝓔) :
     rayAddChar 7 (h * Ideal.Quotient.mk _ m) =
       pattersonCharacter ((eisEmbedding m / eisEmbedding eisLambda ^ 3) * rayShift h) := by
   have hLambda := (map_ne_zero_iff eisEmbedding eisEmbedding_injective).mpr eisLambda_prime.ne_zero

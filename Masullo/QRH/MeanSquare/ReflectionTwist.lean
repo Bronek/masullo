@@ -2,6 +2,8 @@ import Masullo.QRH.MeanSquare.FamilyReciprocity
 import Masullo.QRH.MeanSquare.FamilySymbol
 import Masullo.QRH.MeanSquare.ReflectionCoefficients
 import Masullo.QRH.MeanSquare.ThetaSupport
+import Masullo.QRH.MeanSquare.UnitRows
+import Mathlib.NumberTheory.MulChar.Duality
 
 /-! # Tame factors of the primary sextic twist -/
 
@@ -644,5 +646,156 @@ theorem sextic_lambda_congr (recip : DunnRadziwillReciprocity) (quad : DeloupTur
   have he₄ : Ideal.Quotient.mk (span {(4 : 𝓔)}) (generator n) = Ideal.Quotient.mk _ (generator m) :=
     Ideal.Quotient.eq.mpr (mem_span_singleton.mpr (by simpa using ray_dvd he (by decide : 4 ∣ 72)))
   rw [lambda_ratio quad hn, lambda_ratio quad hm, map_mul,map_mul,he₄]
+
+private lemma norm_ne_two (x : 𝓔) : elementNorm x ≠ 2 := by
+  rintro h
+  obtain ⟨a,b,rfl⟩ := eisInteger_coordinates x
+  have he := norm_coords a b
+  rw [h] at he
+  have hz := congrArg (Int.cast : ℤ → ZMod 3) he
+  push_cast at hz
+  have hc : (3 : ZMod 3) = 0 := rfl
+  have hs : ((a : ZMod 3)+b)^2 = 2 := by
+    linear_combination -hz + (a*b : ZMod 3)*hc
+  exact (show ∀ t : ZMod 3, t^2 ≠ 2 by decide) _ hs
+
+private lemma norm_neg_two : elementNorm (-2) = 4 := by
+  have h := norm_coords (-2) 0
+  norm_num at h
+  exact_mod_cast h
+
+/-- The rational prime two is inert in the Eisenstein integers. -/
+theorem neg_two_prime : Prime (-2 : 𝓔) := by
+  have hu (a : 𝓔) : IsUnit a ↔ elementNorm a = 1 :=
+    span_singleton_eq_top.symm.trans absNorm_eq_one_iff.symm
+  apply Irreducible.prime
+  constructor
+  · simp [hu,norm_neg_two]
+  · intro a b h
+    have hnorm : elementNorm a * elementNorm b = 4 := by
+      rw [← norm_neg_two,h]
+      simp only [elementNorm,← span_singleton_mul_span_singleton,map_mul]
+    rw [hu,hu]
+    by_contra! hh
+    have ha : elementNorm a ≤ 4 := Nat.le_of_dvd (by decide) ⟨_, hnorm.symm⟩
+    have hb : elementNorm b ≤ 4 := Nat.le_of_dvd (by decide) ⟨_, (mul_comm _ _).trans hnorm |>.symm⟩
+    have := norm_ne_two a
+    have := norm_ne_two b
+    interval_cases elementNorm a <;> interval_cases elementNorm b <;> omega
+
+/-- Split a nonzero Eisenstein integer into its unit, factors at two and λ,
+and the primary generator of an ideal prime to six. -/
+theorem exists_good_part {x : 𝓔} (hx : x ≠ 0) :
+    ∃ (u : 𝓔ˣ) (i j : ℕ) (k : Ideal 𝓔), AwayFromSix k ∧
+      x = (u : 𝓔) * (-2)^i * eisLambda^j * generator k := by
+  obtain ⟨i,a,ha,hx'⟩ := WfDvdMonoid.max_power_factor hx neg_two_prime.irreducible
+  have ha₀ : a ≠ 0 := by rintro rfl; simp [hx'] at hx
+  obtain ⟨j,b,hb,ha'⟩ := WfDvdMonoid.max_power_factor ha₀ eisLambda_prime.irreducible
+  have hb₀ : b ≠ 0 := by rintro rfl; simp [ha'] at ha₀
+  have h₂ : IsCoprime (-2:𝓔) b :=
+    neg_two_prime.coprime_iff_not_dvd.mpr (fun h => ha (ha' ▸ h.trans (dvd_mul_left ..)))
+  have h₃ := (eisLambda_prime.coprime_iff_not_dvd.mpr hb).pow_left (m := 2)
+  have h₆ : IsCoprime b (6 : 𝓔) := by
+    have h := h₂.symm.mul_right h₃.symm
+    rwa [eisLambda_sq,show (-2 : 𝓔)*(-3) = 6 by norm_num] at h
+  let k := span {b}
+  obtain ⟨u,hu⟩ := span_singleton_eq_span_singleton.mp (span_generator k)
+  refine ⟨u,i,j,k,⟨by simpa [k] using hb₀, (isCoprime_span_singleton_iff _ _).mpr h₆⟩,?_⟩
+  rw [hx', ha',← hu]
+  ring
+
+/-- The fixed ray weight of (12). The residues which do not occur for good primary
+denominators have weight zero. All its parameters vary in finite sets. -/
+def fixedFactor (ξ : RayCharacter) (u : 𝓔ˣ) (i j : Fin 6) (k : QuadraticFamilyClass) (r : R₇₂) : ℂ :=
+  open Classical in
+  if h : ∃ n : Ideal 𝓔, AwayFromSix n ∧ Ideal.Quotient.mk _ (generator n) = r then
+    rayFactor ξ k r * sextic h.choose ((u : 𝓔) * (-2)^(i : ℕ) * eisLambda^(j : ℕ))
+  else 0
+
+theorem fixedFactor_mk (recip : DunnRadziwillReciprocity) (quad : DeloupTuraevTheorem1)
+    (ξ : RayCharacter) (u : 𝓔ˣ) (i j : ℕ) (k : QuadraticFamilyClass) {n : Ideal 𝓔} (hn : AwayFromSix n) :
+    fixedFactor ξ u (Fin.ofNat 6 i) (Fin.ofNat 6 j) k (Ideal.Quotient.mk _ (generator n)) =
+      rayFactor ξ k (Ideal.Quotient.mk _ (generator n)) * sextic n ((u : 𝓔)*(-2)^i*eisLambda^j) := by
+  classical
+  have h : ∃ m : Ideal 𝓔, AwayFromSix m ∧ Ideal.Quotient.mk (span {(72 : 𝓔)}) (generator m) =
+      Ideal.Quotient.mk _ (generator n) := ⟨n, hn, rfl⟩
+  have hm := h.choose_spec.1
+  have he := h.choose_spec.2
+  have h₂ : IsCoprime n (span {(-2 : 𝓔)}) := hn.2.of_isCoprime_of_dvd_right
+    (span_singleton_dvd_span_singleton_iff_dvd.mpr ⟨-3,by norm_num⟩)
+  have hs (x : 𝓔) (hx : IsCoprime n (span {x})) : sextic n x ^ 6 = 1 := by
+    simp only [sextic, ← map_pow, powerResidueSymbol_six_pow_six hn.1 hn.2, ite_eq_left hx,map_one]
+  rw [fixedFactor,dite_eq_left h]
+  simp only [sextic_mul hm, sextic_pow hm, sextic_mul hn, sextic_pow hn,
+    sextic_unit_congr recip hm hn he, sextic_neg_two_congr recip hm hn he, sextic_lambda_congr recip quad hm hn he]
+  rw [pow_eq_pow_mod i (hs _ h₂), pow_eq_pow_mod j (hs _ (coprime_span_lambda hn))]
+  rfl
+
+theorem norm_fixedFactor_le (ξ : RayCharacter) (u : 𝓔ˣ) (i j : Fin 6) (k : QuadraticFamilyClass) (r : R₇₂) :
+    ‖fixedFactor ξ u i j k r‖ ≤ 1 := by
+  classical
+  unfold fixedFactor
+  split
+  next h =>
+    let n := h.choose
+    have hn : AwayFromSix n := h.choose_spec.1
+    have hr := congrArg (rayFactor ξ k) h.choose_spec.2.symm
+    rw [hr,rayFactor_mk,mul_right_comm, norm_mul]
+    have hsign := (isOfFinOrder_iff_pow_eq_one.mpr ⟨2, by decide, familySign_sq (familyClass n) k⟩).norm_eq_one
+    rw [hsign,mul_one]
+    simpa only [twist,ite_eq_left hn,generator_one,one_pow,mul_one] using
+      norm_twist_le_one ξ ((u : 𝓔) * (-2)^(i : ℕ) * eisLambda^(j : ℕ)) 1 n
+  · simp
+
+/-- A single finite set contains all the fixed ray weights as both numerators and
+the original ray character vary. -/
+theorem finite_fixedFactors :
+    (Set.range (fun t : RayCharacter × 𝓔ˣ × Fin 6 × Fin 6 × QuadraticFamilyClass =>
+      fixedFactor t.1 t.2.1 t.2.2.1 t.2.2.2.1 t.2.2.2.2)).Finite := by
+  classical
+  let := Ring.HasFiniteQuotients.finiteQuotient (I := span {(72 : 𝓔)}) (by simp)
+  let : Finite 𝓔ˣ := Finite.of_injective (fun u : 𝓔ˣ =>
+    (⟨(u : 𝓔), (mem_elementRows (by norm_num : (0:ℝ) ≤ 1)).mpr
+      ⟨u.ne_zero, by simp [elementNorm, span_singleton_eq_top.mpr u.isUnit]⟩⟩ : elementRows 1))
+    (fun _ _ h => Units.ext (congrArg Subtype.val h))
+  exact Set.finite_range _
+
+/-- Factor the twist when the good parts of the two numerators are specified. -/
+theorem factor_twist_of_parts (recip : DunnRadziwillReciprocity) (quad : DeloupTuraevTheorem1)
+    (ξ : RayCharacter) {x y : 𝓔} {u v : 𝓔ˣ} {i j a b : ℕ} {k g n : Ideal 𝓔}
+    (hk : AwayFromSix k) (hg : AwayFromSix g) (hn : AwayFromSix n)
+    (hx : x = (u : 𝓔)*(-2)^i*eisLambda^j*generator k)
+    (hy : y = (v : 𝓔)*(-2)^a*eisLambda^b*generator g) :
+    ξ (Ideal.Quotient.mk _ (generator n)) * sextic n (x*y^4) =
+      fixedFactor ξ (u*v^4) (Fin.ofNat 6 (i+4*a)) (Fin.ofNat 6 (j+4*b)) (familyClass k)
+          (Ideal.Quotient.mk _ (generator n)) *
+        ∏ p ∈ (normalizedFactors (k*g)).toFinset,
+          localFactor p ((normalizedFactors k).count p + 4*(normalizedFactors g).count p) (generator n) := by
+  classical
+  let w : 𝓔 := ((u * v^4 : 𝓔ˣ) : 𝓔) * (-2)^(i+4*a) * eisLambda^(j+4*b)
+  have hxy : x * y^4 = w * (generator k * generator g^4) := by
+    rw [hx,hy]
+    dsimp only [w]
+    rw [Nat.mul_comm 4 a,Nat.mul_comm 4 b]
+    simp only [Units.val_mul,Units.val_pow_eq_pow_val,pow_add,pow_mul]
+    ring
+  rw [hxy, sextic_mul hn, mul_left_comm, factor_twist_good recip quad ξ hk hg hn,
+    fixedFactor_mk recip quad ξ _ _ _ _ hn]
+  dsimp only [w]
+  ring
+
+/-- Every nonzero pair of element numerators has a fixed ray weight modulo 72
+and a product of zero-extended tame factors with the indicated valuations. -/
+theorem factor_twist (recip : DunnRadziwillReciprocity) (quad : DeloupTuraevTheorem1)
+    (ξ : RayCharacter) {x y : 𝓔} (hx : x ≠ 0) (hy : y ≠ 0) :
+    ∃ (u : 𝓔ˣ) (i j : Fin 6) (k g : Ideal 𝓔), AwayFromSix k ∧ AwayFromSix g ∧
+      (∀ n : Ideal 𝓔, AwayFromSix n →
+        ξ (Ideal.Quotient.mk _ (generator n)) * sextic n (x*y^4) =
+          fixedFactor ξ u i j (familyClass k) (Ideal.Quotient.mk _ (generator n)) *
+            ∏ p ∈ (normalizedFactors (k*g)).toFinset,
+              localFactor p ((normalizedFactors k).count p + 4*(normalizedFactors g).count p) (generator n)) := by
+  obtain ⟨u,i,j,k,hk,hx⟩ := exists_good_part hx
+  obtain ⟨v,a,b,g,hg,hy⟩ := exists_good_part hy
+  exact ⟨u*v^4,_,_,k,g,hk,hg, fun _ hn => factor_twist_of_parts recip quad ξ hk hg hn hx hy⟩
 
 end Masullo.QRH.MeanSquare.ReflectionTwist
