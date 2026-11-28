@@ -244,7 +244,7 @@ theorem norm_reflectionGammaRatio_on_strip (h : DLMFGammaVertical) {a b : ℝ}
         · exact ht.2.trans (le_max_left ..)
       _ ≤ _ := by
         gcongr
-        · exact le_max_left .. 
+        · exact le_max_left ..
         · linarith
   · have htR : t ∈ R := ⟨ht, abs_le.mp (le_of_not_ge hf)⟩
     exact (hC _ htR).trans ((le_max_right 9 C).trans

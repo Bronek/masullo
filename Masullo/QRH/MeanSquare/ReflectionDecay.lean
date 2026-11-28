@@ -196,7 +196,7 @@ theorem PattersonRow.norm_frequency (r : PattersonRow) :
   rw [show ((r.layer.lambdaExponent : ℝ) - 3) / 2 =
       (1 / 2 : ℝ) * r.layer.lambdaExponent - (1 / 2 : ℝ) * 3 by ring,
     Real.rpow_sub (by norm_num : 0 < (3 : ℝ))]
-  ring
+  ring_nf
 
 theorem one_le_norm_eisEmbedding {c : 𝓔} (hc : c ≠ 0) : 1 ≤ ‖eisEmbedding c‖ := by
   have hc' : 1 ≤ absNorm (span {c}) := Nat.one_le_iff_ne_zero.mpr (by simp [hc])
@@ -315,7 +315,6 @@ theorem summable_pattersonFrequency_rpow_exp (s : ℝ) {A : ℝ} (hA : 0 < A) :
   set t := ‖pattersonFrequency m‖
   change t ^ (s + 3) * Real.exp (-A * t) ≤ 1 at hm
   rw [Real.norm_of_nonneg (by positivity)]
-  change t ^ s * Real.exp (-A * t) ≤ t ^ (-3 : ℝ)
   apply (mul_le_mul_iff_right₀ (Real.rpow_pos_of_pos hm₀ (3 : ℝ))).mp
   calc
     _ = t ^ (s + 3) * Real.exp (-A * t) := by rw [Real.rpow_add hm₀]; ring
