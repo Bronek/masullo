@@ -19,6 +19,8 @@ Steps toward `DualTailEstimate rowMajorant` from `GapEstimate`.
   bounds on `K` and `X`.
 * `exists_sum_rows_le`: the rows `(e, v, h)` of a block cover each pair `(f, k) = (e v, e° h)`
   at most `τ(f) ≪ (N f)^s` times.
+* `exists_block_le`: a block of the main dual terms with fixed `b`, ray characters `ξ, η` and
+  dyadic twist norm `F` is `O(D^ε (XF)²)`.
 * `mainSummand_eq`: after the Möbius substitution `c = v m₁`, `b = v m₂`, the arithmetic factor
   of a main dual term factors into a row weight and twisted columns `m₁`, `m₂`.
 -/
@@ -590,5 +592,156 @@ theorem exists_sum_rows_le {s : ℝ} (hs : 0 < s) :
       ≤ (idealDivisors x.1).card := by exact_mod_cast Finset.card_le_card_of_injOn _ hmaps hinj
     _ ≤ C * (absNorm x.1 : ℝ) ^ s := hτ _ hx0
     _ ≤ C * F ^ s := by gcongr
+
+/-! ### The block bound -/
+
+/-- The starred columns of norm at most `R X`. -/
+def blockColumns (R X : ℝ) : Finset (Ideal 𝓔) := by
+  classical
+  exact (idealsLe (R * X)).filter Starred
+
+/-- The column coefficient of a block: the twisted Gauss coefficient at the row `k = e° h` and
+the twist ideal `f = e v` of `ρ = (e, v, h)`, restricted to columns coprime to `b`. -/
+def blockCoefficient (ξ : RayCharacter) (b : Ideal 𝓔) (ρ : Ideal 𝓔 × Ideal 𝓔 × 𝓔)
+    (m : Ideal 𝓔) : ℂ := open Classical in
+  if IsCoprime m b then
+    gaussCoefficient m * twist ξ (generator ρ.1 * ρ.2.2) (ρ.1 * ρ.2.1) m
+  else 0
+
+lemma columnSumCoprime_eq_sum {ξ : RayCharacter} {U : ℝ → ℂ} {R X : ℝ} (hX : 0 < X)
+    (hU : ∀ x, U x ≠ 0 → x ≤ R) (b : Ideal 𝓔) (ρ : Ideal 𝓔 × Ideal 𝓔 × 𝓔) :
+    columnSumCoprime ξ U X (generator ρ.1 * ρ.2.2) (ρ.1 * ρ.2.1) b =
+      ∑ m ∈ blockColumns R X, blockCoefficient ξ b ρ m * U (absNorm m / X) := by
+  classical
+  have hst : ∀ m ∈ blockColumns R X, Starred m := fun m hm => by
+    unfold blockColumns at hm
+    exact (Finset.mem_filter.mp hm).2
+  rw [← Finset.subtype_map_of_mem hst, Finset.sum_map, columnSumCoprime,
+    finsum_eq_sum_of_support_subset (s := (blockColumns R X).subtype Starred) _ ?_]
+  · refine Finset.sum_congr rfl fun m _ => ?_
+    simp only [blockCoefficient, Function.Embedding.subtype_apply]
+    by_cases hc : IsCoprime m.1 b
+    · simp only [hc, ↓reduceIte]
+    · simp [hc]
+  intro m hm
+  rw [Function.mem_support] at hm
+  have hU0 : U (absNorm m.1 / X) ≠ 0 := fun h0 => hm (by simp [h0])
+  have hle := hU _ hU0
+  rw [div_le_iff₀ hX] at hle
+  rw [Finset.mem_coe, Finset.mem_subtype]
+  unfold blockColumns
+  rw [Finset.mem_filter, mem_idealsLe (by
+    have : (0 : ℝ) ≤ absNorm m.1 := Nat.cast_nonneg _
+    linarith)]
+  exact ⟨hle, m.2⟩
+
+lemma hasCompactSupport_conj_comp_exp {W : ℝ → ℂ} (hWc : HasCompactSupport W)
+    (hW0 : tsupport W ⊆ Set.Ioi 0) : HasCompactSupport fun t => conj (W (Real.exp t)) := by
+  refine HasCompactSupport.comp_left (g := conj) ?_ (map_zero _)
+  refine HasCompactSupport.intro (hWc.isCompact.image_of_continuousOn
+    (Real.continuousOn_log.mono fun x hx => ne_of_gt (hW0 hx))) fun t ht => ?_
+  by_contra h
+  exact ht ⟨Real.exp t, subset_tsupport W h, Real.log_exp t⟩
+
+/-- A block of main dual terms: rows `ρ = (e, v, h)` with `f = e v` starred of norm in
+`[F, 2F)` and `k = e° h ∈ elementRows K`, columns coprime to `b`, ray characters `ξ, η` on the
+two sides, the dilation `β = N f / F` of the weight `W`, and a cut dual kernel with any row
+shifts `a ρ`. It is `O(D^ε (XF)²)` under the hypotheses of `exists_dualMeanSquareCoprime_le`. -/
+theorem exists_block_le (hpg : PairedGaussIdentities) (hgap : GapEstimate) {W : ℝ → ℂ}
+    (hW : ContDiff ℝ ∞ W) (hWc : HasCompactSupport W) (hW0 : tsupport W ⊆ Set.Ioi 0)
+    (P : SchwartzMap ℝ ℂ) {χ : ℝ → ℂ} (hχ : ContDiff ℝ ∞ χ) (hχc : HasCompactSupport χ)
+    {κ ε : ℝ} (hκ : 0 < κ) (hε : 0 < ε) :
+    ∃ R₁ C : ℝ, 0 ≤ C ∧ ∀ (R D K X F : ℝ) (ξ η : RayCharacter) (b : Ideal 𝓔)
+      (T : Finset (Ideal 𝓔 × Ideal 𝓔 × 𝓔)) (a : Ideal 𝓔 × Ideal 𝓔 × 𝓔 → ℝ),
+      R₁ ≤ R → 2 ≤ D → 0 < X → 1 ≤ F → F ≤ D → X * F ≤ D → K ≤ X * F * D ^ (-κ) →
+      Starred b → (absNorm b : ℝ) ≤ D →
+      (∀ ρ ∈ T, ρ.1 ≠ ⊥ ∧ Starred (ρ.1 * ρ.2.1) ∧ F ≤ (absNorm (ρ.1 * ρ.2.1) : ℝ) ∧
+        (absNorm (ρ.1 * ρ.2.1) : ℝ) < 2 * F ∧ generator ρ.1 * ρ.2.2 ∈ elementRows K) →
+      ∑ ρ ∈ T, ‖∑ m₁ ∈ blockColumns R X, ∑ m₂ ∈ blockColumns R X,
+        blockCoefficient ξ b ρ m₁ * conj (blockCoefficient η b ρ m₂) *
+          (conj (W (absNorm (ρ.1 * ρ.2.1) / F * (absNorm m₁ / X))) *
+            W (absNorm (ρ.1 * ρ.2.1) / F * (absNorm m₂ / X)) *
+            cutDualKernel P χ (a ρ) (Real.log (absNorm m₁ / X) + Real.log (absNorm m₂ / X)))‖ ≤
+        C * D ^ ε * (X * F) ^ 2 := by
+  classical
+  set w : ℝ → ℂ := fun t => conj (W (Real.exp t)) with hw_def
+  have hw : ContDiff ℝ ∞ w :=
+    (Complex.conjCLE.contDiff.comp (hW.comp Real.contDiff_exp) :)
+  have hwc : HasCompactSupport w := hasCompactSupport_conj_comp_exp hWc hW0
+  obtain ⟨j, hj⟩ := exists_dualMeanSquareCoprime_le hpg hgap hκ (half_pos hε)
+  obtain ⟨I, Cs, hCs, hsep⟩ := exists_dilated_separated_le₂ hw hwc (Real.log_nonneg one_le_two) j
+  obtain ⟨Cg, hCg, hgap'⟩ := hj I
+  obtain ⟨A, hA, hker⟩ := exists_cutDualKernel_bounds P hχ hχc (2 * j + 2)
+  obtain ⟨Cr, hCr, hrows⟩ := exists_sum_rows_le (half_pos hε)
+  refine ⟨max I.hi 1, 2 * Cs * A * (Cr * 2 ^ (ε / 2) * Cg), by positivity,
+    fun R D K X F ξ η b T a hR hD hX hF hFD hXF hK hb hbD hT => ?_⟩
+  have hD0 : 0 < D := by linarith
+  have hF0 : 0 < F := by linarith
+  set cols := blockColumns R X
+  set M := Cr * (2 * D) ^ (ε / 2) * ((X * F) * (Cg * D ^ (ε / 2) * (X * F))) with hM
+  have hM0 : 0 ≤ M := by positivity
+  have hcolpos : ∀ n ∈ cols, 0 < (absNorm n : ℝ) / X := fun n hn => by
+    have hst : Starred n := by
+      simp only [cols, blockColumns] at hn; exact (Finset.mem_filter.mp hn).2
+    have : (0 : ℝ) < absNorm n := by
+      exact_mod_cast Nat.pos_of_ne_zero (absNorm_eq_zero_iff.not.mpr hst.1.1)
+    positivity
+  have hmean : ∀ ζ : RayCharacter, ∀ U, UnitTest I j U →
+      ∑ ρ ∈ T, ‖∑ n ∈ cols, blockCoefficient ζ b ρ n * U (absNorm n / X)‖ ^ 2 ≤ M := by
+    intro ζ U hU
+    have hUR : ∀ x, U x ≠ 0 → x ≤ R := fun x hx =>
+      ((hU.2.1 (subset_tsupport U hx)).2).trans ((le_max_left _ _).trans hR)
+    set Fs := (idealsLe (2 * F)).filter fun f =>
+      Starred f ∧ F ≤ (absNorm f : ℝ) ∧ (absNorm f : ℝ) < 2 * F
+    set S := Fs ×ˢ elementRows K
+    have hS : ∀ x ∈ S, x.1 ≠ ⊥ ∧ (absNorm x.1 : ℝ) ≤ 2 * D := fun x hx => by
+      obtain ⟨hx1, -⟩ := Finset.mem_product.mp hx
+      obtain ⟨-, hst, -, hlt⟩ := Finset.mem_filter.mp hx1
+      exact ⟨hst.1.1, by linarith⟩
+    have hTS : ∀ ρ ∈ T, ρ.1 ≠ ⊥ ∧ (ρ.1 * ρ.2.1, generator ρ.1 * ρ.2.2) ∈ S := fun ρ hρ => by
+      obtain ⟨h0, hst, hF1, hF2, hk⟩ := hT ρ hρ
+      refine ⟨h0, Finset.mem_product.mpr ⟨Finset.mem_filter.mpr ⟨?_, hst, hF1, hF2⟩, hk⟩⟩
+      exact (mem_idealsLe (by linarith)).mpr hF2.le
+    have hG : ∀ x : Ideal 𝓔 × 𝓔, 0 ≤ ‖columnSumCoprime ζ U X x.2 x.1 b‖ ^ 2 :=
+      fun x => sq_nonneg _
+    calc ∑ ρ ∈ T, ‖∑ n ∈ cols, blockCoefficient ζ b ρ n * U (absNorm n / X)‖ ^ 2
+        = ∑ ρ ∈ T, ‖columnSumCoprime ζ U X (generator ρ.1 * ρ.2.2) (ρ.1 * ρ.2.1) b‖ ^ 2 :=
+          Finset.sum_congr rfl fun ρ _ => by rw [columnSumCoprime_eq_sum hX hUR]
+      _ ≤ Cr * (2 * D) ^ (ε / 2) * ∑ x ∈ S, ‖columnSumCoprime ζ U X x.2 x.1 b‖ ^ 2 :=
+          hrows T S (fun x => ‖columnSumCoprime ζ U X x.2 x.1 b‖ ^ 2) hG hTS hS
+      _ = Cr * (2 * D) ^ (ε / 2) * ((X * F) * dualMeanSquareCoprime ζ U K X F b) := by
+          rw [dualMeanSquareCoprime, Finset.sum_product, mul_div_cancel₀ _ (by positivity)]
+      _ ≤ M := by
+          rw [hM]
+          gcongr
+          exact hgap' D K X F ζ U b hD hX hF hXF hK hb hbD hU
+  have hsep' := hsep T cols (blockCoefficient ξ b) (blockCoefficient η b)
+    (fun n => (absNorm n : ℝ) / X) (fun ρ => Real.log ((absNorm (ρ.1 * ρ.2.1) : ℝ) / F))
+    (fun ρ => cutDualKernel P χ (a ρ)) hA hM0 hM0 hcolpos
+    (fun ρ hρ => by
+      obtain ⟨-, -, hF1, hF2, -⟩ := hT ρ hρ
+      have h1 := (one_le_div hF0).mpr hF1
+      refine ⟨Real.log_nonneg h1, Real.log_le_log (by linarith) ?_⟩
+      rw [div_le_iff₀ hF0]; linarith)
+    (hmean ξ) (hmean η)
+    (fun ρ _ => (hker (a ρ)).1.of_le (WithTop.coe_le_coe.mpr le_top))
+    (fun ρ _ k hk => ((hker (a ρ)).2 k hk).1)
+    (fun ρ _ => by simpa using ((hker (a ρ)).2 0 (Nat.zero_le _)).2)
+    (fun ρ _ => ((hker (a ρ)).2 (2 * j + 2) le_rfl).2)
+  refine le_of_eq_of_le (Finset.sum_congr rfl fun ρ hρ => ?_) (hsep'.trans_eq ?_)
+  · obtain ⟨-, -, hF1, -, -⟩ := hT ρ hρ
+    have hβ : (0 : ℝ) < absNorm (ρ.1 * ρ.2.1) / F := by
+      have : (0 : ℝ) < absNorm (ρ.1 * ρ.2.1) := by linarith
+      positivity
+    congr 1
+    refine Finset.sum_congr rfl fun m₁ hm₁ => Finset.sum_congr rfl fun m₂ hm₂ => ?_
+    simp only [hw_def, Complex.conj_conj, ← Real.log_mul hβ.ne' (hcolpos m₁ hm₁).ne',
+      ← Real.log_mul hβ.ne' (hcolpos m₂ hm₂).ne', Real.exp_log (mul_pos hβ (hcolpos m₁ hm₁)),
+      Real.exp_log (mul_pos hβ (hcolpos m₂ hm₂))]
+  · rw [hM, Real.mul_rpow (by norm_num) hD0.le]
+    have hDε : D ^ (ε / 2) * D ^ (ε / 2) = D ^ ε := by
+      rw [← Real.rpow_add hD0]; ring_nf
+    rw [← hDε]
+    ring
 
 end Masullo.QRH.MeanSquare
