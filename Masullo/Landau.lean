@@ -162,8 +162,8 @@ lemma norm_coeff_le (hf : Measurable f) (hA : ∀ u, 0 ≤ u → |f u| ≤ A * R
     ((integrable_gamma_kernel hl' k).const_mul _), integral_const_mul, integral_const_mul,
     integral_gamma_kernel hlσ, integral_gamma_kernel hl', ← hre, mul_one_div, mul_one_div] at hi
   rw [← hi]
-  refine (norm_integral_le_integral_norm _).trans (setIntegral_mono_on
-    (integrable_kernel hf hA k (by simpa)).norm (i0.add (i1.const_mul (2 * A)))
+  refine (norm_integral_le_integral_norm _).trans
+    (setIntegral_mono_on (integrable_kernel hf hA k (by simpa)).norm (i0.add (i1.const_mul (2 * A)))
     measurableSet_Ioi fun u hu => ?_)
   rw [norm_kernel hu]
   calc _ ≤ u ^ k / k.factorial * (f u + 2 * A * Real.exp (c * u) *

@@ -549,12 +549,12 @@ theorem two_pow_card_normalizedFactors_le {s : ℝ} (hs : 0 < s) :
       by_cases hT : P ∈ T
       · rw [Multiset.filter_cons_of_pos _ hT, Multiset.card_cons, pow_succ]
         nlinarith [mul_le_mul_of_nonneg_left hPs
-          (mul_nonneg (pow_nonneg (by norm_num : (0 : ℝ) ≤ 2)
-            (Multiset.card (m.filter (· ∈ T)))) hm₀)]
+          (mul_nonneg
+            (pow_nonneg (by norm_num : (0 : ℝ) ≤ 2) (Multiset.card (m.filter (· ∈ T)))) hm₀)]
       · rw [Multiset.filter_cons_of_neg _ hT]
         nlinarith [mul_le_mul_of_nonneg_left (hlarge hT)
-          (mul_nonneg (pow_nonneg (by norm_num : (0 : ℝ) ≤ 2)
-            (Multiset.card (m.filter (· ∈ T)))) hm₀)]
+          (mul_nonneg
+            (pow_nonneg (by norm_num : (0 : ℝ) ≤ 2) (Multiset.card (m.filter (· ∈ T)))) hm₀)]
   have hfac : ∀ P ∈ normalizedFactors r, P ≠ ⊥ := fun P hP =>
     (prime_of_normalized_factor P hP).ne_zero
   have hprod : (normalizedFactors r).prod = r :=

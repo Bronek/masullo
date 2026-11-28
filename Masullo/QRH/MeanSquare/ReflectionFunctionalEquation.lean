@@ -36,8 +36,8 @@ private theorem normSq_orientedFrequency (barred : Bool) (μ : ℂ) :
 private theorem index_ne_zero (m : FrequencyIndex) : pattersonFrequency m ≠ 0 := by
   apply div_ne_zero
   · exact fun hz => m.property (eisEmbedding_injective (hz.trans (map_zero _).symm))
-  · exact pow_ne_zero _ (fun hz => eisLambda_prime.ne_zero (eisEmbedding_injective (hz.trans
-      (map_zero _).symm)))
+  · exact pow_ne_zero _ (fun hz => eisLambda_prime.ne_zero
+      (eisEmbedding_injective (hz.trans (map_zero _).symm)))
 
 /-- Fourier series of the normalized Wirtinger derivative at horizontal location `z`.
 The conjugate derivative carries the conjugate angular factor. -/
@@ -86,8 +86,8 @@ private theorem mellin_at_cusp (χ : 𝓔 → 𝓔 → ℂ) (f g : ℝ → ℂ) 
   apply mellin_cusp_reflection f g (N := ‖eisEmbedding c‖ ^ 2) (by positivity)
   intro v hv
   rw [hfg _ hv]
-  have hN : ((‖eisEmbedding c‖ ^ 2 : ℝ) : ℂ) ≠ 0 := ofReal_ne_zero.mpr (pow_ne_zero _
-    (norm_ne_zero_iff.mpr hC))
+  have hN : ((‖eisEmbedding c‖ ^ 2 : ℝ) : ℂ) ≠ 0 := ofReal_ne_zero.mpr
+    (pow_ne_zero _ (norm_ne_zero_iff.mpr hC))
   unfold pattersonCuspScalar
   field_simp
 
@@ -124,8 +124,8 @@ private theorem mellin_entire_at_cusp {f g : ℝ → ℂ} {N : ℝ} (hN : 0 < N)
 
 
 private def horizontalTerm (τ : ℂ → ℂ) (barred : Bool) (z : ℂ) (m : FrequencyIndex) (v : ℝ) : ℂ :=
-  horizontalMode (orientedFrequency barred (pattersonFrequency m)) (cuspCoefficient τ z
-    (pattersonFrequency m)) v
+  horizontalMode (orientedFrequency barred (pattersonFrequency m))
+    (cuspCoefficient τ z (pattersonFrequency m)) v
 
 private theorem horizontal_majorant {τ : ℂ → ℂ} (ht : PattersonCoefficients τ)
     (barred : Bool) (z : ℂ)
@@ -167,8 +167,8 @@ private theorem horizontal_majorant {τ : ℂ → ℂ} (ht : PattersonCoefficien
   simp only [horizontalTerm, horizontalMode, norm_mul, norm_I, norm_conj, norm_cuspCoefficient,
     norm_orientedFrequency, Complex.norm_real, Real.norm_of_nonneg hv₀.le,
     Real.norm_of_nonneg Real.pi_pos.le, norm_ofNat, mul_one]
-  change 2*Real.pi*t*‖conj (τ (pattersonFrequency m))/27‖ * (v *
-    ‖besselK (1/3) (4*Real.pi*t*v)‖) ≤ _
+  change 2*Real.pi*t*‖conj (τ (pattersonFrequency m))/27‖ *
+    (v * ‖besselK (1/3) (4*Real.pi*t*v)‖) ≤ _
   calc
     _ ≤ 2*Real.pi*t*t^(1/3:ℝ) * (v * (C * (Real.exp (-(Real.pi*δ)*t) * Real.exp (-b*v)))) := by
       gcongr
@@ -193,11 +193,14 @@ private theorem horizontalSeries_analytic {τ : ℂ → ℂ} (ht : PattersonCoef
         have hu₀ : 0 < u := by linarith [hu.1]
         have ht₀ := norm_pos_iff.mpr (index_ne_zero m)
         have hf := hcont (4*Real.pi*‖pattersonFrequency m‖*u) (by positivity)
-        change ContinuousWithinAt (fun w : ℝ => _ * ((w : ℂ) * besselK (1/3)
-          (4*Real.pi*‖orientedFrequency barred (pattersonFrequency m)‖*w))) U u
+        change ContinuousWithinAt
+          (fun w : ℝ =>
+          _ * ((w : ℂ) * besselK (1/3)
+          (4*Real.pi*‖orientedFrequency barred (pattersonFrequency m)‖*w)))
+          U u
         rw [norm_orientedFrequency]
-        exact (ContinuousAt.const_mul ((continuous_ofReal.continuousAt).mul
-          (hf.comp (by fun_prop))) _).continuousWithinAt
+        exact (ContinuousAt.const_mul
+          ((continuous_ofReal.continuousAt).mul (hf.comp (by fun_prop))) _).continuousWithinAt
       · exact hg.mul_right _
       · intro m u hu
         apply (hB m u hu.1.le).trans
@@ -238,8 +241,8 @@ private theorem horizontalSeries_eq_slope {θ : ℂ → ℝ → ℂ} {τ : ℂ �
   have h (u : ℂ) : HasSum (D u) (horizontalSlope θ z v u) := by
     rw [horizontalSlope, (he.hasDerivAt_normalized_horizontal ht z u hv).deriv]
     exact (ht.summable_normalized_horizontal z u hv).hasSum
-  refine (tsum_congr fun m => ?_).trans (((h 1).add ((h I).mul_left (if barred then I else
-    -I))).div_const 2).tsum_eq
+  refine (tsum_congr fun m => ?_).trans
+    (((h 1).add ((h I).mul_left (if barred then I else -I))).div_const 2).tsum_eq
   change horizontalTerm τ barred z m v = _
   let μ := pattersonFrequency m
   have hc : conj μ = (μ.re : ℂ) - μ.im*I := by apply Complex.ext <;> simp

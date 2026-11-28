@@ -62,8 +62,8 @@ theorem lambda_cubic_mul_cube {n b : Ideal 𝓔} (hn : AwayFromSix n) (hb : Away
       ite_eq_left (coprime_span_lambda hb), map_one]
   simp only [pow_three, powerResidueSymbol_mul_right, map_mul,
     ← powerResidueSymbol_six_sq hn.2, ← powerResidueSymbol_six_sq hb.2, map_pow]
-  change sextic n eisLambda ^ 2 * (sextic b eisLambda ^ 2 * (sextic b eisLambda ^ 2 *
-    sextic b eisLambda ^ 2)) = _
+  change sextic n eisLambda ^ 2 * (sextic b eisLambda ^ 2 *
+    (sextic b eisLambda ^ 2 * sextic b eisLambda ^ 2)) = _
   rw [show sextic b eisLambda ^ 2 * (sextic b eisLambda ^ 2 * sextic b eisLambda ^ 2) =
       sextic b eisLambda ^ 6 by ring, hb₆, mul_one]
 

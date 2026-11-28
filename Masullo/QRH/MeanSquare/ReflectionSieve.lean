@@ -124,8 +124,8 @@ private lemma norm_column {R S : Finset (Ideal 𝓔)} {L a A : ℝ}
     _ ≤ _ := by rw [← Finset.mul_sum]; exact mul_le_mul_of_nonneg_left hS (sq_nonneg _)
   rw [norm_vector]
   calc
-    _ ≤ Real.sqrt (L * (a ^ 2 * A)) := Real.sqrt_le_sqrt ((h z).trans
-      (mul_le_mul_of_nonneg_left hz hL))
+    _ ≤ Real.sqrt (L * (a ^ 2 * A)) := Real.sqrt_le_sqrt
+      ((h z).trans (mul_le_mul_of_nonneg_left hz hL))
     _ = _ := by rw [Real.sqrt_mul hL, Real.sqrt_mul (sq_nonneg a), Real.sqrt_sq ha, mul_assoc]
 
 /-- A separated block of (15), before multiplication by the scalar `3^(-m/3)`. -/
@@ -229,10 +229,14 @@ theorem separated_dyadic_block (quad : DeloupTuraevTheorem1)
       (Real.sqrt_nonneg V)]
   rw [norm_vector] at hb
   calc
-    _ ≤ (3 : ℝ) ^ (-(m : ℝ) / 3) * ((2 * A) * ((H / (1 + kernelScale m V B Y) ^ 3) *
+    _ ≤ (3 : ℝ) ^ (-(m : ℝ) / 3) *
+        ((2 * A) *
+        ((H / (1 + kernelScale m V B Y) ^ 3) *
         (Real.sqrt (c * (K * V) ^ (2 * ρ) * (K + V)) * a * Real.sqrt (2 * A)) * Real.pi)) :=
       mul_le_mul_of_nonneg_left hb (by positivity)
-    _ ≤ (3 : ℝ) ^ (-(m : ℝ) / 3) * ((2 * A) * ((H / (1 + kernelScale m V B Y) ^ 3) *
+    _ ≤ (3 : ℝ) ^ (-(m : ℝ) / 3) *
+        ((2 * A) *
+        ((H / (1 + kernelScale m V B Y) ^ 3) *
         ((Real.sqrt c * (K * V) ^ ρ * (Real.sqrt K + Real.sqrt V)) * a * Real.sqrt (2 * A)) *
           Real.pi)) := by gcongr
     _ = _ := by ring
@@ -344,8 +348,8 @@ theorem dyadic_kernel_sum {s d : ℝ} (hs : s < d) (hd : 0 < d) (hd₃ : d ≤ 3
   calc
     _ ≤ ∑ i ∈ U, ∑ j ∈ B, Z ^ d * (r ^ i * t ^ j) := by
       refine sum_le_sum fun i _ => sum_le_sum fun j _ => ?_
-      simpa only [dyadic_rpow, r, t] using hterm ((2 : ℝ) ^ i) ((2 : ℝ) ^
-        j) (by positivity) (by positivity)
+      simpa only [dyadic_rpow, r, t] using hterm ((2 : ℝ) ^ i)
+        ((2 : ℝ) ^ j) (by positivity) (by positivity)
     _ = Z ^ d * ((∑ i ∈ U, r ^ i) * ∑ j ∈ B, t ^ j) := by
       rw [Finset.sum_mul_sum]
       simp only [Finset.mul_sum]

@@ -161,8 +161,8 @@ lemma intervalIntegrable_liouvilleSum (h a b : ℝ) :
     max_le (by linarith [le_abs_self a, abs_nonneg b]) (by linarith [le_abs_self b, abs_nonneg a])
   have hx' : |x| ≤ |a| + |b| := abs_le.2 ⟨by linarith [hx.1], by linarith [hx.2]⟩
   simp only [Real.norm_eq_abs]
-  refine (abs_liouvilleSum_le_abs (x + h)).trans ((abs_add_le x h).trans (le_trans ?_
-    (le_abs_self _)))
+  refine (abs_liouvilleSum_le_abs (x + h)).trans ((abs_add_le x h).trans
+    (le_trans ?_ (le_abs_self _)))
   linarith
 
 lemma intervalIntegrable_increment (ε h a b : ℝ) :

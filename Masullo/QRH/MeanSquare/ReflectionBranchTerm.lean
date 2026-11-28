@@ -68,11 +68,11 @@ theorem norm_branchColumn {τ : ℂ → ℂ} (hτ : PattersonCoefficients τ) {�
     rw [norm_div, norm_mul (↑(Real.sqrt (absNorm (twoPart i*extractedN F e))) : ℂ)
       (absNorm (extractedB F e) : ℂ),Complex.norm_real,Complex.norm_natCast,Real.norm_of_nonneg
         (Real.sqrt_nonneg _)]
-    refine (?_ : _ ≤ ‖pieceProduct F j e x‖ / (Real.sqrt (absNorm (extractedN F e)) *
-      (absNorm (extractedB F e):ℝ))).trans
+    refine (?_ : _ ≤ ‖pieceProduct F j e x‖ /
+      (Real.sqrt (absNorm (extractedN F e)) * (absNorm (extractedB F e):ℝ))).trans
       (idealPiece_product_bound F hF j e he x)
-    exact div_le_div₀ (norm_nonneg _) hmul hden (mul_le_mul_of_nonneg_right (Real.sqrt_le_sqrt hN)
-      (by positivity))
+    exact div_le_div₀ (norm_nonneg _) hmul hden
+      (mul_le_mul_of_nonneg_right (Real.sqrt_le_sqrt hN) (by positivity))
   · simp
 
 private theorem quadratic_cube {k : Idl} (hk : AwayFromSix k) (y : 𝓔) :
@@ -136,8 +136,9 @@ theorem extendIndex_indexTerm_eq_rawKernelTerm (τ : ℂ → ℂ) (W : ℝ → �
       mul_one,harg,hNsqrt,hBz,hquad]
     change (ψ x.numerator * pieceProduct F j e x) * (branchRow F e u i h b k *
       primaryQuadraticSymbol n k) *
-      (((((3:ℝ)^(-((h:ℝ)-3)/3):ℝ):ℂ) * x.amplitude τ /
-        ((Real.sqrt (absNorm A):ℂ)*Real.sqrt (absNorm n)*((absNorm B:ℂ)*absNorm b))) * _) = _
+      (((((3:ℝ)^(-((h:ℝ)-3)/3):ℝ):ℂ) *
+        x.amplitude τ / ((Real.sqrt (absNorm A):ℂ)*Real.sqrt (absNorm n)*((absNorm B:ℂ)*absNorm b)))
+        * _) = _
     ring
   · rw [extendIndex,dite_eq_right hs,rawKernelTerm,branchColumn,extendIndex,dite_eq_right hs]
     simp

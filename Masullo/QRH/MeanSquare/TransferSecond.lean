@@ -200,8 +200,8 @@ private lemma norm_secondColumn_eq (ξ ξ' ξ'' : RayCharacter) (U : ℝ → ℂ
         fun h0 => hne (by rw [h0]; simp)
       have hcf := coprime_of_twist_ne_zero _ _ hxS.1 hT
       refine hnot ((mem_passCols_iff hhi hℓ (r := (b₂, e₂, v₂)) hN2).mpr ⟨by rwa [hlen], ?_⟩)
-      exact (IsCoprime.mul_right (IsCoprime.mul_right
-        (hcr.of_isCoprime_of_dvd_right (Dvd.intro_left v rfl))
+      exact (IsCoprime.mul_right
+        (IsCoprime.mul_right (hcr.of_isCoprime_of_dvd_right (Dvd.intro_left v rfl))
         (hcf.of_isCoprime_of_dvd_right (Dvd.intro (b * e * v₂) (by ring))))
         (hcf.of_isCoprime_of_dvd_right (Dvd.intro (b * e * e₂) (by ring)))).symm
     · simp [hcr]
@@ -275,8 +275,9 @@ private lemma rowk_mem {hi K L F target : ℝ} (hhi : 0 < hi) (hK : 0 < K) (hL :
     (hF : 0 < F) (htarget : 0 < target)
     {b e v b₂ e₂ : Ideal 𝓔} (hb : b ≠ ⊥) (he : e ≠ ⊥) (hv : v ≠ ⊥) (hb₂ : b₂ ≠ ⊥)
     (he₂ : e₂ ≠ ⊥) {h : 𝓔}
-    (hh : h ∈ elementRows (passCap hi (secondScale hi K L F target (b, e, v))
-      (secondLength L (b, e, v)) (b₂ * e₂) e₂)) :
+    (hh : h ∈ elementRows
+      (passCap hi (secondScale hi K L F target (b, e, v)) (secondLength L (b, e, v)) (b₂ * e₂) e₂))
+      :
     generator e * h * generator e₂ ∈
       elementRows (K * L / (target * F * (absNorm (v * b₂) : ℝ) ^ 2)) := by
   have h1 := absNorm_one_le hb
@@ -331,8 +332,9 @@ private lemma fibre_card_le (S : Finset SrcRows)
     ((S.filter fun a => rowMap a = y).card : ℝ) ≤
       ((idealDivisors y.1).card : ℝ) * ((idealDivisors y.2.1).card : ℝ) ^ 4 := by
   have hcard : (S.filter fun a => rowMap a = y).card ≤
-      (idealDivisors y.1 ×ˢ (idealDivisors y.2.1 ×ˢ (idealDivisors y.2.1 ×ˢ
-        (idealDivisors y.2.1 ×ˢ idealDivisors y.2.1)))).card := by
+      (idealDivisors y.1 ×ˢ
+        (idealDivisors y.2.1 ×ˢ
+        (idealDivisors y.2.1 ×ˢ (idealDivisors y.2.1 ×ˢ idealDivisors y.2.1)))).card := by
     refine Finset.card_le_card_of_injOn
       (fun a => (a.1.2.2, a.1.1, a.1.2.1, a.2.1.2.2, a.2.1.2.1)) ?_ ?_
     · rintro ⟨⟨b, e, v⟩, ⟨b₂, e₂, v₂⟩, h⟩ ha
@@ -368,9 +370,11 @@ private lemma fibre_card_le (S : Finset SrcRows)
         mul_left_cancel₀ (hgen e he0) (mul_right_cancel₀ (hgen e₂ he₂0) hy3)
       subst hb hh
       rfl
-  have hcast : ((S.filter fun a => rowMap a = y).card : ℝ) ≤ (((idealDivisors y.1 ×ˢ
-      (idealDivisors y.2.1 ×ˢ (idealDivisors y.2.1 ×ˢ (idealDivisors y.2.1 ×ˢ
-        idealDivisors y.2.1)))).card : ℕ) : ℝ) := by exact_mod_cast hcard
+  have hcast : ((S.filter fun a => rowMap a = y).card : ℝ) ≤
+      (((idealDivisors y.1 ×ˢ
+      (idealDivisors y.2.1 ×ˢ
+        (idealDivisors y.2.1 ×ˢ (idealDivisors y.2.1 ×ˢ idealDivisors y.2.1)))).card : ℕ)
+        : ℝ) := by exact_mod_cast hcard
   refine hcast.trans_eq ?_
   simp only [Finset.card_product]
   push_cast
@@ -416,8 +420,8 @@ theorem secondDual_le (ξ ξ' ξ'' : RayCharacter) (U : ℝ → ℂ) {hi K L F t
       ‖∑ x ∈ passCols (hi * secondLength L a.1) a.2.1,
         dualCoeff conjGauss (secondTwist ξ ξ' (a.1.1 * a.1.2.1) a.1.2.1
           (a.1.1 * a.1.2.1 * a.1.2.2)) 0 2 ξ'' (a.2.1.1 * a.2.1.2.1) a.2.1.2.1 a.2.1.2.2
-          a.2.2 x * U (absNorm (a.2.1.1 * a.2.1.2.1 * (a.2.1.2.2 * x)) /
-            secondLength L a.1)‖ ^ 2
+          a.2.2 x * U
+            (absNorm (a.2.1.1 * a.2.1.2.1 * (a.2.1.2.2 * x)) / secondLength L a.1)‖ ^ 2
   have h1 : secondDual ξ ξ' ξ'' U hi K L F target = ∑ a ∈ S, G a := by
     unfold secondDual
     simp only [S, G, Finset.sum_sigma']
@@ -430,8 +434,8 @@ theorem secondDual_le (ξ ξ' ξ'' : RayCharacter) (U : ℝ → ℂ) {hi K L F t
     have hsum : ∑ x ∈ passCols (hi * secondLength L a.1) a.2.1,
         dualCoeff conjGauss (secondTwist ξ ξ' (a.1.1 * a.1.2.1) a.1.2.1
           (a.1.1 * a.1.2.1 * a.1.2.2)) 0 2 ξ'' (a.2.1.1 * a.2.1.2.1) a.2.1.2.1 a.2.1.2.2
-          a.2.2 x * U (absNorm (a.2.1.1 * a.2.1.2.1 * (a.2.1.2.2 * x)) /
-            secondLength L a.1) = 0 := by
+          a.2.2 x * U
+            (absNorm (a.2.1.1 * a.2.1.2.1 * (a.2.1.2.2 * x)) / secondLength L a.1) = 0 := by
       refine Finset.sum_eq_zero fun x hx => ?_
       exfalso
       refine hP ?_

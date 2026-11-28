@@ -125,8 +125,8 @@ theorem hasDerivAt_cusp_path {c : ℂ} (hc : c ≠ 0) {v : ℝ} (hv : 0 < v) (u 
   constructor
   · simp only [cuspOffset, map_mul, Complex.conj_ofReal]
     have hn := ((Complex.ofRealCLM.hasDerivAt (x := (0 : ℝ))).mul_const (conj u)).neg
-    convert hn.div ((Complex.ofRealCLM.hasFDerivAt.comp_hasDerivAt _ hrad).const_mul
-      (c ^ 2)) hcR using 1
+    convert hn.div
+      ((Complex.ofRealCLM.hasFDerivAt.comp_hasDerivAt _ hrad).const_mul (c ^ 2)) hcR using 1
     · rfl
     · simp
       field_simp

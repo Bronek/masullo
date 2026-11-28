@@ -108,10 +108,10 @@ theorem PattersonExpansion.ray_translates {θ : ℂ → ℝ → ℂ} {τ : ℂ �
     (hθ : PattersonExpansion θ τ σ) (W : RayResidue 7 → ℂ) (z : ℂ) {v : ℝ} (hv : 0 < v) :
     HasSum (fun m : {m : 𝓔 // m ≠ 0} =>
       let l := eisEmbedding m.val / eisEmbedding eisLambda ^ 3
-      W (Ideal.Quotient.mk (rayModulus 7) m.val) * (τ l * v *
-        besselK (1 / 3) (4 * Real.pi * ‖l‖ * v) * pattersonCharacter (l * z)))
-      ((∑ h, rayFourierCoeff 7 W h * θ (z + rayShift h) v) - W 0 * (σ * (v ^ (2 /
-        3 : ℝ) : ℝ))) := by
+      W (Ideal.Quotient.mk (rayModulus 7) m.val) *
+        (τ l * v * besselK (1 / 3) (4 * Real.pi * ‖l‖ * v) * pattersonCharacter (l * z)))
+      ((∑ h, rayFourierCoeff 7 W h * θ (z + rayShift h) v) - W 0 *
+        (σ * (v ^ (2 / 3 : ℝ) : ℝ))) := by
   have hh := hasSum_sum (s := (univ : Finset (RayResidue 7))) (fun h _ =>
     (hθ (z + rayShift h) v hv).mul_left (rayFourierCoeff 7 W h))
   have h₀ : ∑ h, rayFourierCoeff 7 W h = W 0 := by

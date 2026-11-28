@@ -23,10 +23,10 @@ private local instance : Countable 𝓔 := by
 private def line (x y : ℝ) : ℂ := x + y * I
 private abbrev mass (m : Index) : ℝ := normSq (pattersonFrequency m)
 
-private theorem mass_pos (m : Index) : 0 < mass m := normSq_pos.mpr (div_ne_zero
-  (fun hz => m.property (eisEmbedding_injective (hz.trans (map_zero _).symm)))
-  (pow_ne_zero _ (fun hz => eisLambda_prime.ne_zero (eisEmbedding_injective (hz.trans
-    (map_zero _).symm)))))
+private theorem mass_pos (m : Index) : 0 < mass m := normSq_pos.mpr
+  (div_ne_zero (fun hz => m.property (eisEmbedding_injective (hz.trans (map_zero _).symm)))
+  (pow_ne_zero _
+    (fun hz => eisLambda_prime.ne_zero (eisEmbedding_injective (hz.trans (map_zero _).symm)))))
 
 /-- The coefficient including its additive translation and its angular factor. -/
 def pattersonAngularCoefficient (τ : ℂ → ℂ) (barred : Bool) (z : ℂ) (m : 𝓔) : ℂ :=
@@ -136,11 +136,11 @@ private theorem smoothed_right_integral (hB : DLMFBesselMellin) {τ : ℂ → �
   let F := fun y : ℝ => mellin W (line σ y) * (X : ℂ) ^ (line σ y) / (Real.sqrt X : ℂ)
   have hF : Integrable F := by
     have hc : Continuous F := (hW.mellin_entire.continuous.comp (by unfold line; fun_prop)).mul
-      (g := fun y : ℝ => (X : ℂ) ^
-        (line σ y))
+      (g := fun y : ℝ =>
+        (X : ℂ) ^ (line σ y))
         (by unfold line; fun_prop (disch := exact ofReal_ne_zero.mpr hX.ne')) |>.div_const _
-    apply ((test_vertical_integrable hW σ).norm.mul_const (X^σ /
-      Real.sqrt X)).mono' hc.aestronglyMeasurable
+    apply ((test_vertical_integrable hW σ).norm.mul_const
+      (X^σ / Real.sqrt X)).mono' hc.aestronglyMeasurable
     apply ae_of_all
     intro y
     dsimp only [F]
@@ -149,8 +149,8 @@ private theorem smoothed_right_integral (hB : DLMFBesselMellin) {τ : ℂ → �
   have hr : (∫ y : ℝ, smoothedIntegrand τ z W X (line σ y)) =
       ∑' m : Index, pattersonAngularCoefficient τ true z m * ∫ y : ℝ, F y * (mass m : ℂ) ^
         (-line σ y) := by
-    rw [← integral_dirichlet_line _ _ mass_pos σ (summable_angular ht true z
-      (by norm_num [σ])) F hF]
+    rw [← integral_dirichlet_line _ _ mass_pos σ
+      (summable_angular ht true z (by norm_num [σ])) F hF]
     apply integral_congr_ae (ae_of_all _ fun y => ?_)
     unfold smoothedIntegrand
     rw [ht.continued_eq_dirichlet hB true z (by norm_num [line, σ]), dirichlet_eq_tsum]
@@ -252,8 +252,8 @@ private theorem smoothed_left_value {τ : ℂ → ℂ} {z z' η : ℂ} {X N : �
     show 1-(1/2-t) =
       1/2+t by ring, show 1-2*(1/2-t) = 2*t by ring, reflectionGammaFactor_centered_ratio]
   dsimp only [leftIntegrand, reflectionKernelAmplitude]
-  change _ = η * (((-t)^0 * mellin W (1/2-t) * reflectionGammaRatio t *
-    (kernelScale X N : ℂ) ^ (-t)) * _)
+  change _ = η *
+    (((-t)^0 * mellin W (1/2-t) * reflectionGammaRatio t * (kernelScale X N : ℂ) ^ (-t)) * _)
   rw [← conductor_powers hX hN t]
   ring
 
@@ -299,7 +299,8 @@ private theorem smoothed_left_integral (hΓ : DLMFGammaVertical) {τ : ℂ → �
     ring
   change A m * (∫ y : ℝ, F y * (q : ℂ) ^ (-line (3/2) y)) / _ = _
   simp only [hterm, integral_const_mul, reflectionKernel]
-  change _ = A m / Real.sqrt q * ((∫ y, reflectionKernelAmplitude W 0 (line 1 y) *
+  change _ = A m / Real.sqrt q *
+    ((∫ y, reflectionKernelAmplitude W 0 (line 1 y) *
     (((2*Real.pi)^4*(q*X/N^2) : ℝ) : ℂ) ^ (-line 1 y)) / _)
   ring
 
@@ -308,8 +309,8 @@ private theorem angular_column_bound {τ : ℂ → ℂ} (ht : PattersonCoefficie
     (z : ℂ) : ∃ B ≥ (0:ℝ), ∀ y : ℝ, ‖pattersonCuspDirichlet τ barred z (line (3/2) y)‖ ≤ B := by
   let g := fun m : Index => ‖pattersonAngularCoefficient τ barred z m‖ * mass m ^ (-(3/2:ℝ))
   have hg : Summable g := summable_angular ht barred z (by norm_num)
-  refine ⟨∑' m, g m, tsum_nonneg (fun m => mul_nonneg (norm_nonneg _) (Real.rpow_nonneg
-    (mass_pos m).le _)), ?_⟩
+  refine ⟨∑' m, g m, tsum_nonneg
+    (fun m => mul_nonneg (norm_nonneg _) (Real.rpow_nonneg (mass_pos m).le _)), ?_⟩
   intro y
   rw [dirichlet_eq_tsum]
   apply (norm_tsum_le_tsum_norm _).trans_eq
@@ -336,8 +337,8 @@ private theorem smoothed_boundary_right (hB : DLMFBesselMellin) {τ : ℂ → �
     abs_of_nonneg (Real.sqrt_nonneg X), line, add_re, ofReal_re, mul_I_re, ofReal_im,
       neg_zero, add_zero]
   calc
-    _ = (‖mellin W (line (3/2) y)‖ * (1+|y|)^2) * H * ‖pattersonCuspDirichlet τ true z (line
-      (3/2) y)‖ := by
+    _ = (‖mellin W (line (3/2) y)‖ * (1+|y|)^2) * H * ‖pattersonCuspDirichlet τ true z
+      (line (3/2) y)‖ := by
       dsimp only [H,line]; ring
     _ ≤ _ := mul_le_mul (mul_le_mul_of_nonneg_right h hH) (hD y) (norm_nonneg _) (mul_nonneg hC hH)
 
@@ -441,8 +442,8 @@ theorem PattersonCoefficients.summable_smoothed_dual {τ : ℂ → ℂ} (ht : Pa
   obtain ⟨C, hC, hK⟩ := norm_reflectionKernel hΓ (σ := 1) (by norm_num) 0 J
   let T := X / N^2
   have hT : 0 < T := div_pos hX (pow_pos hN _)
-  apply Summable.of_nonneg_of_le (fun _ => norm_nonneg _) _ ((summable_angular ht false z
-    (by norm_num : 1 < (3/2:ℝ))).mul_right (C / T))
+  apply Summable.of_nonneg_of_le (fun _ => norm_nonneg _) _
+    ((summable_angular ht false z (by norm_num : 1 < (3/2:ℝ))).mul_right (C / T))
   intro m
   let q := mass m
   have hq : 0 < q := mass_pos m

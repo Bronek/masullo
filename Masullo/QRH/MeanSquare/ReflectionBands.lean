@@ -36,8 +36,8 @@ theorem mem_cubeBand {b : Idl} {i : ℕ} :
   rw [cubeBand,mem_filter]
   have h : (absNorm b : ℝ) ∈ Ico ((2:ℝ)^i) (2*2^i) ↔ b ≠ 0 ∧ Nat.log 2 (absNorm b) = i := by
     rw [band_iff]; simp
-  exact ⟨fun hx => h.mp hx.2,fun hx => ⟨(mem_idealsLe (by positivity)).mpr
-    (h.mpr hx).2.le,h.mpr hx⟩⟩
+  exact ⟨fun hx => h.mp hx.2,fun hx =>
+    ⟨(mem_idealsLe (by positivity)).mpr (h.mpr hx).2.le,h.mpr hx⟩⟩
 
 theorem mem_squarefreeBand {n : Idl} {i : ℕ} :
     n ∈ squarefreeBand i ↔ Starred n ∧ Nat.log 2 (absNorm n) = i := by

@@ -27,8 +27,8 @@ private lemma ramified_square_associated : Associated ((eisOmega - 1) ^ 2) (3 : 
   exact ⟨-omegaUnit, by rw [ramified_square]; change 3 * -eisOmega = _; ring⟩
 
 private lemma not_unit_three : ¬ IsUnit (3 : 𝓔) := fun h =>
-  rootSpec.zeta_sub_one_prime'.not_isUnit (isUnit_of_dvd_unit
-    rootSpec.toInteger_sub_one_dvd_prime' h)
+  rootSpec.zeta_sub_one_prime'.not_isUnit
+    (isUnit_of_dvd_unit rootSpec.toInteger_sub_one_dvd_prime' h)
 
 /-- Primary elements reduce to the identity in the quotient by three. -/
 lemma eisPrimary_iff_mk_eq_one (x : 𝓔) :

@@ -528,8 +528,8 @@ theorem fixedWeight_congr (hR : DunnRadziwillReciprocity) {c₀ a₀ r r' : 𝓔
   have hcub := fixed_symbol_congr hR hc (ha.mul hr) (ha.mul hr')
     (show 9*c₀ ∣ a₀*r'-a₀*r by rw [← mul_sub]; exact dvd_mul_of_dvd_right (mk_eq_iff.mp h.symm) _)
   have hred : red (eisLambda^2*c₀) r = red (eisLambda^2*c₀) r' :=
-    mk_eq_iff.mpr ((show eisLambda^2*c₀ ∣ 9*c₀ from ⟨-3, by rw [eisLambda_sq]; ring⟩).trans
-      (mk_eq_iff.mp h))
+    mk_eq_iff.mpr
+      ((show eisLambda^2*c₀ ∣ 9*c₀ from ⟨-3, by rw [eisLambda_sq]; ring⟩).trans (mk_eq_iff.mp h))
   simp only [fixedWeight, hcub, hred]
 
 omit [Fintype ι] [DecidableEq ι] in

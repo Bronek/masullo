@@ -108,8 +108,8 @@ private theorem reciprocal_gamma_growth (h : DLMFGammaVertical) :
     have hy₀ : 0 < y := zero_lt_one.trans_le hy₁
     let M := Real.sqrt (2*Real.pi) * y^(z.re-1/2) * Real.exp (-Real.pi*y/2)
     have hM : 0 < M := by dsimp [M]; positivity
-    have low := (abs_lt.mp (hT z.re z.im (abs_le.mpr ⟨by linarith [hz.1],hz.2⟩)
-      ((le_max_right ..).trans hy))).1
+    have low := (abs_lt.mp
+      (hT z.re z.im (abs_le.mpr ⟨by linarith [hz.1],hz.2⟩) ((le_max_right ..).trans hy))).1
     rw [re_add_im] at low
     change -(1/2 : ℝ) < ‖Gamma z‖ / M - 1 at low
     have hl : M/2 ≤ ‖Gamma z‖ := by
@@ -135,8 +135,8 @@ private theorem reciprocal_gamma_growth (h : DLMFGammaVertical) :
         rw [mul_assoc,← Real.exp_add]; congr 2; ring
       _ ≤ _ := mul_le_mul_of_nonneg_right (le_max_left ..) (Real.exp_pos _).le
   · have hzK : z ∈ K := ⟨hz,abs_le.mp (le_of_not_ge hy)⟩
-    exact (hU z hzK).trans ((le_max_right B U).trans (le_mul_of_one_le_right (hB.le.trans
-      (le_max_left ..))
+    exact (hU z hzK).trans ((le_max_right B U).trans
+      (le_mul_of_one_le_right (hB.le.trans (le_max_left ..))
       (Real.one_le_exp (by positivity))))
 
 /-- On the strip used in smoothed reflection, the reciprocal of the completed

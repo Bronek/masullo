@@ -103,13 +103,14 @@ lemma mellin_seed {s : ℂ} (hs : 0 < s.re) : mellin seed s = (s - 1) * arch s :
     ring_nf
   have hw : 0 < (s / 2).re := by
     rw [show s / 2 = ((1 / 2 : ℝ) : ℂ) * s by push_cast; ring, re_ofReal_mul]; linarith
-  have key : ∀ k : ℂ, 0 < k.re → IntegrableOn (fun t : ℝ => (t : ℂ) ^ (k - 1) *
-      exp (-(Real.pi * t))) (Ioi 0) := fun k hk => by
+  have key : ∀ k : ℂ, 0 < k.re → IntegrableOn
+      (fun t : ℝ => (t : ℂ) ^ (k - 1) * exp (-(Real.pi * t))) (Ioi 0) := fun k hk => by
     by_contra h
     have h1 := Complex.integral_cpow_mul_exp_neg_mul_Ioi hk Real.pi_pos
     rw [integral_undef h] at h1
-    exact mul_ne_zero ((cpow_ne_zero_iff_of_exponent_ne_zero (by rintro rfl; simp at hk)).2
-      one_div_pi_ne) (Gamma_ne_zero_of_re_pos hk) h1.symm
+    exact mul_ne_zero
+      ((cpow_ne_zero_iff_of_exponent_ne_zero
+      (by rintro rfl; simp at hk)).2 one_div_pi_ne) (Gamma_ne_zero_of_re_pos hk) h1.symm
   have h2 : 0 < (s / 2 + 2).re := by rw [add_re]; norm_num; linarith
   have h3 : 0 < (s / 2 + 1).re := by rw [add_re]; norm_num; linarith
   have e2 : mellin g (s / 2) = 4 * Real.pi ^ 2 * ((1 / Real.pi) ^ (s / 2 + 2) * Gamma (s / 2 + 2)) -
@@ -218,8 +219,8 @@ lemma analyticOrderAt_xi {s : ℂ} (hs : 0 < s.re) : analyticOrderAt xi (s - 1 /
   rw [analyticOrderAt_xi_shift]
   by_cases h : s ∈ stripZeros
   · rw [WeilExplicit.xi_order_eq h]
-    exact (Nat.cast_analyticOrderNatAt (WeilExplicit.zeta_order_ne_top
-      (by rintro rfl; exact absurd h.2.2 (by simp)))).symm
+    exact (Nat.cast_analyticOrderNatAt
+      (WeilExplicit.zeta_order_ne_top (by rintro rfl; exact absurd h.2.2 (by simp)))).symm
   · have hz : riemannZeta s ≠ 0 := fun hz =>
       h ⟨hz, hs, not_le.1 fun h1 => riemannZeta_ne_zero_of_one_le_re h1 hz⟩
     rw [analyticOrderAt_eq_zero.2 (.inr (mt WeilExplicit.xi_eq_zero_iff.1 h))]

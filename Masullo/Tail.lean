@@ -126,8 +126,8 @@ theorem exists_bound (φ : TestFunction) : ∃ C : ℝ, 0 ≤ C ∧
         gcongr
         exact hρ.2.2.le.trans (by simpa using abs_im_le_norm (ρ - 1 / 2))
       simp only [zeroWeight, normSq_eq_norm_sq, norm_div, norm_I, div_one] at h2 ⊢
-      calc _ ≤ (zeroMult ρ : ℝ) * (Real.exp (t / 2) *
-              (M / ((1 + T ^ 2) * (1 + ‖ρ - 1 / 2‖ ^ 2)))) := by
+      calc _ ≤ (zeroMult ρ : ℝ) *
+              (Real.exp (t / 2) * (M / ((1 + T ^ 2) * (1 + ‖ρ - 1 / 2‖ ^ 2)))) := by
             gcongr
             refine h2.trans ?_
             rw [sq (1 + _)]

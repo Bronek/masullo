@@ -130,8 +130,8 @@ private theorem norm_primaryRayWeight_le_one {ψ : (𝓔 ⧸ span {(72:𝓔)}) �
   split_ifs with h
   · have hn := (good_span_iff h.1).mpr h.2
     rw [norm_mul, cubicSymbol, ← powerResidueSymbol_six_sq hn.2, map_pow, norm_pow]
-    exact (mul_le_of_le_one_left (norm_nonneg _) (pow_le_one₀ (norm_nonneg _) (norm_sextic_le_one _
-      _))).trans (hψ _)
+    exact (mul_le_of_le_one_left (norm_nonneg _)
+      (pow_le_one₀ (norm_nonneg _) (norm_sextic_le_one _ _))).trans (hψ _)
   · simp
 
 private theorem norm_lift_le_one {w : RayResidue 7 → ℂ} {ψ : (𝓔 ⧸ span {(72:𝓔)}) → ℂ}

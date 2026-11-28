@@ -37,8 +37,8 @@ private theorem cpow_continuousOn_test (I : TestInterval) (s : ℂ) :
   have := I.pos
   have := I.ordered
   rw [uIcc_of_le (by linarith)]
-  exact fun x hx => (continuousAt_ofReal_cpow_const _ _ (Or.inr
-    (by linarith [hx.1]))).continuousWithinAt
+  exact fun x hx => (continuousAt_ofReal_cpow_const _ _
+    (Or.inr (by linarith [hx.1]))).continuousWithinAt
 
 /-- Integration by parts with both endpoints outside the support. -/
 theorem UnitTest.mellin_deriv {I : TestInterval} {m : ℕ} {W : ℝ → ℂ} (h : UnitTest I (m+1) W)

@@ -30,8 +30,8 @@ private def kDerivIntegrand (x t : ℝ) : ℂ := -Real.cosh t * kIntegrand x t
 
 private theorem hasDerivAt_kIntegrand (x t : ℝ) :
     HasDerivAt (kIntegrand · t) (kDerivIntegrand x t) x := by
-  have h := (((hasDerivAt_id x).neg.mul_const (Real.cosh t)).exp.mul_const (Real.cosh
-    (t / 3))).ofReal_comp
+  have h := (((hasDerivAt_id x).neg.mul_const (Real.cosh t)).exp.mul_const
+    (Real.cosh (t / 3))).ofReal_comp
   convert h using 1 <;> dsimp [kDerivIntegrand, kIntegrand]
   push_cast
   ring
@@ -261,8 +261,8 @@ private theorem frequency_pos (m : PattersonIndex) : 0 < ‖pattersonFrequency m
   rw [pattersonFrequency, norm_pos_iff]
   apply div_ne_zero
   · exact (map_ne_zero_iff eisEmbedding eisEmbedding_injective).mpr m.2
-  · exact pow_ne_zero _ ((map_ne_zero_iff eisEmbedding
-      eisEmbedding_injective).mpr eisLambda_prime.ne_zero)
+  · exact pow_ne_zero _
+      ((map_ne_zero_iff eisEmbedding eisEmbedding_injective).mpr eisLambda_prime.ne_zero)
 
 set_option maxHeartbeats 1000000 in
 private theorem exists_thetaTerm_majorant {τ : ℂ → ℂ} (ht : PattersonCoefficients τ)
@@ -270,7 +270,8 @@ private theorem exists_thetaTerm_majorant {τ : ℂ → ℂ} (ht : PattersonCoef
     ∃ g : PattersonIndex → ℝ, Summable g ∧ ∀ (m : PattersonIndex) (p : U), p.2 ∈ Ioo (v/2) (2*v) →
       ‖fderiv ℝ (thetaTerm (pattersonFrequency m) (τ (pattersonFrequency m))) p‖ ≤ g m := by
   let L := ‖eisEmbedding eisLambda ^ 3‖
-  have hL : 0 < L := norm_pos_iff.mpr (pow_ne_zero _
+  have hL : 0 < L := norm_pos_iff.mpr
+    (pow_ne_zero _
     ((map_ne_zero_iff eisEmbedding eisEmbedding_injective).mpr eisLambda_prime.ne_zero))
   let δ := Real.pi * v / L / 4
   have hδ : 0 < δ := by positivity
@@ -372,8 +373,8 @@ theorem PattersonCoefficients.summable_normalizedThetaMode {τ : ℂ → ℂ}
   obtain ⟨C, hC, hB⟩ := exists_besselK_oneThird_bound (δ := 1) zero_lt_one
   have hb : 0 < 2 * Real.pi * v := by positivity
   have hk : 0 < 4 * Real.pi * v := by positivity
-  apply ((summable_pattersonFrequency_rpow_exp (1/3 +
-    s) hb).mul_left (v*C)).of_norm_bounded_eventually
+  apply ((summable_pattersonFrequency_rpow_exp
+    (1/3 + s) hb).mul_left (v*C)).of_norm_bounded_eventually
   filter_upwards [tendsto_norm_pattersonFrequency.eventually_ge_atTop (8/(4*Real.pi*v)),
     tendsto_norm_pattersonFrequency.eventually_gt_atTop 0] with m hm hm₀
   set t := ‖pattersonFrequency m‖

@@ -83,8 +83,8 @@ lemma IsHS.of_basis (b : HilbertBasis ι ℂ H) {A : H →L[ℂ] H}
 lemma summable_sq_adjoint (b : HilbertBasis ι ℂ H) {A : H →L[ℂ] H}
     (h : Summable fun i => ‖A (b i)‖ ^ 2) :
     Summable fun i => ‖ContinuousLinearMap.adjoint A (b i)‖ ^ 2 := by
-  refine (ENNReal.summable_toReal (f := fun i => ENNReal.ofReal
-    (‖ContinuousLinearMap.adjoint A (b i)‖ ^ 2)) ?_).congr fun k =>
+  refine (ENNReal.summable_toReal
+    (f := fun i => ENNReal.ofReal (‖ContinuousLinearMap.adjoint A (b i)‖ ^ 2)) ?_).congr fun k =>
       ENNReal.toReal_ofReal (by positivity)
   rw [← tsum_sq_adjoint b b A, ← ENNReal.ofReal_tsum_of_nonneg (fun _ => by positivity) h]
   exact ENNReal.ofReal_ne_top

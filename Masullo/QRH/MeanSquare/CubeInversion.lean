@@ -68,8 +68,8 @@ theorem completedSum_eq_sum_cubeIdeals {I : TestInterval} {j : ℕ} {W : ℝ →
       cubeWeight ξ k f b * normalizedColumn ξ W (X / cubeNorm b) k f := by
   classical
   let S := cubeIdeals (max I.hi 1 * X)
-  let t := S.preimage (Subtype.val : {b : Ideal 𝓔 // AwayFromSix b} →
-    Ideal 𝓔) Subtype.val_injective.injOn
+  let t := S.preimage
+    (Subtype.val : {b : Ideal 𝓔 // AwayFromSix b} → Ideal 𝓔) Subtype.val_injective.injOn
   change (∑ᶠ b : {b : Ideal 𝓔 // AwayFromSix b}, cubeWeight ξ k f b *
     normalizedColumn ξ W (X / cubeNorm b) k f) = _
   rw [finsum_eq_sum_of_support_subset _ (s := t) ?_]
@@ -105,8 +105,8 @@ theorem sum_idealMoebius_dividing {n : Ideal 𝓔} (hn : n ≠ 0) (S : Finset (I
     exact normalizedFactors_prod_of_prime fun p hp => prime_of_normalized_factor _
       (Multiset.mem_toFinset.mp (hT hp))
   have h₀ {T : Finset (Ideal 𝓔)} (hT : T ⊆ P) : ∏ p ∈ T, p ≠ 0 :=
-    Finset.prod_ne_zero_iff.mpr fun _ hp => (prime_of_normalized_factor _ (Multiset.mem_toFinset.mp
-      (hT hp))).ne_zero
+    Finset.prod_ne_zero_iff.mpr fun _ hp => (prime_of_normalized_factor _
+      (Multiset.mem_toFinset.mp (hT hp))).ne_zero
   have hsum : ∑ T ∈ P.powerset, (-1 : ℤ) ^ T.card = ∑ b ∈ S with b ∣ n, idealMoebius b := by
     refine Finset.sum_bij_ne_zero (fun T _ _ => ∏ p ∈ T, p) ?_ ?_ ?_ ?_
     · intro T hT _
@@ -125,8 +125,8 @@ theorem sum_idealMoebius_dividing {n : Ideal 𝓔} (hn : n ≠ 0) (S : Finset (I
       have hnd := (squarefree_iff_nodup_normalizedFactors hsf.ne_zero).mp hsf
       let T := (normalizedFactors b).toFinset
       have hsub : T ⊆ P := Multiset.toFinset_subset.mpr
-        (Multiset.subset_of_le ((dvd_iff_normalizedFactors_le_normalizedFactors
-          hsf.ne_zero hn).mp hd))
+        (Multiset.subset_of_le
+          ((dvd_iff_normalizedFactors_le_normalizedFactors hsf.ne_zero hn).mp hd))
       refine ⟨T, mem_powerset.mpr hsub, by simp, ?_⟩
       rw [prod_eq_multiset_prod, Multiset.map_id', Multiset.toFinset_val, hnd.dedup]
       exact associated_iff_eq.mp (prod_normalizedFactors hsf.ne_zero)
@@ -151,8 +151,8 @@ theorem mem_cubeIdeals_of_dvd {b n : Ideal 𝓔} {Y : ℝ} (hd : b ∣ n) (hn : 
   have hb : AwayFromSix b := ⟨left_ne_zero_of_mul h₀, hc.of_mul_left_left⟩
   have hd : AwayFromSix d := ⟨right_ne_zero_of_mul h₀, hc.of_mul_left_right⟩
   rw [cubeNorm_mul] at hY
-  exact mem_cubeIdeals.mpr ⟨hb, (le_mul_of_one_le_right (zero_le_one.trans (cubeNorm_one_le hb))
-    (cubeNorm_one_le hd)).trans hY⟩
+  exact mem_cubeIdeals.mpr ⟨hb,
+    (le_mul_of_one_le_right (zero_le_one.trans (cubeNorm_one_le hb)) (cubeNorm_one_le hd)).trans hY⟩
 
 open Classical in
 private theorem sum_cube_factors {Y : ℝ} {b : Ideal 𝓔} (hb : AwayFromSix b)

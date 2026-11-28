@@ -124,8 +124,8 @@ private lemma twistedGauss_mul {b c : Ideal 𝓔} (hb : AwayFromSix b) (hc : Awa
     exact Ideal.mul_mem_left _ _ h
 
 private lemma sqrt_absNorm_ne_zero {n : Ideal 𝓔} (hn : n ≠ ⊥) : Real.sqrt (absNorm n) ≠ 0 :=
-  (Real.sqrt_pos.mpr (Nat.cast_pos.mpr (Nat.pos_of_ne_zero
-    (Ideal.absNorm_eq_zero_iff.not.mpr hn)))).ne'
+  (Real.sqrt_pos.mpr
+    (Nat.cast_pos.mpr (Nat.pos_of_ne_zero (Ideal.absNorm_eq_zero_iff.not.mpr hn)))).ne'
 
 private lemma twistedGauss_one {b c : Ideal 𝓔} (h : b * c ≠ ⊥) :
     twistedGauss (pairCharacter b c) (b * c) (generator (b * c)) 1 =
@@ -405,7 +405,8 @@ lemma sum_moebius_dvd_ideal {g : Ideal 𝓔} (hg : g ≠ ⊥) (c : Ideal 𝓔) :
       have hgM : g ≤ M := le_sup_right.trans hle
       have hM0 : M ≠ ⊥ := fun h0 => hg (eq_bot_iff.mpr (h0 ▸ hgM))
       have hP : Prime M := (Ideal.prime_iff_isPrime hM0).mpr hm.isPrime
-      exact h M (Finset.mem_filter.mpr ⟨Multiset.mem_toFinset.mpr
+      exact h M (Finset.mem_filter.mpr
+        ⟨Multiset.mem_toFinset.mpr
         ((UniqueFactorizationMonoid.mem_normalizedFactors_iff hg).mpr ⟨hP, dvd_iff_le.mpr hgM⟩),
         dvd_iff_le.mpr (le_sup_left.trans hle)⟩)
     · intro hc P hP

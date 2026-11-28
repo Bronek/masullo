@@ -33,8 +33,8 @@ theorem isPrimitiveRayCharacter_of_prime_tests {f : Ideal (𝓞 K)} {χ : Ideal 
     have hu : IsUnit f := isCoprime_zero_left.mp
       (by simpa only [span_singleton_zero, Ideal.zero_eq_bot] using hx)
     exact hp.not_isUnit (isUnit_of_dvd_unit ⟨_, hfactor⟩ hu)
-  exact (hval ((heq _ (by simpa using hx₀) hx).symm.trans
-    (hψ.2.2 x hx₀ (Ideal.mul_le_left hm)))).elim
+  exact (hval
+    ((heq _ (by simpa using hx₀) hx).symm.trans (hψ.2.2 x hx₀ (Ideal.mul_le_left hm)))).elim
 
 /-- Lift an arbitrary unit residue modulo `P` to an element congruent to one
 modulo `m`. Its principal ideal is coprime to the full product. -/

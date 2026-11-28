@@ -159,8 +159,8 @@ theorem transferEstimate (hpg : PairedGaussIdentities) : TransferEstimate := by
       (fun a b ha hb hab => hp a b (I.hi * L) ha hb hab)).trans ?_
     refine mul_le_mul_of_nonneg_left ?_ hT20
     have hM3' : M3 = ∑ r ∈ starredLe (I.hi * L), c * target * absNorm r / L ^ 2 *
-        (C3 * lg * 4 ^ Multiset.card (normalizedFactors r) * (1 + B) *
-          (L / absNorm r) ^ 2) := by
+        (C3 * lg * 4 ^ Multiset.card (normalizedFactors r) *
+          (1 + B) * (L / absNorm r) ^ 2) := by
       rw [hM3_def, hH_def, Finset.mul_sum]
       refine Finset.sum_congr rfl fun r hr => ?_
       have hr0 : (absNorm r : ℝ) ≠ 0 := by
@@ -257,8 +257,10 @@ theorem transferEstimate (hpg : PairedGaussIdentities) : TransferEstimate := by
       _ = _ := by ring
   have e2 : C1 * M1 ≤ (C1 * Cs * C2 * c * Ct * Cr * I.hi +
       C1 * Cs * C2 * Cp * c * C3 * Cl * Ch) * R := by
-    calc C1 * M1 ≤ C1 * (Cs * q * (C2 * (c * Ct * Cr * I.hi * target * q ^ 2) +
-          C2 * (Cp * q * (c * target * C3 * (Cl * q) * (1 + B) * (Ch * q))))) := by
+    calc C1 * M1 ≤ C1 *
+          (Cs * q *
+          (C2 * (c * Ct * Cr * I.hi * target * q ^ 2) + C2 *
+          (Cp * q * (c * target * C3 * (Cl * q) * (1 + B) * (Ch * q))))) := by
           rw [hM1_def]; gcongr
       _ = C1 * Cs * C2 * c * Ct * Cr * I.hi * (target * q ^ 3) +
           C1 * Cs * C2 * Cp * c * C3 * Cl * Ch * R := by rw [hR_def]; ring

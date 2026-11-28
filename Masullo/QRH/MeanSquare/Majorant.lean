@@ -234,8 +234,9 @@ lemma profile_norm (z : ℂ) : profile z = profile (‖z‖ : ℂ) := by
 
 lemma half_mass_le_profile {z : ℂ} (hz : ‖z‖ ≤ 1) : mass / 2 ≤ profile z := by
   rw [mass, ← integral_div]
-  refine integral_mono ((integrable_bump_mul (f := fun _ ↦ 1) continuous_const).div_const 2
-    |>.congr (by simp)) (integrable_bump_mul (by fun_prop)) fun ξ ↦ ?_
+  refine integral_mono
+    ((integrable_bump_mul (f := fun _ ↦ 1) continuous_const).div_const 2 |>.congr
+    (by simp)) (integrable_bump_mul (by fun_prop)) fun ξ ↦ ?_
   dsimp only
   rcases eq_or_ne (bump ξ) 0 with h | h
   · simp [h]

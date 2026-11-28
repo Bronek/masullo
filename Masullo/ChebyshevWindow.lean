@@ -97,8 +97,9 @@ lemma continues {θ ε : ℝ} (hθ : 0 ≤ θ) (hε : ε ≠ 0) :
   analytic s hs hZ := by
     have h0 : s ≠ 0 := fun e => by simp [e] at hs; linarith
     have hd := differentiable_zetaNum.analyticAt s
-    exact (analyticAt_const.mul (analyticAt_const.add (hd.deriv.div hd
-      (zetaNum_ne_zero fun h => hZ ⟨hs, h⟩)))).div analyticAt_id h0
+    exact (analyticAt_const.mul
+      (analyticAt_const.add (hd.deriv.div hd (zetaNum_ne_zero fun h => hZ ⟨hs, h⟩)))).div
+      analyticAt_id h0
   finite s r := ((isCompact_closedBall s r).inter_riemannZetaZeros_finite).subset
     fun ρ h => ⟨h.2, h.1.2⟩
   re_mem ρ h := ⟨h.1, (re_lt_one_of_zero h.2).le.trans one_le_two⟩
@@ -106,7 +107,8 @@ lemma continues {θ ε : ℝ} (hθ : 0 ≤ θ) (hε : ε ≠ 0) :
     have h0 : ρ ≠ 0 := fun e => by have := h.1; simp [e] at this; linarith
     obtain ⟨g, hg, hg0, hlog⟩ := exists_logDeriv_zetaNum ρ
     refine ⟨0, fun s => ε * ((1 + logDeriv g s) * (s - ρ) + zeroMult ρ) / s,
-      ((analyticAt_const.mul (((analyticAt_const.add (hg.deriv.div hg hg0)).mul
+      ((analyticAt_const.mul
+        (((analyticAt_const.add (hg.deriv.div hg hg0)).mul
         (by fun_prop)).add analyticAt_const)).div analyticAt_id h0), ?_, ?_⟩
     · simpa using ⟨⟨hε, (zeroMult_pos h.2).ne'⟩, h0⟩
     filter_upwards [hlog, self_mem_nhdsWithin,

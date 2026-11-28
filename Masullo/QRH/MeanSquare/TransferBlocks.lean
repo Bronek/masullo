@@ -282,8 +282,9 @@ theorem exists_coprimeBlocks_le (hpg : PairedGaussIdentities) (I : TestInterval)
   have hL0 : 0 < L := by linarith
   rw [← Finset.sum_fiberwise_of_maps_to (s := starredLe (I.hi * L / absNorm r))
     (t := Finset.range (Nat.log 2 ⌊I.hi * L⌋₊ + 1)) (g := fun f => Nat.log 2 (absNorm f)) ?_]
-  · refine (Finset.sum_le_card_nsmul _ _ (C * 4 ^ Multiset.card (normalizedFactors r) * (1 + B) *
-      (L / absNorm r) ^ 2) fun i _ => h K L F target B ζ U r i hK hL hF hKt hB hch hU hr).trans ?_
+  · refine (Finset.sum_le_card_nsmul _ _
+      (C * 4 ^ Multiset.card (normalizedFactors r) * (1 + B) * (L / absNorm r) ^ 2) fun i _ => h K L
+      F target B ζ U r i hK hL hF hKt hB hch hU hr).trans ?_
     rw [Finset.card_range, nsmul_eq_mul]
     push_cast
     apply le_of_eq

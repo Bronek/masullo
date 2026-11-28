@@ -261,7 +261,8 @@ theorem gaoZhaoLemma23 : GaoZhaoLemma23 := by
   have hsA : Summable a := by
     have := e₃.summable_iff.mpr hsR
     simp only [Function.comp_def, hR] at this
-    exact (summable_mul_left_iff (mul_ne_zero (Complex.ofReal_ne_zero.mpr hX.ne')
+    exact (summable_mul_left_iff
+      (mul_ne_zero (Complex.ofReal_ne_zero.mpr hX.ne')
       (div_ne_zero (Complex.ofReal_ne_zero.mpr sqrt_three_pos.ne') two_ne_zero))).mp this
   refine ⟨∑' k, a k, ?_, hsA.hasSum⟩
   have hsL : Summable fun ℓ : eisLattice q ↦ f (eisEmbedding r + ℓ) := by
@@ -305,8 +306,8 @@ theorem hasSum_twisted_poisson (W : 𝓢(ℝ, ℂ)) {X : ℝ} (hX : 0 < X) {I : 
     rw [Ideal.Quotient.eq, ← hm, Ideal.mem_span_singleton]
   let t : (𝓔 ⧸ I) → 𝓔 → ℂ := fun x k ↦ gaoZhaoTransform W (√(N k * X / N m)) *
     differentCharacter (eisEmbedding k * eisEmbedding (Quotient.out x) / eisEmbedding m)
-  have hx : ∀ x, Summable (t x) ∧ HasSum (Set.indicator {y | m ∣ y - Quotient.out x}
-      fun y ↦ W (N y / X)) (X / N m * ∑' k, t x k) := by
+  have hx : ∀ x, Summable (t x) ∧ HasSum
+      (Set.indicator {y | m ∣ y - Quotient.out x} fun y ↦ W (N y / X)) (X / N m * ∑' k, t x k) := by
     intro x
     obtain ⟨s, h₁, h₂⟩ := gaoZhaoLemma23 W X hX (Quotient.out x) m hm0
     rw [h₂.tsum_eq]

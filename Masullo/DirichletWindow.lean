@@ -123,8 +123,8 @@ lemma continues {θ ε : ℝ} (hθ : 0 ≤ θ) (hε : ε ≠ 0) (hb : ∀ n, |b 
     ring
   analytic s hs hZ := by
     have h0 : s ≠ 0 := fun e => by simp [e] at hs; linarith
-    exact (analyticAt_const.mul (((hK s hs).mul
-      (by fun_prop : AnalyticAt ℂ (fun z : ℂ => z - 1) s)).div
+    exact (analyticAt_const.mul
+      (((hK s hs).mul (by fun_prop : AnalyticAt ℂ (fun z : ℂ => z - 1) s)).div
       (analyticAt_id.mul (differentiable_zetaNum.analyticAt s))
       (mul_ne_zero h0 (zetaNum_ne_zero (fun h => hZ ⟨hs, h⟩))))).fun_neg
   finite s r := ((isCompact_closedBall s r).inter_riemannZetaZeros_finite).subset
@@ -292,8 +292,8 @@ theorem PowerWindowBound.windowBound {m : ℕ} {θ δ C : ℝ} (hm : 1 ≤ m) (h
     (le_abs_self _).trans (by rw [abs_mul, hε1, one_mul]; exact hJ.trans hinc)
   have hC : C * ((J : ℝ) ^ m) ^ θ ≤ max C 0 * (2 ^ m * x) ^ θ :=
     (mul_le_mul_of_nonneg_right (le_max_left C 0) (by positivity)).trans
-      (mul_le_mul_of_nonneg_left (Real.rpow_le_rpow (by positivity) hJx
-        (nonneg_of_one_sub_inv_le hm hθ)) (le_max_right C 0))
+      (mul_le_mul_of_nonneg_left
+        (Real.rpow_le_rpow (by positivity) hJx (nonneg_of_one_sub_inv_le hm hθ)) (le_max_right C 0))
   rw [hS, mul_assoc, ← Real.mul_rpow (by positivity) (by linarith)]
   linarith [hw J hJw]
 

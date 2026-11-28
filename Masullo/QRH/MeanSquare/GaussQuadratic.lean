@@ -251,8 +251,8 @@ private lemma sub_rep_mem_iff (n : Ideal 𝓔) (q : Fin 2 → ℤ) (hq : span {e
 
 private theorem reps_eisMatrix (n : Ideal 𝓔) [Fintype (𝓔 ⧸ n)] (q : Fin 2 → ℤ)
     (hq : span {elem q} = n) :
-    Representatives (lattice 1) ((eisMatrix ((q 0 : ℤ) : ℝ) (q 1)).mulVec '' lattice
-      1) (reps n) := by
+    Representatives (lattice 1)
+      ((eisMatrix ((q 0 : ℤ) : ℝ) (q 1)).mulVec '' lattice 1) (reps n) := by
   classical
   have hmem (y : 𝓔 ⧸ n) : rep n y ∈ reps n := Finset.mem_map.mpr ⟨_, Finset.mem_univ _, rfl⟩
   constructor
@@ -382,8 +382,8 @@ theorem quadraticExponentialSum_eq_of_mk_four_eq (h : DeloupTuraevTheorem1)
 every residue. The two coefficients are in the Eisenstein basis `1, ω`. -/
 theorem quadraticRayValue_representatives :
     ∃ s, Representatives (lattice 1) ((fun x => (2 : ℝ) • x) '' lattice 1) s ∧
-      ∀ a b : ℤ, quadraticRayValue (Ideal.Quotient.mk (span {(4 : 𝓔)}) ((a : 𝓔) +
-        (b : 𝓔) * eisOmega)) =
+      ∀ a b : ℤ, quadraticRayValue (Ideal.Quotient.mk (span {(4 : 𝓔)})
+        ((a : 𝓔) + (b : 𝓔) * eisOmega)) =
         (∑ x ∈ s, phase (dotProduct x ((eisMatrix (a : ℝ) b).mulVec x) / 2)) / 2 := by
   refine ⟨reps (span {(2 : 𝓔)}), reps_two, ?_⟩
   intro a b

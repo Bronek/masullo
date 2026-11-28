@@ -245,8 +245,8 @@ lemma re_sub_half_le_of_windowBound (ha : 0 ≤ a) (hδ : 0 < δ) {φ : TestFunc
       have h0 := (φ.translate |x| (abs_nonneg x)).hasSum_full
       rw [← conj_eq_iff_re.1 (conj_eq_iff_im.2 (hφ.translate (abs_nonneg x)).efFunctional_im)]
         at h0
-      refine ((hasSum_subtype_iff_of_support_subset fun ρ hρ => ?_).2 (h0.congr_fun
-        fun ρ : stripZeros => ?_ : HasSum (fun ρ : stripZeros =>
+      refine ((hasSum_subtype_iff_of_support_subset fun ρ hρ => ?_).2
+        (h0.congr_fun fun ρ : stripZeros => ?_ : HasSum (fun ρ : stripZeros =>
           (zeroMult ρ : ℂ) * φ.hat ((ρ : ℂ) - 1 / 2) * exp (x * ((ρ : ℂ) - 1 / 2))) _))
       · exact right_ne_zero_of_mul (left_ne_zero_of_mul hρ)
       · rw [TestFunction.hat_translate, abs_of_nonneg hx]
@@ -351,7 +351,7 @@ Riemann hypothesis holds. Neither side is asserted. -/
 theorem exists_windowBound_zero_iff_riemannHypothesis (hδ : 0 < δ) :
     ∃ φ : TestFunction, φ.Nonneg ∧ (φ.WindowBound 0 δ ↔ RiemannHypothesis) :=
   have ⟨φ, hφ, h⟩ := exists_windowBound_iff le_rfl hδ
-  ⟨φ, hφ, h.trans ((probeBound_iff le_rfl hδ).symm.trans
-    (probeBound_zero_iff_riemannHypothesis hδ))⟩
+  ⟨φ, hφ, h.trans
+    ((probeBound_iff le_rfl hδ).symm.trans (probeBound_zero_iff_riemannHypothesis hδ))⟩
 
 end Masullo

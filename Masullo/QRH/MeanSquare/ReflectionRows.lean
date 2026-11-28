@@ -173,8 +173,8 @@ theorem summable_inverse_square : Summable (fun v : Ideal 𝓔 => ((absNorm v : 
 
 private theorem cover_sum {K : ℝ} (hK : 1 ≤ K) (T : 𝓔 → ℝ) (hT : ∀ k, 0 ≤ T k) :
     ∑ k ∈ elementRows K, T k ≤ ∑ v ∈ squareDivisors K, ∑ u : 𝓔ˣ,
-      ∑ s ∈ squarefreeRows (K / (absNorm v : ℝ) ^ 2), T ((u : 𝓔) * generator s *
-        generator v ^ 2) := by
+      ∑ s ∈ squarefreeRows (K / (absNorm v : ℝ) ^ 2), T
+        ((u : 𝓔) * generator s * generator v ^ 2) := by
   classical
   let S (v : Ideal 𝓔) := squarefreeRows (K / (absNorm v : ℝ) ^ 2)
   let P := (squareDivisors K).sigma (fun v => (univ : Finset 𝓔ˣ) ×ˢ S v)
@@ -233,8 +233,8 @@ theorem completedEstimate_of_squarefree (hsq : SquarefreeCompletedEstimate)
     have h := hsf D (H v) X u (G v) ξ W hD hH (hHK.trans (hKD.trans hD₂)) hX (hXD.trans hD₂)
       (mul_ne_zero (generator_ne hf.1.1) (pow_ne_zero _ (generator_ne hv₀))) hNG hW
     calc
-      _ = ∑ s ∈ squarefreeRows (H v), ‖completedAtElement ξ W X ((u : 𝓔) *
-        generator s) (G v)‖ ^ 2 := by
+      _ = ∑ s ∈ squarefreeRows (H v), ‖completedAtElement ξ W X
+        ((u : 𝓔) * generator s) (G v)‖ ^ 2 := by
         refine sum_congr rfl fun s _ => ?_
         rw [completedSum_eq_atElement, completedAtElement_shift_square]
       _ ≤ _ := h

@@ -81,8 +81,8 @@ theorem completedSum_eq_primary_theta {τ : ℂ → ℂ} (hτ : PattersonCoeffic
         eisEmbedding (powerResidueSymbol 3 eisLambda m.val) * twist ξ k f m.val *
         W (absNorm m.val / X) / Real.sqrt X := by
   classical
-  let F (m : Good) : ℂ := conj (angularFactor m.val) * (conj (τ (eisEmbedding
-    (generator m.val))) / 27) *
+  let F (m : Good) : ℂ := conj (angularFactor m.val) *
+    (conj (τ (eisEmbedding (generator m.val))) / 27) *
     eisEmbedding (powerResidueSymbol 3 eisLambda m.val) * twist ξ k f m.val *
     W (absNorm m.val / X) / Real.sqrt X
   have hf : Function.HasFiniteSupport F := by

@@ -51,8 +51,8 @@ Fourier terms at height `v` with `a = 4π|μ|`. -/
 theorem besselMellin_oneThird_scaled (h : DLMFBesselMellin) {s : ℂ} (hs : -(1 / 3 : ℝ) < s.re)
     {a : ℝ} (ha : 0 < a) :
     HasMellin (fun v => besselK (1 / 3) (a * v)) (2 * s + 1)
-      ((a : ℂ) ^ (-(2 * s + 1)) * ((2 : ℂ) ^ (2 * s - 1) *
-        Complex.Gamma (s + 1 / 3) * Complex.Gamma (s + 2 / 3))) := by
+      ((a : ℂ) ^ (-(2 * s + 1)) *
+        ((2 : ℂ) ^ (2 * s - 1) * Complex.Gamma (s + 1 / 3) * Complex.Gamma (s + 2 / 3))) := by
   obtain ⟨hc, hm⟩ := besselMellin_oneThird h hs
   exact ⟨(MellinConvergent.comp_mul_left ha).2 hc, by rw [mellin_comp_mul_left _ _ ha, hm]; rfl⟩
 

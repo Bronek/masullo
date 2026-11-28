@@ -112,8 +112,8 @@ private lemma integrableOn_cpow_mul_fract' {s : ℂ} (hs : 0 < s.re) (α : ℝ) 
       (Ioc 0 1) := by
   refine (integrableOn_cpow hs).norm.mono' ?_ ?_
   · exact (Measurable.mul (by fun_prop : Measurable fun x : ℝ => (x : ℂ) ^ (s - 1))
-      (Complex.measurable_ofReal.comp (measurable_fract.comp
-        (measurable_const.div measurable_id)))).aestronglyMeasurable
+      (Complex.measurable_ofReal.comp
+        (measurable_fract.comp (measurable_const.div measurable_id)))).aestronglyMeasurable
   · refine .of_forall fun x => ?_
     rw [norm_mul, Complex.norm_real, Real.norm_eq_abs, abs_of_nonneg (Int.fract_nonneg _)]
     exact mul_le_of_le_one_right (norm_nonneg _) (Int.fract_lt_one _).le

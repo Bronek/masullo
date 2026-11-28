@@ -416,8 +416,8 @@ lemma smoothDiff_eq (t : ℝ) {N : ℕ} (hN : 2 * Real.exp (t + b.rOut) < N) :
       rw [dyadicDiff_eq_sum (Real.exp_pos _) (N := N) (lt_of_le_of_lt (by gcongr; linarith) hN),
         Real.log_exp, Finset.mul_sum]
       exact Finset.sum_congr rfl fun n _ => by ring_nf
-    · exact (((b.continuous_normed (μ := volume)).mul (continuous_kern.comp
-        (continuous_const.sub continuous_id))).integrable_of_hasCompactSupport
+    · exact (((b.continuous_normed (μ := volume)).mul
+        (continuous_kern.comp (continuous_const.sub continuous_id))).integrable_of_hasCompactSupport
         b.hasCompactSupport_normed.mul_right).const_mul _
   · have hn : (N : ℝ) ≤ n := by exact_mod_cast not_lt.1 (Finset.mem_range.not.1 hn)
     have := Real.log_lt_log (by positivity) (hN.trans_le hn)
@@ -513,12 +513,12 @@ lemma avg_bound [DecidableEq J] (hq : ∀ j, 0 ≤ q j ∧ q j ≤ 1) (hd : ∀ 
   have hw (S : Finset J) : 0 ≤ w S := mul_nonneg (Finset.prod_nonneg fun j _ => (hq j).1)
     (Finset.prod_nonneg fun j _ => by linarith [(hq j).2])
   have hu (S : Finset J) (hS : S ∈ F.powerset) : ∑ j ∈ S, d j ∈ Icc 0 L :=
-    ⟨Finset.sum_nonneg fun j _ => hd j, (Finset.sum_le_sum_of_subset_of_nonneg
-      (Finset.mem_powerset.1 hS) fun j _ _ => hd j).trans hL⟩
+    ⟨Finset.sum_nonneg fun j _ => hd j,
+      (Finset.sum_le_sum_of_subset_of_nonneg (Finset.mem_powerset.1 hS) fun j _ _ => hd j).trans hL⟩
   have hsum := hasSum_sum fun S (hS : S ∈ F.powerset) =>
     (hasSum_zeros b (t := t + ∑ j ∈ S, d j) (by linarith [(hu S hS).1])).mul_left (w S : ℂ)
-  have e : (fun ρ : stripZeros => ∑ S ∈ F.powerset, (w S : ℂ) * ((zeroMult ρ : ℂ) *
-      (cexp (ρ * ↑(t + ∑ j ∈ S, d j)) * lap (smooth b) ρ))) =
+  have e : (fun ρ : stripZeros => ∑ S ∈ F.powerset, (w S : ℂ) *
+      ((zeroMult ρ : ℂ) * (cexp (ρ * ↑(t + ∑ j ∈ S, d j)) * lap (smooth b) ρ))) =
       fun ρ : stripZeros => (zeroMult ρ : ℂ) *
       (cexp (ρ * t) * lap (smooth b) ρ) * ∏ j ∈ F, factor (q j) (d j) ρ := by
     funext ρ
@@ -560,8 +560,8 @@ lemma limit_bound (hq : ∀ j, 0 ≤ q j ∧ q j ≤ 1) (hd : ∀ j, 0 ≤ d j) 
   classical
   have ht0 : 0 ≤ t := by linarith [Real.log_pos one_lt_two, b.rOut_pos]
   have hlim := tendsto_tsum_of_dominated_convergence (𝓕 := atTop)
-    (f := fun (F : Finset J) (ρ : stripZeros) => (zeroMult ρ : ℂ) * (cexp (ρ * t) *
-      lap (smooth b) ρ) * ∏ j ∈ F, factor (q j) (d j) ρ)
+    (f := fun (F : Finset J) (ρ : stripZeros) => (zeroMult ρ : ℂ) *
+      (cexp (ρ * t) * lap (smooth b) ρ) * ∏ j ∈ F, factor (q j) (d j) ρ)
     (bound := fun ρ => Real.exp t * Real.exp L * ((zeroMult ρ : ℝ) * ‖lap (smooth b) ρ‖))
     ((summable_norm_lap b).mul_left _) (fun ρ => by
       have := hM ρ
@@ -992,8 +992,8 @@ theorem exists_rightmost_of_bound {R θ C : ℝ} (hR : 1 < R)
       exact j.2.1
   let i (z : upper p.re) : {j : E // j ∉ F} :=
     ⟨⟨z, z.2.1, (hmax ρ₂ (Finset.mem_insert_self ..)).trans z.2.2.1.le, z.2.2.2⟩,
-      fun hj => z.2.2.1.not_ge (hmax _ (Finset.mem_insert_of_mem
-        (Finset.mem_image_of_mem Subtype.val hj)))⟩
+      fun hj => z.2.2.1.not_ge
+        (hmax _ (Finset.mem_insert_of_mem (Finset.mem_image_of_mem Subtype.val hj)))⟩
   have hi : Function.Injective i := fun _ _ e =>
     Subtype.ext (congrArg (fun j : {j : E // j ∉ F} => ((j : E) : ℂ)) e)
   let v (j : {j : E // j ∉ F}) := w j

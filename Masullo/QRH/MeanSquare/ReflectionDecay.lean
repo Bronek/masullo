@@ -148,8 +148,8 @@ theorem PattersonRow.norm_normalized_coefficient_le (r : PattersonRow) :
   | unshifted j =>
     have h := hcommon (a := 1) (by simp)
     simp only [PattersonRow.coefficient, PattersonLayer.lambdaExponent, norm_div, Complex.norm_conj,
-      norm_mul, Complex.norm_real, Real.norm_of_nonneg (Real.rpow_nonneg
-        (by norm_num : (0 : ℝ) ≤ 3) _),
+      norm_mul, Complex.norm_real, Real.norm_of_nonneg
+        (Real.rpow_nonneg (by norm_num : (0 : ℝ) ≤ 3) _),
       Real.norm_of_nonneg (norm_nonneg _), Complex.norm_ofNat, Nat.cast_mul, Nat.cast_ofNat]
     calc
       _ ≤ ‖eisEmbedding d‖ * (3 ^ (((j : ℝ) + 5) / 2) / 27) := by

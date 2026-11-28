@@ -299,8 +299,8 @@ theorem mean_modulate_le {a : ℝ} (ha : 0 < a) (φ : TestFunction) :
       have := pow_le_pow_left₀ (Real.log_nonneg (by linarith)) hlog 2
       linarith [show (3 * Real.log (2 * T)) ^ 2 = 9 * Real.log (2 * T) ^ 2 by ring]
     calc (2 * T)⁻¹ * (Real.pi * M * ∑ ρ ∈ S, (zeroMult ρ : ℝ))
-        ≤ (2 * T)⁻¹ * (Real.pi * M * (A * ((2 * T) ^ (1 - κ) *
-            Real.log (2 * (2 * T) + 4) ^ 2))) := by gcongr
+        ≤ (2 * T)⁻¹ *
+            (Real.pi * M * (A * ((2 * T) ^ (1 - κ) * Real.log (2 * (2 * T) + 4) ^ 2))) := by gcongr
       _ = Real.pi * M * A * ((2 * T) ^ (1 - κ) / (2 * T)) * Real.log (2 * (2 * T) + 4) ^ 2 := by
           field_simp
       _ ≤ Real.pi * M * A * T ^ (-κ) * (9 * Real.log (2 * T) ^ 2) := by gcongr

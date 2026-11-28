@@ -47,8 +47,9 @@ theorem sum_moebiusSplitsLe_eq {X : ℝ} (hX : 0 ≤ X)
     rw [Finset.sum_product]
   rw [h2, Finset.sum_sigma']
   refine Finset.sum_bij'
-    (fun u _ => (⟨(u.1, u.2.1, u.2.2.1), (u.2.2.2.2, u.2.2.2.1)⟩ :
-      Σ _ : Ideal 𝓔 × Ideal 𝓔 × Ideal 𝓔, Ideal 𝓔 × Ideal 𝓔))
+    (fun u _ =>
+      (⟨(u.1, u.2.1, u.2.2.1), (u.2.2.2.2, u.2.2.2.1)⟩ : Σ _ : Ideal 𝓔 × Ideal 𝓔 × Ideal 𝓔, Ideal 𝓔
+      × Ideal 𝓔))
     (fun q _ => (q.1.1, q.1.2.1, q.1.2.2, q.2.2, q.2.1)) ?_ ?_ ?_ ?_ ?_
   · rintro ⟨b, e, v, m₁, m₂⟩ hu
     simp only [moebiusSplitsLe, passRows, passCols, Finset.mem_filter, Finset.mem_product,

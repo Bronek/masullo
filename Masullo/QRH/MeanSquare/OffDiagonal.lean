@@ -79,8 +79,8 @@ lemma dualExclusion_eq_add {b c g : Ideal 𝓔} (hb : AwayFromSix b) (hc : AwayF
           (Real.sqrt (Y * elementNorm h / ((absNorm e : ℝ) * absNorm (b * c)))) := by
     intro e he
     have he0 : (0 : ℝ) < absNorm e := by
-      exact_mod_cast Nat.pos_of_ne_zero (absNorm_eq_zero_iff.not.mpr
-        he)
+      exact_mod_cast Nat.pos_of_ne_zero
+        (absNorm_eq_zero_iff.not.mpr he)
     have hX : 0 < Y / ((absNorm e : ℝ) * absNorm (b * c)) := by positivity
     have hs : Summable fun h : 𝓔 => conj (pairCharacter b c h) * gaoZhaoTransform P
         (Real.sqrt (Y * elementNorm h / ((absNorm e : ℝ) * absNorm (b * c)))) := by
@@ -96,10 +96,12 @@ lemma dualExclusion_eq_add {b c g : Ideal 𝓔} (hb : AwayFromSix b) (hc : AwayF
     finsum_dvd_eq_sum hg.2 (fun e => (idealMoebius e : ℂ) * pairCharacter b c (generator e) /
       (absNorm e : ℂ) * ∑' h : 𝓔, if h = 0 then 0 else conj (pairCharacter b c h) *
         gaoZhaoTransform P (Real.sqrt (Y * elementNorm h / ((absNorm e : ℝ) * absNorm (b * c))))),
-    finsum_dvd_eq_sum hg.2 (fun e => (idealMoebius e : ℂ) * pairCharacter b c (generator e) /
-      (absNorm e : ℂ)), Finset.sum_mul, ← Finset.sum_add_distrib]
+    finsum_dvd_eq_sum hg.2
+      (fun e => (idealMoebius e : ℂ) * pairCharacter b c (generator e) / (absNorm e : ℂ)),
+      Finset.sum_mul, ← Finset.sum_add_distrib]
   refine Finset.sum_congr rfl fun s hs => ?_
-  rw [hsplit _ (Finset.prod_ne_zero_iff.mpr fun P hP => (prime_of_normalized_factor P
+  rw [hsplit _ (Finset.prod_ne_zero_iff.mpr fun P hP =>
+    (prime_of_normalized_factor P
     (Multiset.mem_toFinset.mp (Finset.mem_powerset.mp hs hP))).ne_zero)]
   ring
 
@@ -116,8 +118,8 @@ lemma re_pairRowSum_self_nonneg {P : SchwartzMap ℝ ℂ} (hP : IsRowMajorant P)
 lemma re_offDiagonalSum_le {P : SchwartzMap ℝ ℂ} (hP : IsRowMajorant P) {W : ℝ → ℂ}
     {D Y : ℝ} (hY : 0 < Y) {S : Finset (Ideal 𝓔)} (hcS : ∀ n ∉ S, moebiusCoeff W D n = 0) :
     (offDiagonalSum P W D Y).re ≤
-      (∑ n₁ ∈ S, ∑ n₂ ∈ S, moebiusCoeff W D n₁ * conj (moebiusCoeff W D n₂) *
-        pairRowSum P Y n₁ n₂).re := by
+      (∑ n₁ ∈ S, ∑ n₂ ∈ S, moebiusCoeff W D n₁ *
+        conj (moebiusCoeff W D n₂) * pairRowSum P Y n₁ n₂).re := by
   classical
   set c := moebiusCoeff W D
   have hoffS : offDiagonalSum P W D Y = ∑ n₁ ∈ S, ∑ n₂ ∈ S, if n₁ = n₂ then 0 else
@@ -232,8 +234,9 @@ lemma norm_finsum_dvd_le {g : Ideal 𝓔} (hg : Squarefree g) (b c : Ideal 𝓔)
     ‖∑ᶠ e : {e : Ideal 𝓔 // e ∣ g},
         (idealMoebius e : ℂ) * pairCharacter b c (generator e) / (absNorm e.val : ℂ)‖ ≤
       (2 : ℝ) ^ Multiset.card (normalizedFactors g) := by
-  refine (norm_finsum_dvd_le_of hg (fun e => (idealMoebius e : ℂ) *
-    pairCharacter b c (generator e) / (absNorm e : ℂ)) zero_le_one fun e _ => ?_).trans_eq
+  refine (norm_finsum_dvd_le_of hg
+    (fun e => (idealMoebius e : ℂ) * pairCharacter b c (generator e) / (absNorm e : ℂ)) zero_le_one
+    fun e _ => ?_).trans_eq
     (mul_one _)
   refine (norm_div_natCast_le _ _).trans ?_
   rw [norm_mul]
@@ -290,8 +293,8 @@ theorem offDiagonalEstimate_of_dualTail {P : SchwartzMap ℝ ℂ} (hP : IsRowMaj
     simp only [c, moebiusCoeff]
     split_ifs with h
     · by_contra hne
-      exact hn (Finset.mem_filter.mpr ⟨(mem_idealsLe hX₀).mpr
-        (hWX n (right_ne_zero_of_mul hne)), h⟩)
+      exact hn (Finset.mem_filter.mpr
+        ⟨(mem_idealsLe hX₀).mpr (hWX n (right_ne_zero_of_mul hne)), h⟩)
     · rfl
   -- The gcd splits with all three norms at most `X`.
   set T := ((idealsLe X) ×ˢ ((idealsLe X) ×ˢ (idealsLe X))).filter IsGcdSplit
@@ -300,8 +303,8 @@ theorem offDiagonalEstimate_of_dualTail {P : SchwartzMap ℝ ℂ} (hP : IsRowMaj
     rintro ⟨g, z₁, z₂⟩ ht h₁ h₂
     have hn₁ : g * z₁ ≠ ⊥ := mul_ne_zero ht.1.1.1 ht.2.1.1.1
     have hn₂ : g * z₂ ≠ ⊥ := mul_ne_zero ht.1.1.1 ht.2.2.1.1.1
-    refine Finset.mem_filter.mpr ⟨Finset.mem_product.mpr ⟨(mem_idealsLe hX₀).mpr
-      ((absNorm_le_absNorm_mul hn₁).1.trans h₁), Finset.mem_product.mpr
+    refine Finset.mem_filter.mpr ⟨Finset.mem_product.mpr
+      ⟨(mem_idealsLe hX₀).mpr ((absNorm_le_absNorm_mul hn₁).1.trans h₁), Finset.mem_product.mpr
         ⟨(mem_idealsLe hX₀).mpr ((absNorm_le_absNorm_mul hn₁).2.trans h₁),
           (mem_idealsLe hX₀).mpr ((absNorm_le_absNorm_mul hn₂).2.trans h₂)⟩⟩, ht⟩
   set F : Ideal 𝓔 × Ideal 𝓔 → ℂ := fun p => c p.1 * conj (c p.2) * pairRowSum P Y p.1 p.2
@@ -337,8 +340,8 @@ theorem offDiagonalEstimate_of_dualTail {P : SchwartzMap ℝ ℂ} (hP : IsRowMaj
       ((Y : ℂ) / Real.sqrt (absNorm (t.2.2 * t.2.1))) *
       (gaussCoefficient t.2.2 * conj (gaussCoefficient t.2.1) *
         A (Ideal.Quotient.mk _ (generator t.2.2)) (Ideal.Quotient.mk _ (generator t.2.1))) *
-      ((∑ᶠ e : {e : Ideal 𝓔 // e ∣ t.1}, (idealMoebius e : ℂ) *
-        pairCharacter t.2.2 t.2.1 (generator e) / (absNorm e.val : ℂ)) *
+      ((∑ᶠ e : {e : Ideal 𝓔 // e ∣ t.1},
+        (idealMoebius e : ℂ) * pairCharacter t.2.2 t.2.1 (generator e) / (absNorm e.val : ℂ)) *
         (conj (pairCharacter t.2.2 t.2.1 0) * gaoZhaoTransform P 0))
   have hsplit : ∀ t ∈ T, F (t.1 * t.2.1, t.1 * t.2.2) = dualTailTerm P A W D Y t + Z t := by
     rintro ⟨g, z₁, z₂⟩ ht
@@ -363,8 +366,8 @@ theorem offDiagonalEstimate_of_dualTail {P : SchwartzMap ℝ ℂ} (hP : IsRowMaj
       have hgX : (absNorm g : ℝ) ≤ X :=
         (mem_idealsLe hX₀).mp (Finset.mem_product.mp hbox).1
       have hτg : (2 : ℝ) ^ Multiset.card (normalizedFactors g) ≤ Cτ * X ^ ε :=
-        (hτ g hg.1.1 hg.2).trans (mul_le_mul_of_nonneg_left (Real.rpow_le_rpow
-          (Nat.cast_nonneg _) hgX hε.le) hCτ)
+        (hτ g hg.1.1 hg.2).trans (mul_le_mul_of_nonneg_left
+          (Real.rpow_le_rpow (Nat.cast_nonneg _) hgX hε.le) hCτ)
       simp only [Z, mul_top, absNorm_top, Nat.cast_one, Real.sqrt_one, Complex.ofReal_one,
         div_one]
       rw [norm_mul, norm_mul, norm_mul, norm_mul, norm_mul, norm_mul, norm_mul, norm_mul,
@@ -394,8 +397,8 @@ theorem offDiagonalEstimate_of_dualTail {P : SchwartzMap ℝ ℂ} (hP : IsRowMaj
   have hcard : ((T.filter fun t => t.2 = (⊤, ⊤)).card : ℝ) ≤ A₀ * X := by
     refine le_trans ?_ (hA₀ X hX)
     exact_mod_cast Finset.card_le_card_of_injOn (fun t : Ideal 𝓔 × Ideal 𝓔 × Ideal 𝓔 => t.1)
-      (fun t ht => (Finset.mem_product.mp (Finset.mem_filter.mp
-        (Finset.mem_filter.mp ht).1).1).1)
+      (fun t ht =>
+        (Finset.mem_product.mp (Finset.mem_filter.mp (Finset.mem_filter.mp ht).1).1).1)
       (fun t₁ ht₁ t₂ ht₂ h => Prod.ext h
         (((Finset.mem_filter.mp ht₁).2 : t₁.2 = (⊤, ⊤)).trans
           ((Finset.mem_filter.mp ht₂).2 : t₂.2 = (⊤, ⊤)).symm))

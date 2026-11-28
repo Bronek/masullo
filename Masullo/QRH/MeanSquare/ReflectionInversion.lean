@@ -85,8 +85,8 @@ theorem smoothed_active {θ : ℂ → ℝ → ℂ} {τ : ℂ → ℂ} {σ : ℝ}
     (hp : ∀ i, Prime (span {S.p i})) (j : ι → ℕ) (hj : ∀ i, j i < 6) :
     ∃ C : ℂ, ‖C‖ = 1 ∧ ∀ {J : TestInterval} {V : ℝ → ℂ} {X : ℝ}, UnitTest J 6 V → 0 < X →
       Function.HasFiniteSupport (fun m : Index => V (normSq (pattersonFrequency m)/X)) →
-      (∑' m : Index, (pattersonCharacter (pattersonFrequency m*(eisEmbedding
-        S.a₀/eisEmbedding S.c₀)) *
+      (∑' m : Index,
+        (pattersonCharacter (pattersonFrequency m*(eisEmbedding S.a₀/eisEmbedding S.c₀)) *
         ∏ i, activeInput (sexticChar (hgood i)) (j i) (phase (S.p i)) (red (S.p i) m)) *
         inputMode τ V X m) =
       C * ∑' m : Index, (Moduli.fixedWeight S.c₀ S.a₀ S.r m *
@@ -229,8 +229,8 @@ theorem smoothed_tame {θ : ℂ → ℝ → ℂ} {τ : ℂ → ℂ} {σ : ℝ}
     ∃ C : Finset ι → ℂ, (∀ s, ‖C s‖ = 1) ∧ ∀ {J : TestInterval} {V : ℝ → ℂ} {X : ℝ},
       UnitTest J 6 V → 0 < X →
       Function.HasFiniteSupport (fun m : Index => V (normSq (pattersonFrequency m)/X)) →
-      (∑' m : Index, (pattersonCharacter (pattersonFrequency m*(eisEmbedding
-        S.a₀/eisEmbedding S.c₀)) *
+      (∑' m : Index,
+        (pattersonCharacter (pattersonFrequency m*(eisEmbedding S.a₀/eisEmbedding S.c₀)) *
         ∏ i, (sexticChar (hgood i) ^ j i) (red (S.p i) m)) * inputMode τ V X m) =
       ∑ s : Finset ι, inactiveWeight S.p j s * C s * ∑' m : Index,
         (Moduli.fixedWeight S.c₀ S.a₀ (∏ i ∈ s, S.p i) m *
@@ -281,8 +281,8 @@ theorem smoothed_tame {θ : ℂ → ℝ → ℂ} {τ : ℂ → ℂ} {σ : ℝ}
       have hF (m : 𝓔) :
           (∏ i : s, ReflectionTame.factor (sexticChar (hgood i)) (j i) (red (S.p i) m)) =
             ∏ i ∈ s, ReflectionTame.factor (sexticChar (hgood i)) (j i) (red (S.p i) m) :=
-        prod_finset_coe (fun i => ReflectionTame.factor (sexticChar (hgood i)) (j i)
-          (red (S.p i) m)) s
+        prod_finset_coe
+          (fun i => ReflectionTame.factor (sexticChar (hgood i)) (j i) (red (S.p i) m)) s
       have hr : (∏ i : s, S.p i) = ∏ i ∈ s, S.p i := prod_finset_coe S.p s
       simp_rw [hA, hF, hr] at h
       exact h
@@ -313,8 +313,8 @@ def fixedCusp {φ : RayResidue 7 → ℂ}
 
 private lemma ray_inversion (φ : RayResidue 7 → ℂ) (m : 𝓔) :
     φ (Ideal.Quotient.mk (rayModulus 7) m) =
-      ∑ h : RaySupport φ, rayFourierCoeff 7 φ h.1 * pattersonCharacter (pattersonFrequency
-        m*rayShift h.1) := by
+      ∑ h : RaySupport φ, rayFourierCoeff 7 φ h.1 * pattersonCharacter
+        (pattersonFrequency m*rayShift h.1) := by
   let f (h : RayResidue 7) := rayFourierCoeff 7 φ h * rayAddChar 7 (h*Ideal.Quotient.mk _ m)
   have he := Fintype.sum_subtype_add_sum_subtype (fun h => rayFourierCoeff 7 φ h ≠ 0) f
   have hz : ∀ h : {h : RayResidue 7 // ¬ rayFourierCoeff 7 φ h ≠ 0}, f h = 0 :=
@@ -361,8 +361,8 @@ theorem projected_inversion {θ : ℂ → ℝ → ℂ} {τ : ℂ → ℂ} {σ : 
   let T (m : 𝓔) := ∏ i, (sexticChar (hgood i)^j i) (red (p i) m)
   let F (h : RaySupport φ) (m : 𝓔) := pattersonCharacter (pattersonFrequency m*rayShift h.1) * T m
   calc
-    _ = ∑' m : Index, ∑ h : RaySupport φ, rayFourierCoeff 7 φ h.1 * (F h m *
-      inputMode τ V X m) := by
+    _ = ∑' m : Index, ∑ h : RaySupport φ, rayFourierCoeff 7 φ h.1 *
+      (F h m * inputMode τ V X m) := by
       unfold projectedPattersonSum
       apply tsum_congr
       intro m

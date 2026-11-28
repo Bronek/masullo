@@ -272,8 +272,8 @@ lemma abs_windowSum_le {x : ℝ} (hx : 1 ≤ x) : |windowSum x| ≤ 4 * x ^ 3 :=
   have hx0 : 0 < x := by linarith
   have hS : 0 ≤ ∑ n ∈ Finset.Icc 1 ⌊x⌋₊, Λ n * (x / n - 1) := Finset.sum_nonneg fun n hn => by
     obtain ⟨h1, h2⟩ := Finset.mem_Icc.1 hn
-    exact mul_nonneg vonMangoldt_nonneg (sub_nonneg.2 ((one_le_div (by exact_mod_cast h1)).2
-      ((Nat.le_floor_iff hx0.le).1 h2)))
+    exact mul_nonneg vonMangoldt_nonneg
+      (sub_nonneg.2 ((one_le_div (by exact_mod_cast h1)).2 ((Nat.le_floor_iff hx0.le).1 h2)))
   have hlog := mul_le_mul_of_nonneg_left (Real.log_le_sub_one_of_pos hx0) hx0.le
   have hx2 : x ^ 2 ≤ x ^ 3 := pow_le_pow_right₀ hx (by decide)
   have hγ := Real.one_half_lt_eulerMascheroniConstant

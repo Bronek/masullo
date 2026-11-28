@@ -125,8 +125,9 @@ theorem exists_dilated_separated_le {w : ℝ → ℂ} (hw : ContDiff ℝ ∞ w)
     simp only [V, twistTest, logCharacter]
     fun_prop
   have hFg : Integrable (fun τ => ‖F τ‖ * g τ) := by
-    refine ((F.integrable.norm.add ((F.integrable_pow_mul volume j).const_mul
-      ((2 * π) ^ j))).const_mul (c₀⁻¹ * Ct * 2 ^ j)).mono'
+    refine ((F.integrable.norm.add
+      ((F.integrable_pow_mul volume j).const_mul ((2 * π) ^ j))).const_mul
+      (c₀⁻¹ * Ct * 2 ^ j)).mono'
       (by simp only [g]; exact (F.continuous.norm.mul (by fun_prop)).aestronglyMeasurable)
       (Filter.Eventually.of_forall fun τ => ?_)
     rw [Real.norm_of_nonneg (mul_nonneg (norm_nonneg _) (hg0 τ))]
@@ -236,8 +237,8 @@ theorem exists_dilated_separated_le {w : ℝ → ℂ} (hw : ContDiff ℝ ∞ w)
     have hgg : 0 ≤ g τ₁ * g τ₂ := mul_nonneg (hg0 τ₁) (hg0 τ₂)
     simp only [hBv, norm_mul, Complex.norm_real, Real.norm_of_nonneg hgg]
     rw [← Finset.mul_sum]
-    exact mul_le_mul_of_nonneg_left (hCs rows cols c x (U τ₁) (U τ₂) ψ hA hM (hU τ₁) (hU τ₂)
-      hUM hψ hψi hA0 hAn) hgg
+    exact mul_le_mul_of_nonneg_left
+      (hCs rows cols c x (U τ₁) (U τ₂) ψ hA hM (hU τ₁) (hU τ₂) hUM hψ hψi hA0 hAn) hgg
   have hBvc : ∀ ρ, Continuous (Function.uncurry (Bv ρ)) := by
     intro ρ
     simp only [Bv, V, twistTest, logCharacter]

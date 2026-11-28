@@ -257,8 +257,9 @@ theorem exists_transferSeparated_le (I : TestInterval) (j : ℕ) (P : 𝓢(ℝ, 
       UnitTest I j W₁ → UnitTest I j W₂ → (∀ ρ ∈ rows, 0 < A ρ) →
       (∀ U, UnitTest I j U → ∑ ρ ∈ rows, ‖∑ n ∈ cols, c ρ n * U (x n)‖ ^ 2 ≤ M) →
       ∑ ρ ∈ rows, ‖∑ n₁ ∈ cols, ∑ n₂ ∈ cols, c ρ n₁ * conj (c ρ n₂) *
-        (W₁ (x n₁) * conj (W₂ (x n₂)) * ((((√(x n₁ * x n₂))⁻¹ : ℝ) : ℂ) *
-          gaoZhaoTransform P (√(A ρ / (x n₁ * x n₂)))))‖ ≤ C * M := by
+        (W₁ (x n₁) * conj (W₂ (x n₂)) *
+          ((((√(x n₁ * x n₂))⁻¹ : ℝ) : ℂ) * gaoZhaoTransform P (√(A ρ / (x n₁ * x n₂)))))‖ ≤ C *
+          M := by
   obtain ⟨S, hSeq⟩ := exists_schwartz_eq_gaoZhaoTransform P
   have hS : ∀ t, 1 ≤ t → S t = 0 := fun t ht => by rw [hSeq, hP t ht]
   obtain ⟨B, hB0, hB⟩ := exists_transferKernel_bounds I S hS (2 * j + 2)

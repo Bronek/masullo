@@ -200,11 +200,11 @@ theorem PattersonCoefficients.summable_normalized_dirichlet {τ : ℂ → ℂ}
         simpa [decodeRow_tag, μ, ← r.frequency_eq_div, pattersonFrequency, neg_div] using hr.symm
       · simpa only [f, hr, (ht.1 r).2, normSq_neg] using row_weight_bound r true σ
   choose k hk hle using hex
-  have hki : Function.Injective k := fun x y he => Subtype.ext ((hk x).symm.trans
-    ((congrArg decodeRow he).trans (hk y)))
+  have hki : Function.Injective k := fun x y he => Subtype.ext
+    ((hk x).symm.trans ((congrArg decodeRow he).trans (hk y)))
   have h : Summable fun m : Function.support f => f m :=
-    Summable.of_nonneg_of_le (fun m => mul_nonneg (norm_nonneg _) (Real.rpow_nonneg
-      (normSq_nonneg _) _)) hle
+    Summable.of_nonneg_of_le (fun m => mul_nonneg (norm_nonneg _)
+      (Real.rpow_nonneg (normSq_nonneg _) _)) hle
       ((summable_rowWeight hs).comp_injective hki)
   exact (summable_subtype_iff_indicator.mp h).congr fun m => by
     change (Function.support f).indicator f m = f m
@@ -233,8 +233,8 @@ theorem PattersonCoefficients.mellin_horizontalSeries {τ : ℂ → ℂ} (ht : P
   · intro m
     apply div_ne_zero
     · exact fun hz => m.property (eisEmbedding_injective (hz.trans (map_zero _).symm))
-    · exact pow_ne_zero _ (fun hz => eisLambda_prime.ne_zero (eisEmbedding_injective (hz.trans
-        (map_zero _).symm)))
+    · exact pow_ne_zero _ (fun hz => eisLambda_prime.ne_zero
+        (eisEmbedding_injective (hz.trans (map_zero _).symm)))
   · have hsum := (ht.summable_normalized_dirichlet hs).comp_injective
       (Subtype.coe_injective (p := fun m : 𝓔 => m ≠ 0))
     apply Summable.of_nonneg_of_le _ _ hsum

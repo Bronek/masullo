@@ -14,8 +14,8 @@ local notation "𝓔" => 𝓞 (CyclotomicField 3 ℚ)
 
 private lemma away_of_coprime_seventyTwo {n : Ideal 𝓔} (hn : n ≠ 0)
     (hc : IsCoprime n (span {72})) : AwayFromSix n :=
-  ⟨hn, hc.of_isCoprime_of_dvd_right (span_singleton_dvd_span_singleton_iff_dvd.mpr
-    ⟨12, by norm_num⟩)⟩
+  ⟨hn, hc.of_isCoprime_of_dvd_right
+    (span_singleton_dvd_span_singleton_iff_dvd.mpr ⟨12, by norm_num⟩)⟩
 
 private lemma minus_one_sq {a : Ideal 𝓔} (ha : AwayFromSix a) :
     quadraticResidue ha (-1) ^ 2 = 1 := by

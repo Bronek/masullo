@@ -199,8 +199,9 @@ theorem norm_sum_passZero_le {κ κ' φ : Ideal 𝓔 → ℂ} {p : ℕ} {Corr : 
         simp [Real.norm_of_nonneg hY]
       unfold passDual passZero
       refine (norm_mul_le _ _).trans ?_
-      refine (mul_le_mul_of_nonneg_right ((norm_mul_le _ _).trans (mul_le_mul_of_nonneg_right
-        (norm_mul_le _ _) (norm_nonneg _))) (norm_nonneg _)).trans ?_
+      refine (mul_le_mul_of_nonneg_right
+        ((norm_mul_le _ _).trans (mul_le_mul_of_nonneg_right (norm_mul_le _ _) (norm_nonneg _)))
+        (norm_nonneg _)).trans ?_
       refine (mul_le_mul_of_nonneg_left (norm_mul_le _ _) (by positivity)).trans ?_
       calc _ ≤ K₀ * 1 * Y * ((2 : ℝ) ^ Multiset.card (normalizedFactors g) *
             ‖gaoZhaoTransform P 0‖) := by gcongr; exact hV2 _ _

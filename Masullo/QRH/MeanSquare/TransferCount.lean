@@ -105,8 +105,8 @@ theorem exists_sum_passRows_le {s : ℝ} (hs : 0 < s) :
       rw [map_mul, map_mul]; push_cast
       rw [div_eq_mul_inv, mul_inv, mul_inv]
     rw [heq]
-    calc _ ≤ 1 * (X * ((absNorm r.1 : ℝ)⁻¹ * (absNorm r.2.1 : ℝ)⁻¹ *
-          (absNorm r.2.2 : ℝ)⁻¹)) :=
+    calc _ ≤ 1 *
+          (X * ((absNorm r.1 : ℝ)⁻¹ * (absNorm r.2.1 : ℝ)⁻¹ * (absNorm r.2.2 : ℝ)⁻¹)) :=
           mul_le_mul_of_nonneg_right (inv_le_one_of_one_le₀ hbe) hw
       _ = _ := one_mul _
   have hsub : passRows X ⊆ idealsLe X ×ˢ (idealsLe X ×ˢ idealsLe X) :=

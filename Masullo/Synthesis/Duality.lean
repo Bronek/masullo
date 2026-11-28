@@ -135,7 +135,8 @@ lemma ConvAt.hasDerivAt {z : ℂ} (hu : ConvAt u z.re) (m : ℕ) :
     exact (h.norm.const_mul C).mono' (hmeas m z)
       (Eventually.of_forall (hC z (by simp; positivity)))
   obtain ⟨C, hC⟩ := key (m + 1)
-  refine ⟨hi, (hasDerivAt_integral_of_dominated_loc_of_deriv_le
+  refine ⟨hi,
+    (hasDerivAt_integral_of_dominated_loc_of_deriv_le
     (F := fun w (x : ℝ) => u x * ((x : ℂ) ^ m * exp (w * x)))
     (F' := fun w (x : ℝ) => u x * ((x : ℂ) ^ (m + 1) * exp (w * x)))
     (Metric.ball_mem_nhds z (half_pos hc)) (Eventually.of_forall (hmeas m)) hi (hmeas (m + 1) z)
@@ -569,7 +570,8 @@ structure CrossBound (a : ℝ) (y u : ℝ → ℂ) (K : ℝ) : Prop where
 namespace Dual
 
 lemma cross_integrand (a : ℝ) (y u : ℝ → ℂ) (τ s : ℝ) :
-    y s * u (s - τ) = Real.exp (a * |τ|) * (damp a τ s *
+    y s * u (s - τ) = Real.exp (a * |τ|) *
+      (damp a τ s *
       ((Real.exp (-a * |s|) : ℂ) * y s * ((Real.exp (a * |s - τ|) : ℂ) * u (s - τ)))) := by
   rw [damp]
   have : Real.exp (a * |τ|) * Real.exp (a * (|s| - |s - τ| - |τ|)) * Real.exp (-a * |s|) *
@@ -744,7 +746,8 @@ lemma exists_entire_quotient {X G : ℂ → ℂ} (hX : Differentiable ℂ X) (hG
   have hev : ∀ z, F =ᶠ[𝓝[≠] z] G / X := fun z =>
     hm.toMeromorphicNFOn_eq_self_on_nhdsNE (mem_univ z)
   have hF : Differentiable ℂ F := fun z => by
-    refine AnalyticAt.differentiableAt (((meromorphicNFOn_toMeromorphicNFOn (G / X) univ)
+    refine AnalyticAt.differentiableAt
+      (((meromorphicNFOn_toMeromorphicNFOn (G / X) univ)
       (mem_univ z)).meromorphicOrderAt_nonneg_iff_analyticAt.1 ?_)
     rw [meromorphicOrderAt_congr (hev z), div_eq_mul_inv,
       meromorphicOrderAt_mul (hG.analyticAt z).meromorphicAt (hX.analyticAt z).meromorphicAt.inv,
@@ -814,8 +817,8 @@ lemma order_le_of_tendsto {X G : ℂ → ℂ} {z : ℂ} {d : ℂ} (hd : d ≠ 0)
     · exact ((continuous_pow _).tendsto 0).mono_left nhdsWithin_le_nhds
     · exact (hx.continuousAt.tendsto.comp hray).norm
   rw [mul_zero] at h2
-  exact hg0 (norm_eq_zero.1 (tendsto_nhds_unique
-    ((hg.continuousAt.tendsto.comp hray).norm.congr' h1) h2))
+  exact hg0
+    (norm_eq_zero.1 (tendsto_nhds_unique ((hg.continuousAt.tendsto.comp hray).norm.congr' h1) h2))
 
 /-- A Phragmén–Lindelöf principle: subgaussian growth along a sequence of heights. -/
 lemma norm_le_of_heights {F : ℂ → ℂ} (hF : Differentiable ℂ F) {b M : ℝ} (hM : 0 ≤ M)
@@ -920,8 +923,8 @@ lemma norm_jet_le {z : ℂ} {η : ℝ} (hz : z.re = a + η) :
     ‖jet (pos p) 0 (-z)‖ ≤
       ∫ τ in Ioi (0 : ℝ), Real.exp (-a * |τ|) * ‖p τ‖ * Real.exp (-η * τ) := by
   rw [jet_zero, ← integral_indicator measurableSet_Ioi]
-  refine (norm_integral_le_integral_norm _).trans (le_of_eq (integral_congr_ae
-    (Eventually.of_forall fun τ => ?_)))
+  refine (norm_integral_le_integral_norm _).trans
+    (le_of_eq (integral_congr_ae (Eventually.of_forall fun τ => ?_)))
   by_cases h : τ ∈ Ioi (0 : ℝ)
   · simp only [pos, indicator_of_mem h, norm_mul, norm_exp, abs_of_pos (mem_Ioi.1 h)]
     rw [mul_comm (Real.exp _) ‖p τ‖, mul_assoc, ← Real.exp_add]
@@ -1131,7 +1134,7 @@ theorem integral_eq_zero_of_order_le (ha : 0 < a) (hh : Rapid h) (hd : Dual a y 
   have hGp := rapid_cross hp.tempered hh hp0
   have hGy := rapid_cross hd.tempered hh h0
   set G : ℂ → ℂ := fun z => jet (cross (pos p) h) 0 (-z)
-  have hGd : Differentiable ℂ G := 
+  have hGd : Differentiable ℂ G :=
     hGp.differentiable_jet.comp differentiable_neg
   have hright : ∀ z : ℂ, a < z.re → G z = jet (pos p) 0 (-z) * X z := fun z hz =>
     jet_cross_pos hp.tempered hh hz

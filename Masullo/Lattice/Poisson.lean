@@ -57,8 +57,8 @@ lemma SchwartzMap.exists_summable_norm_comp_add_le (L : Submodule ℤ V) [Discre
   obtain ⟨C, hC⟩ := SchwartzMap.exists_norm_le_inv_one_add_pow f k
   set R' := max R 0
   refine ⟨fun ℓ ↦ C * (1 + R') ^ k * ((1 + ‖(ℓ : V)‖) ^ k)⁻¹, ?_, fun ℓ v hv ↦ ?_⟩
-  · refine Summable.mul_left _ ((ZLattice.summable_norm_rpow L (-k) ?_).of_norm_bounded_eventually
-      ?_)
+  · refine Summable.mul_left _
+      ((ZLattice.summable_norm_rpow L (-k) ?_).of_norm_bounded_eventually ?_)
     · simp [k]
     · filter_upwards [eventually_cofinite_ne 0] with ℓ hℓ
       have hℓ' : 0 < ‖ℓ‖ := norm_pos_iff.mpr hℓ

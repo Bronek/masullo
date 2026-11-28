@@ -40,8 +40,8 @@ lemma forall_jet_eq_zero_iff (z : ℂ) (m : ℕ) :
     let P : Polynomial ℂ := ∑ l ∈ Finset.range (m + 1),
       Polynomial.monomial (m - l) ((m.choose l : ℂ) * jet (theta seed) l z)
     have hP : P = 0 := by
-      refine Polynomial.eq_zero_of_infinite_isRoot P ((infinite_range_of_injective
-        ofReal_injective).mono ?_)
+      refine Polynomial.eq_zero_of_infinite_isRoot P
+        ((infinite_range_of_injective ofReal_injective).mono ?_)
       rintro _ ⟨t, rfl⟩
       obtain ⟨f, hf, e⟩ := theta_translate t
       have h1 := h f hf
@@ -229,8 +229,8 @@ lemma moment_vanishes_iff_jet {a : ℝ} {z : ℂ} (hz : |z.re| < a) (m : ℕ) :
   · intro h f hf
     have hmem := memLp_theta a hf
     rw [← hjet (hmem.toLp _) f hmem.coeFn_toLp]
-    exact h _ (Submodule.le_topologicalClosure _ (Submodule.subset_span
-      ⟨f, hf, hmem.coeFn_toLp⟩))
+    exact h _ (Submodule.le_topologicalClosure _
+      (Submodule.subset_span ⟨f, hf, hmem.coeFn_toLp⟩))
   · intro h u hu
     have hle : V a ≤ LinearMap.ker (moment hz m).toLinearMap := by
       refine Submodule.topologicalClosure_minimal _ (Submodule.span_le.2 ?_)

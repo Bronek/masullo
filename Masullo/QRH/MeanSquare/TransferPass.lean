@@ -91,8 +91,9 @@ theorem exists_transferSeparated_le' (I : TestInterval) (j : ℕ) (P : 𝓢(ℝ,
       UnitTest I j W → (∀ ρ ∈ rows, 0 < A ρ) →
       (∀ U, UnitTest I j U → ∑ ρ ∈ rows, ‖∑ n ∈ cols, c ρ n * U (x ρ n)‖ ^ 2 ≤ M) →
       ∑ ρ ∈ rows, ‖∑ n₁ ∈ cols, ∑ n₂ ∈ cols, c ρ n₁ * conj (c ρ n₂) *
-        (W (x ρ n₁) * conj (W (x ρ n₂)) * ((((√(x ρ n₁ * x ρ n₂))⁻¹ : ℝ) : ℂ) *
-          gaoZhaoTransform P (√(A ρ / (x ρ n₁ * x ρ n₂)))))‖ ≤ C * M := by
+        (W (x ρ n₁) * conj (W (x ρ n₂)) *
+          ((((√(x ρ n₁ * x ρ n₂))⁻¹ : ℝ) : ℂ) * gaoZhaoTransform P (√(A ρ / (x ρ n₁ * x ρ n₂)))))‖ ≤
+          C * M := by
   classical
   obtain ⟨C, hC, h⟩ := exists_transferSeparated_le I j P hP
   refine ⟨C, hC, fun {R N} rows cols c x W A M hM hW hA hU => ?_⟩
@@ -138,20 +139,22 @@ theorem exists_transferSeparated_le₂ (I : TestInterval) (j : ℕ) (P : 𝓢(�
       (∀ U, UnitTest I j U → ∑ ρ ∈ rows, ‖∑ n ∈ cols, c₁ ρ n * U (x ρ n)‖ ^ 2 ≤ M₁) →
       (∀ U, UnitTest I j U → ∑ ρ ∈ rows, ‖∑ n ∈ cols, c₂ ρ n * U (x ρ n)‖ ^ 2 ≤ M₂) →
       ∑ ρ ∈ rows, ‖∑ n₁ ∈ cols, ∑ n₂ ∈ cols, c₁ ρ n₁ * conj (c₂ ρ n₂) *
-        (W (x ρ n₁) * conj (W (x ρ n₂)) * ((((√(x ρ n₁ * x ρ n₂))⁻¹ : ℝ) : ℂ) *
-          gaoZhaoTransform P (√(A ρ / (x ρ n₁ * x ρ n₂)))))‖ ≤ C * (M₁ + M₂) := by
+        (W (x ρ n₁) * conj (W (x ρ n₂)) *
+          ((((√(x ρ n₁ * x ρ n₂))⁻¹ : ℝ) : ℂ) * gaoZhaoTransform P (√(A ρ / (x ρ n₁ * x ρ n₂)))))‖ ≤
+          C * (M₁ + M₂) := by
   obtain ⟨C, hC, h⟩ := exists_transferSeparated_le' I j P hP
   refine ⟨2 * C, by positivity,
     fun {R N} rows cols c₁ c₂ x W A M₁ M₂ hM₁ hM₂ hW hA h₁ h₂ => ?_⟩
   refine (sum_norm_bilinear_le_polar rows cols c₁ c₂ _).trans ?_
   have hk : ∀ k : Fin 4, ∑ ρ ∈ rows, ‖∑ n₁ ∈ cols, ∑ n₂ ∈ cols,
       (c₁ ρ n₁ + polarUnit k * c₂ ρ n₁) * conj (c₁ ρ n₂ + polarUnit k * c₂ ρ n₂) *
-        (W (x ρ n₁) * conj (W (x ρ n₂)) * ((((√(x ρ n₁ * x ρ n₂))⁻¹ : ℝ) : ℂ) *
-          gaoZhaoTransform P (√(A ρ / (x ρ n₁ * x ρ n₂)))))‖ ≤
+        (W (x ρ n₁) * conj (W (x ρ n₂)) *
+          ((((√(x ρ n₁ * x ρ n₂))⁻¹ : ℝ) : ℂ) * gaoZhaoTransform P (√(A ρ / (x ρ n₁ * x ρ n₂)))))‖ ≤
         C * (2 * M₁ + 2 * M₂) := fun k =>
     h rows cols (fun ρ n => c₁ ρ n + polarUnit k * c₂ ρ n) x W A (by positivity) hW hA
-      fun U hU => (sum_norm_sq_add_le rows cols c₁ c₂ (fun ρ n => U (x ρ n))
-        (norm_polarUnit k)).trans (by linarith [h₁ U hU, h₂ U hU])
+      fun U hU =>
+        (sum_norm_sq_add_le rows cols c₁ c₂ (fun ρ n => U (x ρ n)) (norm_polarUnit k)).trans
+        (by linarith [h₁ U hU, h₂ U hU])
   calc (1 / 4) * ∑ k : Fin 4, _ ≤ (1 / 4) * ∑ _k : Fin 4, C * (2 * M₁ + 2 * M₂) := by
         gcongr with k; exact hk k
     _ = 2 * C * (M₁ + M₂) := by simp; ring

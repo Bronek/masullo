@@ -162,8 +162,8 @@ private lemma ray_eval (quad : DeloupTuraevTheorem1) (a b : ℤ) (hN : 0 < (a : 
       eisMatrix, Fin.sum_univ_two]
   · intro i _ j _ h
     have he := lift_injective h
-    exact (tag_grid i).symm.trans ((congrArg₂ tag (congrFun he 0)
-      (congrFun he 1)).trans (tag_grid j))
+    exact (tag_grid i).symm.trans
+      ((congrArg₂ tag (congrFun he 0) (congrFun he 1)).trans (tag_grid j))
 
 private lemma omega_rel : eisOmega^2 + eisOmega + 1 = 0 := by
   let : IsCyclotomicExtension {3} ℚ (CyclotomicField 3 ℚ) :=
@@ -248,8 +248,9 @@ private lemma sign_square_left (quad : DeloupTuraevTheorem1) (x y v : QuadraticF
 
 private lemma sign_comm (x y : QuadraticFamilyClass) : familySign x y = familySign y x := by
   classical
-  change (if quadraticRayValue ((x : R₄) * y) / (quadraticRayValue x * quadraticRayValue y) = -1
-    then -1 else 1) = _
+  change
+    (if quadraticRayValue ((x : R₄) * y) / (quadraticRayValue x * quadraticRayValue y) = -1 then -1
+    else 1) = _
   rw [mul_comm (x : R₄) (y : R₄), mul_comm (quadraticRayValue x)]
   rfl
 
@@ -263,15 +264,15 @@ theorem sextic_reciprocity (recip : DunnRadziwillReciprocity) (quad : DeloupTura
       sextic k (generator b) = sextic b (generator k) * familySign (familyClass k)
         (familyClass b) := by
     obtain ⟨v,s,rfl,hs⟩ := exists_sq_mul_squarefree k
-    have hv := away_of_dvd hk (show v ∣
-      v^2*s by exact (dvd_pow_self _ (by decide : 2 ≠ 0)).trans (dvd_mul_right ..))
+    have hv := away_of_dvd hk
+      (show v ∣ v^2*s by exact (dvd_pow_self _ (by decide : 2 ≠ 0)).trans (dvd_mul_right ..))
     have hs' := away_of_dvd hk (dvd_mul_left s (v^2))
     have hcl : familyClass (v^2 * s) = familyClass v ^ 2 * familyClass s := by
       simp only [pow_two, familyClass_mul (hv.mul hv) hs', familyClass_mul hv hv]
     rw [sextic_reciprocity_sq_mul recip quad hb hv ⟨hs',hs⟩, hcl, sign_square_left quad]
   obtain ⟨v,s,rfl,hs⟩ := exists_sq_mul_squarefree a
-  have hv := away_of_dvd ha (show v ∣
-    v^2*s by exact (dvd_pow_self _ (by decide : 2 ≠ 0)).trans (dvd_mul_right ..))
+  have hv := away_of_dvd ha
+    (show v ∣ v^2*s by exact (dvd_pow_self _ (by decide : 2 ≠ 0)).trans (dvd_mul_right ..))
   have hs' := away_of_dvd ha (dvd_mul_left s (v^2))
   have hcl : familyClass (v^2 * s) = familyClass v ^ 2 * familyClass s := by
     simp only [pow_two, familyClass_mul (hv.mul hv) hs', familyClass_mul hv hv]
@@ -470,8 +471,8 @@ theorem sextic_unit_congr (recip : DunnRadziwillReciprocity) {n m : Ideal 𝓔}
     sextic n u = sextic m u := by
   have pow_neg {a : Ideal 𝓔} (ha : AwayFromSix a) : sextic a (-1) ^ 2 = 1 := by
     rw [← sextic_pow ha]; norm_num [sextic_one_num ha]
-  have hneg : sextic n (-1) = sextic m (-1) := eq_of_sq_cube ((pow_neg hn).trans
-    (pow_neg hm).symm) (by
+  have hneg : sextic n (-1) = sextic m (-1) := eq_of_sq_cube
+    ((pow_neg hn).trans (pow_neg hm).symm) (by
     rw [(rational_supplements hn).1, (rational_supplements hm).1,
       norm_ray_congr he (by decide : 4 ∣ 72)])
   have h9 : (9 : 𝓔) ∣ generator m - generator n := ray_dvd he.symm (by decide : 9 ∣ 72)
@@ -506,8 +507,8 @@ private def localPhase (n : Ideal 𝓔) (z a : 𝓔) (x : 𝓔 ⧸ n) : ℂ :=
   differentCharacter (eisEmbedding (a * (Quotient.out x)^2) / eisEmbedding z)
 
 private lemma localPhase_mk {n : Ideal 𝓔} {z : 𝓔} (hz : span {z} = n) (a x : 𝓔) :
-    localPhase n z a (Ideal.Quotient.mk n x) = differentCharacter (eisEmbedding (a*x^2) /
-      eisEmbedding z) := by
+    localPhase n z a (Ideal.Quotient.mk n x) = differentCharacter
+      (eisEmbedding (a*x^2) / eisEmbedding z) := by
   apply differentCharacter_div_congr
   rw [← mem_span_singleton, hz, ← Ideal.Quotient.eq]
   simp
@@ -538,8 +539,8 @@ private theorem localSum_crt {n m : Ideal 𝓔} {c d : 𝓔} (hc : span {c} = n)
   let := Fintype.ofFinite (𝓔 ⧸ (n*m))
   have hu := (isUnit_mk_iff_coprime_span n d).mpr (hd ▸ h)
   have hv := (isUnit_mk_iff_coprime_span m c).mpr (hc ▸ h.symm)
-  let e := (hu.unit.mulLeft.prodCongr hv.unit.mulLeft).trans (quotientMulEquivQuotientProd n
-    m h).symm.toEquiv
+  let e := (hu.unit.mulLeft.prodCongr hv.unit.mulLeft).trans
+    (quotientMulEquivQuotientProd n m h).symm.toEquiv
   have hc' : Ideal.Quotient.mk n c = 0 := Ideal.Quotient.eq_zero_iff_mem.mpr
     (hc ▸ mem_span_singleton_self c)
   have hd' : Ideal.Quotient.mk m d = 0 := Ideal.Quotient.eq_zero_iff_mem.mpr
@@ -592,8 +593,9 @@ private theorem localSum_shift {n : Ideal 𝓔} (hn : Starred n) (a : 𝓔)
   have hval : χ u = sextic n a ^
     3 := by rw [hu]; simp only [χ, MulChar.pow_apply' _ (by decide : 3 ≠ 0),
     sexticChar_apply_mk]
-  have hs : (sextic n a ^
-    3)^2 = 1 := by simpa only [quadraticResidue_apply] using quadraticResidue_sq hn.1 ha
+  have hs :
+    (sextic n a ^ 3)^2 =
+    1 := by simpa only [quadraticResidue_apply] using quadraticResidue_sq hn.1 ha
   have hInv : χ⁻¹ u = sextic n a ^ 3 := by
     rw [MulChar.inv_apply_eq_inv', hval]
     exact inv_eq_of_mul_eq_one_right (by simpa [sq] using hs)
@@ -645,8 +647,8 @@ private lemma lambda_ratio_squarefree (quad : DeloupTuraevTheorem1) {n : Ideal �
   have hc := localSum_crt (span_generator n) (rfl : span {eisLambda} = L) (coprime_span_lambda hn.1)
     hg eisLambda_prime.ne_zero
   rw [localSum_shift hn _ (coprime_span_lambda hn.1),
-    localSum_congr (rfl : span {eisLambda} = L) (lambda_dvd_three.trans (eisPrimary_generator
-      hn.1.coprime_three))] at hc
+    localSum_congr (rfl : span {eisLambda} = L) (lambda_dvd_three.trans
+      (eisPrimary_generator hn.1.coprime_three))] at hc
   have hQ {m : Ideal 𝓔} {a : 𝓔} (h : span {a} = m) (ha : a ≠ 0) :
       quadraticRayValue (Ideal.Quotient.mk (span {(4 : 𝓔)}) a) =
         localSum m a 1 / Real.sqrt (absNorm m) := by
@@ -664,8 +666,8 @@ private lemma lambda_ratio (quad : DeloupTuraevTheorem1) {n : Ideal 𝓔} (hn : 
         (quadraticRayValue (Ideal.Quotient.mk _ (generator n)) *
           quadraticRayValue (Ideal.Quotient.mk _ eisLambda)) := by
   obtain ⟨v,s,rfl,hs⟩ := exists_sq_mul_squarefree n
-  have hv := away_of_dvd hn (show v ∣
-    v^2*s by exact (dvd_pow_self _ (by decide : 2 ≠ 0)).trans (dvd_mul_right ..))
+  have hv := away_of_dvd hn
+    (show v ∣ v^2*s by exact (dvd_pow_self _ (by decide : 2 ≠ 0)).trans (dvd_mul_right ..))
   have hs' := away_of_dvd hn (dvd_mul_left s (v^2))
   have hden : generator (v^2*s) = generator v ^ 2 * generator s := by
     simp only [sq, generator_mul (hv.mul hv).coprime_three hs'.coprime_three,

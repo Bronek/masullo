@@ -412,11 +412,13 @@ theorem moebiusCoeff_mul_pairRowSum
         dualExclusion P Y z₂ z₁ g := by
   classical
   have hs₁ : Starred (g * z₁) :=
-    ⟨hg.1.mul h₁.1, squarefree_mul_iff.mpr ⟨(isCoprime_iff_gcd.mp
-      (hgz.of_mul_right_right)).symm ▸ isUnit_one |> gcd_isUnit_iff_isRelPrime.mp, hg.2, h₁.2⟩⟩
+    ⟨hg.1.mul h₁.1, squarefree_mul_iff.mpr
+      ⟨(isCoprime_iff_gcd.mp (hgz.of_mul_right_right)).symm ▸ isUnit_one |>
+      gcd_isUnit_iff_isRelPrime.mp, hg.2, h₁.2⟩⟩
   have hs₂ : Starred (g * z₂) :=
-    ⟨hg.1.mul h₂.1, squarefree_mul_iff.mpr ⟨(isCoprime_iff_gcd.mp
-      (hgz.of_mul_right_left)).symm ▸ isUnit_one |> gcd_isUnit_iff_isRelPrime.mp, hg.2, h₂.2⟩⟩
+    ⟨hg.1.mul h₂.1, squarefree_mul_iff.mpr
+      ⟨(isCoprime_iff_gcd.mp (hgz.of_mul_right_left)).symm ▸ isUnit_one |>
+      gcd_isUnit_iff_isRelPrime.mp, hg.2, h₂.2⟩⟩
   rw [pairRowSum_eq_poisson hg h₁ h₂ h12 hgz P hY, poissonDual,
     ← moebius_mul_pairGauss hA hg h₁ h₂ h12 hgz]
   simp only [moebiusCoeff, ite_eq_left hs₁, ite_eq_left hs₂, map_mul, map_intCast]
@@ -481,8 +483,8 @@ theorem fullRowEstimate_of_offDiagonal {P : SchwartzMap ℝ ℂ} (hP : IsRowMajo
     split_ifs with h
     · rw [hWz _ ?_, mul_zero]
       by_contra hle
-      exact hn (Finset.mem_filter.mpr ⟨(mem_idealsLe (by positivity)).mpr
-        (by rwa [not_lt, div_le_iff₀ hD₀] at hle), h⟩)
+      exact hn (Finset.mem_filter.mpr
+        ⟨(mem_idealsLe (by positivity)).mpr (by rwa [not_lt, div_le_iff₀ hD₀] at hle), h⟩)
     · rfl
   have hcM : ∀ n, ‖c n‖ ≤ M := by
     intro n

@@ -59,9 +59,10 @@ theorem numerator_injective : Function.Injective numerator := by
     intro ha
     exact (eisPrimary_generator h).ne_zero (span_singleton_eq_bot.mp ((span_generator a).trans ha))
   obtain ⟨rfl,rfl⟩ := squarefree_mul_cube_inj (hnz hn) (hnz hb) (hnz hk) (hnz hd) hs hk' hI
-  obtain rfl : u = v := Units.ext (mul_right_cancel₀
-    (mul_ne_zero (eisPrimary_generator hn).ne_zero (pow_ne_zero _ (eisPrimary_generator
-      hb).ne_zero)) h)
+  obtain rfl : u = v := Units.ext
+    (mul_right_cancel₀
+    (mul_ne_zero (eisPrimary_generator hn).ne_zero
+      (pow_ne_zero _ (eisPrimary_generator hb).ne_zero)) h)
   rfl
 
 /-- Encode a signed row of Patterson's original coefficient table. -/
@@ -81,7 +82,9 @@ theorem numerator_ofRow (r : PattersonRow) (neg : Bool) :
     generator_eq_of_eisPrimary rfl r.primary_d,mul_assoc]
 
 private theorem frequency_injective : Function.Injective pattersonFrequency := fun _ _ he =>
-  eisEmbedding_injective ((div_left_inj₀ (pow_ne_zero 3
+  eisEmbedding_injective
+    ((div_left_inj₀
+    (pow_ne_zero 3
     ((map_ne_zero_iff eisEmbedding eisEmbedding_injective).mpr eisLambda_prime.ne_zero))).mp he)
 
 /-- Every nonzero dual coefficient is covered once by the indexed ideals. -/
@@ -171,8 +174,8 @@ theorem norm_amplitude (x : ReflectedIndex) {τ : ℂ → ℂ} (hτ : PattersonC
 /-- The full coefficient divided by the square root of the dual frequency norm
 has exactly the three explicit weights of (15). -/
 theorem angularCoefficient_div_sqrt (x : ReflectedIndex) (τ : ℂ → ℂ) (z : ℂ) :
-    pattersonAngularCoefficient τ false z x.numerator / Real.sqrt (normSq (pattersonFrequency
-      x.numerator)) =
+    pattersonAngularCoefficient τ false z x.numerator / Real.sqrt
+      (normSq (pattersonFrequency x.numerator)) =
       (((3:ℝ)^(-((x.exponent:ℝ)-3)/3) : ℝ) : ℂ) * x.amplitude τ *
         pattersonCharacter (pattersonFrequency x.numerator * z) /
         (Real.sqrt (absNorm x.n) * (absNorm x.b : ℂ)) := by

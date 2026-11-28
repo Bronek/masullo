@@ -118,8 +118,8 @@ theorem of_active {K X : ℝ} (hK : 1 ≤ K) (hX : 1 ≤ X) {t y T G : Idl}
     absNorm_one_le (pow_ne_zero _ (mt span_singleton_eq_bot.mp (by norm_num : (-2:𝓔) ≠ 0)))
   have hN : N i F η.val = (absNorm (twoPart i) : ℝ) * absNorm (extractedN F η.val) := by simp [N]
   have hM := elementNorm_pos D.c_ne_zero
-  have hq (p : Idl) (hp : p ∈ F) : 0 < (absNorm p : ℝ) := zero_lt_one.trans_le (absNorm_one_le
-    (hgood p hp).1.1)
+  have hq (p : Idl) (hp : p ∈ F) : 0 < (absNorm p : ℝ) := zero_lt_one.trans_le
+    (absNorm_one_le (hgood p hp).1.1)
   have hQ : 0 < Q D F := mul_pos hM (prod_pos hq)
   have hH := zero_lt_one.trans_le one_le_H
   refine ⟨hF.trans (fixedSupport_subset ht hy hTt hGy),hgood,?_,hQ,
@@ -154,7 +154,7 @@ theorem of_active {K X : ℝ} (hK : 1 ≤ K) (hX : 1 ≤ X) {t y T G : Idl}
       _ ≤ c^2 * K^2 / X * (w^2/(n*l^3)) := div_le_self (by positivity) h₂
       _ ≤ _ := by
         apply mul_le_mul_of_nonneg_right _ (by positivity)
-        exact div_le_div_of_nonneg_right (mul_le_mul_of_nonneg_right (fixed_norm_sq_le D)
-          (sq_nonneg K)) hx.le
+        exact div_le_div_of_nonneg_right
+          (mul_le_mul_of_nonneg_right (fixed_norm_sq_le D) (sq_nonneg K)) hx.le
 
 end Masullo.QRH.MeanSquare.ReflectionSieve.BranchBudget

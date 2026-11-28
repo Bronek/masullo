@@ -71,8 +71,8 @@ private theorem truncated_rows_bound {I : TestInterval} {j : ℕ} {W : ℝ → �
       (hle (Finset.mem_filter.mp hd).1).trans (div_le_self (by positivity) (cubeNorm_one_le hb'))
     apply weighted_rows_bound (T b) rows u w (fun d => v (b * d)) hV (by intros; positivity [u]) hT
     · intro d hd p _
-      simpa only [u, one_div] using norm_cubeWeight_le ξ p.2 p.1 (mem_cubeIdeals.mp
-        (Finset.mem_filter.mp hd).1).1
+      simpa only [u, one_div] using norm_cubeWeight_le ξ p.2 p.1
+        (mem_cubeIdeals.mp (Finset.mem_filter.mp hd).1).1
     · exact fun d hd => ht (b * d) (hb'.mul (mem_cubeIdeals.mp (Finset.mem_filter.mp hd).1).1)
         (Finset.mem_filter.mp hd).2
   have hrest := weighted_rows_bound S rows u μw t (mul_nonneg (sq_nonneg H) hV)

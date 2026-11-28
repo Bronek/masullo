@@ -376,8 +376,9 @@ lemma comp_mul_left {W : ℝ → ℂ} (hW : ContDiff ℝ ∞ W) (hWc : HasCompac
   have hsub : tsupport (fun x => W (e * x)) ⊆ (fun x => e * x) ⁻¹' tsupport W :=
     closure_minimal (fun x hx => subset_tsupport W hx) ((isClosed_tsupport W).preimage hc)
   refine ⟨hW.comp (contDiff_const.mul contDiff_id), ?_, fun x hx => ?_⟩
-  · refine HasCompactSupport.intro (hWc.isCompact.image
-      (continuous_const.mul continuous_id : Continuous fun y : ℝ => e⁻¹ * y)) fun x hx => ?_
+  · refine HasCompactSupport.intro
+      (hWc.isCompact.image (continuous_const.mul continuous_id : Continuous fun y : ℝ => e⁻¹ * y))
+      fun x hx => ?_
     refine by_contra fun hne => hx ⟨e * x, subset_tsupport W hne, ?_⟩
     exact inv_mul_cancel_left₀ he.ne' x
   · exact pos_of_mul_pos_right (hW0 (hsub hx)) he.le

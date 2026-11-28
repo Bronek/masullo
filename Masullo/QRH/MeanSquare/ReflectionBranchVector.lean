@@ -99,8 +99,8 @@ def rawKernelTerm (W : ℝ → ℂ) (X Q N L : ℝ) (c d : ℕ → Idl → Idl �
     (k : Idl) (h : ℕ) (b n : Idl) : ℂ :=
   (((3 : ℝ)^(-((h:ℝ)-3)/3) : ℝ) : ℂ) * (absNorm b : ℂ)⁻¹ *
     (d h b k * (c h b n / Real.sqrt (absNorm n)) * primaryQuadraticSymbol n k) *
-    reflectionKernel W 0 0 ((3:ℝ)^((h:ℤ)-3) * absNorm n * (absNorm b:ℝ)^3 * N*L^3*X /
-      (Q*absNorm k)^2)
+    reflectionKernel W 0 0
+      ((3:ℝ)^((h:ℤ)-3) * absNorm n * (absNorm b:ℝ)^3 * N*L^3*X / (Q*absNorm k)^2)
 
 private theorem makeKernelBranch_block {B K X : ℝ} {t G : Idl} (v : KernelBranchData B K X t G)
     (W : ℝ → ℂ) (e : ℕ × ℕ × ℕ) (k : v.rows) :
@@ -229,8 +229,8 @@ theorem summable_rawKernelTerm {B K X : ℝ} {t G : Idl} (v : KernelBranchData B
     exact inv_le_one_of_one_le₀ hb₁
   change ‖_‖ ≤ 3*v.a*C*(U^2)⁻¹ * ((1/9:ℝ)^h*(w b*w n))
   dsimp only [rawKernelTerm]
-  simp only [norm_mul,Complex.norm_real,Real.norm_of_nonneg (Real.rpow_nonneg
-    (by norm_num : 0 ≤ (3:ℝ)) _)]
+  simp only [norm_mul,Complex.norm_real,Real.norm_of_nonneg
+    (Real.rpow_nonneg (by norm_num : 0 ≤ (3:ℝ)) _)]
   calc
     _ ≤ 3*1*(1*v.a*1) * (C*(U^2)⁻¹*((1/9:ℝ)^h*(w b*w n))) := by
       gcongr

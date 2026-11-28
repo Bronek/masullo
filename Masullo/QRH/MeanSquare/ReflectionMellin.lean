@@ -223,7 +223,8 @@ theorem norm_reflectionGammaRatio_on_strip (h : DLMFGammaVertical) {a b : ℝ}
   let R := reProdIm (Icc a b) (Icc (-T) T)
   have hR : IsCompact R := isCompact_Icc.reProdIm isCompact_Icc
   obtain ⟨C, hC⟩ := hR.exists_bound_of_continuousOn (f := reflectionGammaRatio)
-    (fun t ht => (differentiableAt_reflectionGammaRatio
+    (fun t ht =>
+      (differentiableAt_reflectionGammaRatio
       (ha.trans_le ((mem_reProdIm.mp ht).1.1))).continuousAt.continuousWithinAt)
   refine ⟨max 9 C, (by positivity : (0 : ℝ) < 9).trans_le (le_max_left ..), ?_⟩
   intro t ht

@@ -150,8 +150,9 @@ theorem exists_twistTest_unitTest (I : TestInterval) (j : ℕ) :
     rw [contDiff_iff_contDiffAt]
     intro x
     rcases lt_or_ge 0 x with hx | hx
-    · exact hWc.contDiffAt.mul ((hg.comp_contDiffOn
-        (Real.contDiffOn_log.mono fun y hy => ne_of_gt hy)).contDiffAt (Ioi_mem_nhds hx))
+    · exact hWc.contDiffAt.mul
+        ((hg.comp_contDiffOn (Real.contDiffOn_log.mono fun y hy => ne_of_gt hy)).contDiffAt
+        (Ioi_mem_nhds hx))
     · refine (contDiffAt_const (c := (0 : ℂ))).congr_of_eventuallyEq ?_
       filter_upwards [Iio_mem_nhds (hx.trans_lt I.pos)] with y hy
       simp [twistTest, hW0 y hy]
@@ -232,8 +233,8 @@ theorem exists_twistTest_unitTest (I : TestInterval) (j : ℕ) :
           calc (2 : ℝ) ^ k * (j ! * (1 + |τ|) ^ j * D ^ j)
               ≤ 2 ^ j * (j ! * (1 + |τ|) ^ j * D ^ j) := by gcongr
             _ = _ := by ring
-  rw [iteratedDeriv_const_mul _ (hT.contDiffAt.of_le (by exact_mod_cast le_top) :
-      ContDiffAt ℝ k _ x), norm_mul,
+  rw [iteratedDeriv_const_mul _
+      (hT.contDiffAt.of_le (by exact_mod_cast le_top) : ContDiffAt ℝ k _ x), norm_mul,
     ← iteratedDerivWithin_of_isOpen hs hxs, ← norm_iteratedFDerivWithin_eq_norm_iteratedDerivWithin]
   have hwn : ‖(((2 ^ j * j ! * D ^ j * (1 + |τ|) ^ j)⁻¹ : ℝ) : ℂ)‖ = w⁻¹ := by
     rw [Complex.norm_real, Real.norm_of_nonneg (by positivity)]
@@ -257,8 +258,9 @@ private lemma inv_one_add_pow_le {n : ℕ} (hn : 2 ≤ n) (t : ℝ) :
 derivatives are integrable. -/
 theorem fourier_decay_and_inversion {ψ : ℝ → ℂ} {n : ℕ} (hn : 2 ≤ n) (hψ : ContDiff ℝ n ψ)
     (hint : ∀ k ≤ n, Integrable (iteratedDeriv k ψ)) :
-    (∀ t, ‖𝓕 ψ t‖ ≤ ((∫ v, ‖ψ v‖) + ((2 * π) ^ n)⁻¹ * ∫ v, ‖iteratedDeriv n ψ v‖) *
-      (1 + |t| ^ n)⁻¹) ∧ Integrable (𝓕 ψ) ∧
+    (∀ t, ‖𝓕 ψ t‖ ≤
+      ((∫ v, ‖ψ v‖) + ((2 * π) ^ n)⁻¹ * ∫ v, ‖iteratedDeriv n ψ v‖) * (1 + |t| ^ n)⁻¹) ∧ Integrable
+      (𝓕 ψ) ∧
     ∀ s, ψ s = ∫ t, Complex.exp (↑(2 * π * t * s) * Complex.I) * 𝓕 ψ t := by
   have h0 : Integrable ψ := by simpa using hint 0 (Nat.zero_le _)
   set A := (∫ v, ‖ψ v‖) + ((2 * π) ^ n)⁻¹ * ∫ v, ‖iteratedDeriv n ψ v‖

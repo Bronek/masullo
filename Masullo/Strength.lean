@@ -112,8 +112,9 @@ theorem eq_zero_of_hasSum_exp [Countable ι] (hl : Function.Injective l) {B : �
     let ⟨r, hr, h⟩ := hd z; ⟨r, hr, fun i => h i⟩
   let G (s : ℂ) := c j + (s - l j) * ∑' i : J, c i / (s - l' i)
   have hA : AnalyticOnNhd ℂ G (range l')ᶜ := analyticOnNhd_const.add
-    ((analyticOnNhd_id.sub analyticOnNhd_const).mul ((differentiableOn_cauchySum
-      (c := fun i : J => c i) hd' (hc.subtype _)).analyticOnNhd (isOpen_compl_range hd')))
+    ((analyticOnNhd_id.sub analyticOnNhd_const).mul
+      ((differentiableOn_cauchySum (c := fun i : J => c i) hd' (hc.subtype _)).analyticOnNhd
+      (isOpen_compl_range hd')))
   have hconn : IsPreconnected (range l')ᶜ :=
     ((countable_range l').isConnected_compl_of_one_lt_rank (by simp)).isPreconnected
   have hp : (((B + 1 : ℝ) : ℂ)) ∈ (range l')ᶜ := by
@@ -266,7 +267,8 @@ lemma exists_nonneg_hat_one : ∃ φ : TestFunction, φ.Nonneg ∧ φ.hat 1 ≠ 
     setIntegral_congr_fun measurableSet_Ioi fun t _ => by simp
   change mellin _ 1 ≠ 0
   rw [e, integral_complex_ofReal, ofReal_ne_zero]
-  refine ne_of_gt ((setIntegral_pos_iff_support_of_nonneg_ae (ae_of_all _ fun t => b.nonneg)
+  refine ne_of_gt
+    ((setIntegral_pos_iff_support_of_nonneg_ae (ae_of_all _ fun t => b.nonneg)
     (b.continuous.integrable_of_hasCompactSupport b.hasCompactSupport).integrableOn).2 ?_)
   rw [b.support_eq]
   refine (Metric.measure_ball_pos _ _ b.rOut_pos).trans_le (measure_mono fun t ht => ⟨ht, ?_⟩)
@@ -416,8 +418,9 @@ critical line is the sum over the others. -/
 lemma hasSum_outer_of_full_inner {a : ℝ} {f : ℂ → ℂ} {u v : ℂ}
     (hf : HasSum (fun z : stripZeros => f z) u) (hi : HasSum (fun z : innerZeros a => f z) v) :
     HasSum (fun z : outerZeros a => f z) (u - v) := by
-  refine (hasSum_subtype_iff_indicator (f := f)).2 (((hasSum_subtype_iff_indicator (f := f)).1
-    hf).sub ((hasSum_subtype_iff_indicator (f := f)).1 hi) |>.congr_fun fun ρ => ?_)
+  refine (hasSum_subtype_iff_indicator (f := f)).2
+    (((hasSum_subtype_iff_indicator (f := f)).1 hf).sub
+    ((hasSum_subtype_iff_indicator (f := f)).1 hi) |>.congr_fun fun ρ => ?_)
   simp only [indicator_apply, innerZeros, outerZeros, stripZeros, mem_ofPred_eq]
   split_ifs <;> grind
 

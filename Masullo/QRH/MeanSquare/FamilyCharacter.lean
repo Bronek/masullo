@@ -150,8 +150,8 @@ private lemma quadratic_prime_test {P m n : Ideal 𝓔} (hn : AwayFromSix n)
   obtain ⟨z, hz⟩ := exists_sexticChar_cube_ne_one hP hp
   obtain ⟨x, hx, hm, hxm⟩ := exists_prime_test hc z
   refine ⟨x, hxm, hm, ?_⟩
-  rw [quadraticIdealCharacter, idealCharacterOfElement_span _ _ (prime_test_nonzero hp
-    hxm), hlocal x hm]
+  rw [quadraticIdealCharacter, idealCharacterOfElement_span _ _
+    (prime_test_nonzero hp hxm), hlocal x hm]
   change (sexticChar hP ^ 3) (Ideal.Quotient.mk P x) ≠ 1
   rwa [hx, MulChar.pow_apply' _ (by decide : 3 ≠ 0)]
 
@@ -203,8 +203,8 @@ theorem quadraticIdealCharacter_primitive {n : Ideal 𝓔} (hn : Starred n) :
       have hm : n = m := mul_left_cancel₀ lambdaIdeal_prime.ne_zero (by rwa [mul_comm n] at hfac)
       obtain ⟨x, hx, hx₁, hxc⟩ := exists_prime_test hcop (-1)
       refine ⟨x, hxc, hx₁, ?_⟩
-      rw [quadraticIdealCharacter, idealCharacterOfElement_span _ _ (prime_test_nonzero
-        lambdaIdeal_prime hxc),
+      rw [quadraticIdealCharacter, idealCharacterOfElement_span _ _
+        (prime_test_nonzero lambdaIdeal_prime hxc),
         correctedQuadratic, ite_eq_right he, MonoidHom.mul_apply, quadraticResidue_congr hn.1
           (hm.symm ▸ hx₁),
         map_one, one_mul]
@@ -257,8 +257,8 @@ private theorem quadraticIdealCharacter_separate {b c : Ideal 𝓔} (hb : Starre
   · have hs : quadraticIdealCharacter hb.1 (span {x}) ^ 2 = 1 := by
       rw [hxval b hb.1]; exact quadraticResidue_sq hb.1 hxa.symm
     exact (sq_eq_one_iff.mp hs).resolve_left hxne
-  · rw [hxval c hc.1, quadraticResidue_congr hc.1 (Ideal.mul_le_left (Ideal.mul_le_right
-      hxm)), map_one]
+  · rw [hxval c hc.1, quadraticResidue_congr hc.1
+      (Ideal.mul_le_left (Ideal.mul_le_right hxm)), map_one]
 
 /-- For distinct squarefree indices `b ≠ c`, the product of `quadraticIdealCharacter` at `b`
 and the conjugate at `c` has value `-1` on an ideal coprime to six and to both indices, as

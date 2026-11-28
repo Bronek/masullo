@@ -79,13 +79,13 @@ private theorem card_branchIndex {C U : Type*} [Fintype C] [Fintype U]
   have hF : ∀ F : r.fixedPrimes.powerset, F.val.card ≤ r.fixedPrimes.card :=
     fun F => card_le_card (mem_powerset.mp F.2)
   have bound (F : r.fixedPrimes.powerset) : Fintype.card (TameAssignment r.exponent F.val) ≤
-      3 ^ r.fixedPrimes.card := (card_tameAssignment _ _).trans (Nat.pow_le_pow_right
-        (by decide) (hF F))
+      3 ^ r.fixedPrimes.card := (card_tameAssignment _ _).trans
+        (Nat.pow_le_pow_right (by decide) (hF F))
   let n := Fintype.card U * 2 * 3 ^ r.fixedPrimes.card
   have havg : ∀ c : C, Fintype.card (RaySupport (r.ray c)) ≤ Fintype.card (RayResidue 7) :=
     fun c => Fintype.card_subtype_le _
-  have hsum : (∑ F : r.fixedPrimes.powerset, Fintype.card U * (2 *
-    Fintype.card (TameAssignment r.exponent F.val)))
+  have hsum : (∑ F : r.fixedPrimes.powerset, Fintype.card U *
+    (2 * Fintype.card (TameAssignment r.exponent F.val)))
       ≤ 2 ^ r.fixedPrimes.card * n := calc
     _ ≤ ∑ _ : r.fixedPrimes.powerset, n := by
       apply sum_le_sum
@@ -97,8 +97,8 @@ private theorem card_branchIndex {C U : Type*} [Fintype C] [Fintype U]
     _ = _ := by simp [card_powerset]
   calc
     _ = ∑ c : C, Fintype.card (RaySupport (r.ray c)) *
-        ∑ F : r.fixedPrimes.powerset, Fintype.card U * (2 *
-          Fintype.card (TameAssignment r.exponent F.val)) := by
+        ∑ F : r.fixedPrimes.powerset, Fintype.card U *
+          (2 * Fintype.card (TameAssignment r.exponent F.val)) := by
       simp [BranchIndex, Fintype.card_sigma, Fintype.card_prod]
     _ ≤ ∑ _ : C, Fintype.card (RayResidue 7) * (2 ^ r.fixedPrimes.card * n) := by
       apply sum_le_sum
@@ -189,8 +189,8 @@ theorem squarefreeBranchRepresentation_of_rows {C U : Type*} [Fintype C] [Fintyp
   obtain ⟨n,b,hn,hrow⟩ := r.assemble
   refine ⟨n, fun i => (b i).enlarge (zero_le_one.trans hB) (le_max_left ..)
     (zero_le_one.trans hX), ?_, hrow⟩
-  have hn' : (n : ℝ) ≤ (N : ℝ) * 6 ^ ((normalizedFactors (span {(6:𝓔)} *
-    span {g})).toFinset.card) := by
+  have hn' : (n : ℝ) ≤ (N : ℝ) * 6 ^
+    ((normalizedFactors (span {(6:𝓔)} * span {g})).toFinset.card) := by
     exact_mod_cast hn
   exact hn'.trans (mul_le_mul_of_nonneg_right (le_max_right ..) (by positivity))
 

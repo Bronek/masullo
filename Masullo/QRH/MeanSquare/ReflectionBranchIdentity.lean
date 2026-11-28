@@ -44,8 +44,8 @@ private theorem summable_indexTerm {τ : ℂ → ℂ} (ht : PattersonCoefficient
   have hf : Function.Injective f := fun _ _ he => ReflectedIndex.numerator_injective
     (congrArg Subtype.val he)
   have hc' := (map_ne_zero_iff eisEmbedding eisEmbedding_injective).mpr hc
-  have hdu := (ht.summable_smoothed_dual hΓ hW 0 hX (show 0 <
-    ‖eisEmbedding c‖^2 by positivity)).comp_injective hf
+  have hdu := (ht.summable_smoothed_dual hΓ hW 0 hX
+    (show 0 < ‖eisEmbedding c‖^2 by positivity)).comp_injective hf
   let a := Real.sqrt (∏ p : F, (e p).weightSq (absNorm p.val))
   let D := Real.sqrt (absNorm (extractedN F e)) * (absNorm (extractedB F e) : ℝ)
   have hcop := extracted_coprime F e (fun p hp => (hF p hp).1)
@@ -117,8 +117,8 @@ theorem extract_indexTerm (τ : ℂ → ℂ) (W : ℝ → ℂ) (X : ℝ) (c : �
     have hh := congrArg (fun z : ℕ × Idl × Idl => z.1) he
     have hb := congrArg (fun z : ℕ × Idl × Idl => z.2.1) he
     have hn := congrArg (fun z : ℕ × Idl × Idl => z.2.2) he
-    exact Prod.ext hh (Prod.ext (Subtype.ext (mul_left_cancel₀ hcop.2.1 hb)) (Subtype.ext
-      (mul_left_cancel₀ hcop.1.1 hn)))
+    exact Prod.ext hh (Prod.ext (Subtype.ext (mul_left_cancel₀ hcop.2.1 hb))
+      (Subtype.ext (mul_left_cancel₀ hcop.1.1 hn)))
   apply (hinj.tsum_eq ?_).symm
   rintro ⟨h,b,n⟩ hz
   change extendIndex _ u i h b n ≠ 0 at hz

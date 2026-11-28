@@ -25,8 +25,8 @@ theorem primitive_mod_prime {P : Ideal 𝓔} (hp : Prime P) {d : ℕ} [NeZero d]
     IsPrimitiveRoot (Ideal.Quotient.mk P ζ) d := by
   let : P.IsPrime := (Ideal.prime_iff_isPrime hp.ne_zero).mp hp
   let f := Ideal.Quotient.mk P
-  have : NeZero ((d : ℕ) : 𝓔 ⧸ P) := ⟨fun h => hd (Ideal.Quotient.eq_zero_iff_mem.mp
-    ((map_natCast f d).trans h))⟩
+  have : NeZero ((d : ℕ) : 𝓔 ⧸ P) := ⟨fun h => hd
+    (Ideal.Quotient.eq_zero_iff_mem.mp ((map_natCast f d).trans h))⟩
   apply Polynomial.isRoot_cyclotomic_iff.mp
   simpa only [Polynomial.map_cyclotomic] using
     (Polynomial.isRoot_cyclotomic_iff.mpr hζ).map f

@@ -363,15 +363,17 @@ theorem exists_norm_dualExclusionTail_sub_le (P : SchwartzMap ℝ ℂ) (k : ℕ)
     rw [htsum]
     ring
   rw [hdiff]
-  refine (norm_finsum_dvd_le_of hg.2 F (B := C * ((absNorm g : ℝ) * absNorm (b * c) / Y + 1) *
+  refine (norm_finsum_dvd_le_of hg.2 F
+    (B := C * ((absNorm g : ℝ) * absNorm (b * c) / Y + 1) *
     ((absNorm g : ℝ) ^ 2 * absNorm (b * c) / (Y * R)) ^ k) (by positivity)
     fun e he => ?_).trans_eq (by ring)
   have he0 : (0 : ℝ) < absNorm e := by
     exact_mod_cast Nat.pos_of_ne_zero (absNorm_eq_zero_iff.not.mpr
       (ne_bot_of_le_ne_bot hg.2.ne_zero (le_of_dvd he)))
   have hNe : (absNorm e : ℝ) ≤ absNorm g := by
-    exact_mod_cast Nat.le_of_dvd (Nat.pos_of_ne_zero
-      (absNorm_eq_zero_iff.not.mpr hg.2.ne_zero)) (absNorm_dvd_absNorm_of_le (le_of_dvd he))
+    exact_mod_cast Nat.le_of_dvd
+      (Nat.pos_of_ne_zero (absNorm_eq_zero_iff.not.mpr hg.2.ne_zero))
+      (absNorm_dvd_absNorm_of_le (le_of_dvd he))
   obtain ⟨-, hb⟩ := hfar (fun h => conj (pairCharacter b c h))
     (fun h => by rw [Complex.norm_conj]; exact norm_pairCharacter_le b c h) Y
     ((absNorm e : ℝ) * absNorm (b * c)) (R * absNorm e / (absNorm g : ℝ) ^ 2) hY
@@ -777,8 +779,8 @@ lemma mem_gcdSplitsLe {X : ℝ} (hX : 0 ≤ X) {t : Ideal 𝓔 × Ideal 𝓔 × 
   have hn₁ : g * z₁ ≠ ⊥ := mul_ne_zero ht.1.1.1 ht.2.1.1.1
   have hn₂ : g * z₂ ≠ ⊥ := mul_ne_zero ht.1.1.1 ht.2.2.1.1.1
   unfold gcdSplitsLe
-  exact Finset.mem_filter.mpr ⟨Finset.mem_product.mpr ⟨(mem_idealsLe hX).mpr
-    ((absNorm_le_absNorm_mul hn₁).1.trans h₁), Finset.mem_product.mpr
+  exact Finset.mem_filter.mpr ⟨Finset.mem_product.mpr
+    ⟨(mem_idealsLe hX).mpr ((absNorm_le_absNorm_mul hn₁).1.trans h₁), Finset.mem_product.mpr
       ⟨(mem_idealsLe hX).mpr ((absNorm_le_absNorm_mul hn₁).2.trans h₁),
         (mem_idealsLe hX).mpr ((absNorm_le_absNorm_mul hn₂).2.trans h₂)⟩⟩, ht⟩
 
@@ -1119,8 +1121,8 @@ lemma sum_idealDivisors_eq_sum_ite {g : Ideal 𝓔} {X : ℝ} (hg : g ≠ ⊥)
 def moebiusSplitsLe (X : ℝ) :
     Finset (Ideal 𝓔 × Ideal 𝓔 × Ideal 𝓔 × Ideal 𝓔 × Ideal 𝓔) := by
   classical
-  exact ((idealsLe X) ×ˢ ((idealsLe X) ×ˢ ((idealsLe X) ×ˢ ((idealsLe X) ×ˢ
-    (idealsLe X))))).filter fun u =>
+  exact ((idealsLe X) ×ˢ
+    ((idealsLe X) ×ˢ ((idealsLe X) ×ˢ ((idealsLe X) ×ˢ (idealsLe X))))).filter fun u =>
       Starred (u.1 * u.2.1) ∧ Starred (u.2.2.1 * u.2.2.2.1) ∧ Starred (u.2.2.1 * u.2.2.2.2) ∧
       IsCoprime (u.1 * u.2.1) (u.2.2.1 * u.2.2.2.1 * (u.2.2.1 * u.2.2.2.2)) ∧
       (absNorm (u.1 * u.2.1) : ℝ) ≤ X ∧ (absNorm (u.2.2.1 * u.2.2.2.1) : ℝ) ≤ X ∧

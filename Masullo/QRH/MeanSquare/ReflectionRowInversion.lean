@@ -81,8 +81,9 @@ private lemma support_disjoint {a b : Idl} (ha : AwayFromSix a) (hc : IsCoprime 
     Disjoint (support a) (support b) := by
   apply disjoint_left.mpr
   intro p hp hq
-  exact (support_good ha hp).2.not_isUnit (hc.isRelPrime
-    (dvd_of_mem_normalizedFactors (Multiset.mem_toFinset.mp hp)) (dvd_of_mem_normalizedFactors
+  exact (support_good ha hp).2.not_isUnit
+    (hc.isRelPrime (dvd_of_mem_normalizedFactors (Multiset.mem_toFinset.mp hp))
+    (dvd_of_mem_normalizedFactors
       (Multiset.mem_toFinset.mp hq)))
 
 private lemma primary_product {P : Finset Idl} (hP : ∀ p ∈ P, AwayFromSix p) :
@@ -176,8 +177,8 @@ private lemma classWeight_mk (hR : DunnRadziwillReciprocity) {h : RayResidue 7} 
     Moduli.fixedWeight D.c D.a (generator k * ∏ p ∈ F, generator p) m =
       classWeight D r F (red (8*eisLambda^9) m) := by
   apply Moduli.fixedWeight_congr_uniform hR D.c_ne_zero D.dvd_modulus D.primary
-    ((eisPrimary_generator hk.coprime_three).mul (primary_product hF)) ((rowLift_primary r).mul
-      (primary_product hF))
+    ((eisPrimary_generator hk.coprime_three).mul (primary_product hF))
+      ((rowLift_primary r).mul (primary_product hF))
   · simp only [map_mul,he,rowLift_congr hk he]
   · exact (Ideal.Quotient.mk_out _).symm
 
@@ -271,8 +272,8 @@ private lemma projected_row {θ : ℂ → ℝ → ℂ} {τ : ℂ → ℂ} {σ : 
     {B : ℝ} (hbound : ∀ x, ‖φ x‖ ≤ B) :
     ∃ C : RaySupport φ → Finset Idl → ℂ, (∀ h F, ‖C h F‖ ≤ B) ∧
       ∀ {J : TestInterval} {V : ℝ → ℂ} {X : ℝ}, UnitTest J 6 V → 0 < X →
-        projectedPattersonSum τ φ (numeratorTameProduct (support k ∪ support (T*G)) (exponent
-          (T*k) G)) V X =
+        projectedPattersonSum τ φ
+          (numeratorTameProduct (support k ∪ support (T*G)) (exponent (T*k) G)) V X =
         ∑ h : RaySupport φ, ∑ F ∈ (support (T*G)).powerset,
           C h F * branchSum (fixedCusp hφ h) r T G F hk.1 τ V X := by
   let K := support k

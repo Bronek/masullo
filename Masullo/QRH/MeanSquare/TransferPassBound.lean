@@ -171,8 +171,9 @@ theorem exists_transferSeparated_weighted (I : TestInterval) (j : ℕ) (P : Schw
       (∀ U, UnitTest I j U →
         ∑ ρ ∈ rows, ω ρ * ‖∑ n ∈ cols ρ, d₂ ρ n * U (x ρ n)‖ ^ 2 ≤ M₂) →
       ∑ ρ ∈ rows, ω ρ * ‖∑ n₁ ∈ cols ρ, ∑ n₂ ∈ cols ρ, d₁ ρ n₁ * conj (d₂ ρ n₂) *
-        (W (x ρ n₁) * conj (W (x ρ n₂)) * ((((√(x ρ n₁ * x ρ n₂))⁻¹ : ℝ) : ℂ) *
-          gaoZhaoTransform P (√(A ρ / (x ρ n₁ * x ρ n₂)))))‖ ≤ C * (M₁ + M₂) := by
+        (W (x ρ n₁) * conj (W (x ρ n₂)) *
+          ((((√(x ρ n₁ * x ρ n₂))⁻¹ : ℝ) : ℂ) * gaoZhaoTransform P (√(A ρ / (x ρ n₁ * x ρ n₂)))))‖ ≤
+          C * (M₁ + M₂) := by
   classical
   obtain ⟨C, hC0, hC⟩ := exists_transferSeparated_le₂ I j P hP
   refine ⟨C, hC0, ?_⟩
@@ -368,15 +369,16 @@ theorem exists_passBound (hres : ResidueMultiplicative) (I : TestInterval) (j : 
           rw [sum_sum_sum_sum_comm]
           simp only [Finset.mul_sum]
   have hzero : ∀ o ∈ O, ‖∑ t ∈ passSplits (X o), passDual κ κ' (φ o) p Corr V (ℓ o) (Y o) t *
-      passZero P t‖ ≤ K₀ * (Y o *
-        ∑ g ∈ starredLe (X o), (2 : ℝ) ^ Multiset.card (normalizedFactors g)) := by
+      passZero P t‖ ≤ K₀ *
+        (Y o * ∑ g ∈ starredLe (X o), (2 : ℝ) ^ Multiset.card (normalizedFactors g)) := by
     intro o ho
     obtain ⟨-, hY, -, hX⟩ := hO o ho
     refine (norm_sum_passZero_le hκn hκ'n (hφn o) hVn P (ℓ o) hY.le hX).trans (le_of_eq ?_)
     rw [hK₀]; ring
   calc _ ≤ ∑ o ∈ O, (w o * ∑ ξ, ∑ η, ‖α ξ η‖ *
-          ∑ r ∈ liveRows (φ o) (X o), ∑ h ∈ E o r, Wt o r * F o r h ξ η + K₀ * (w o * Y o *
-            ∑ g ∈ starredLe (X o), (2 : ℝ) ^ Multiset.card (normalizedFactors g))) := by
+          ∑ r ∈ liveRows (φ o) (X o), ∑ h ∈ E o r, Wt o r * F o r h ξ η + K₀ *
+            (w o * Y o * ∑ g ∈ starredLe (X o), (2 : ℝ) ^ Multiset.card
+            (normalizedFactors g))) := by
         refine Finset.sum_le_sum fun o ho => ?_
         obtain ⟨hw, hY, -, hX⟩ := hO o ho
         rw [tsum_passColumn_eq_add hP hY hκ (hφ o) hconv V (ℓ o) hX]

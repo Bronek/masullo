@@ -82,8 +82,8 @@ theorem reflectionKernel_separate (hΓ : DLMFGammaVertical) (I : TestInterval) :
     have hprod : (S * (x*r) : ℝ) = (S*r) * x := by ring
     change (reflectionKernelAmplitude W 0 (t y) * ((S*(x*r) : ℝ) : ℂ) ^ (-t y)) /
       (2*Real.pi) = Q r y * P x y
-    rw [hprod, Complex.ofReal_mul, Complex.ofReal_mul_cpow (mul_nonneg (zero_lt_one.trans_le
-      hS).le hr₀.le)]
+    rw [hprod, Complex.ofReal_mul, Complex.ofReal_mul_cpow
+      (mul_nonneg (zero_lt_one.trans_le hS).le hr₀.le)]
     dsimp only [P,Q]
     ring
 

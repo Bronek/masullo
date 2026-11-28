@@ -145,9 +145,10 @@ theorem mainSplitTerm_eq (hres : ResidueMultiplicative)
             (Ideal.Quotient.mk _ (generator (v * m₂))) *
           (pairCharacter (v * m₁) (v * m₂) (generator e) *
             conj (pairCharacter (v * m₁) (v * m₂) h))) *
-        (conj w₁ * w₂ * (((Y : ℂ) / (Real.sqrt (absNorm (v * m₁ * (v * m₂))) : ℂ)) *
-          gaoZhaoTransform P (Real.sqrt (Y * elementNorm h /
-            ((absNorm e : ℝ) * absNorm (v * m₁ * (v * m₂))))))) := by
+        (conj w₁ *
+          w₂ * (((Y : ℂ) / (Real.sqrt (absNorm (v * m₁ * (v * m₂))) : ℂ)) * gaoZhaoTransform P
+          (Real.sqrt
+            (Y * elementNorm h / ((absNorm e : ℝ) * absNorm (v * m₁ * (v * m₂))))))) := by
         simp only [splitWeight, hWm, w₁, w₂, x₁, x₂]
         ring
     _ = _ := by
@@ -299,8 +300,8 @@ theorem sum_moebiusSplit_cols_eq (P : SchwartzMap ℝ ℂ) {χ W : ℝ → ℂ} 
     rw [mem_idealsLe hD'0, mem_idealsLe hD'0, mem_moebiusSplitsLe hD'0]
     constructor
     · rintro ⟨-, -, ⟨-, -, hz₁, hz₂, -⟩, -⟩
-      exact ⟨hcol m₁ hz₁.of_mul_right ((mul_assoc (b * e) v m₁).symm ▸
-        mul_ne_zero hbe.1.1 hz₁.1.1) hN₁, hcol m₂ hz₂.of_mul_right
+      exact ⟨hcol m₁ hz₁.of_mul_right
+        ((mul_assoc (b * e) v m₁).symm ▸ mul_ne_zero hbe.1.1 hz₁.1.1) hN₁, hcol m₂ hz₂.of_mul_right
         ((mul_assoc (b * e) v m₂).symm ▸ mul_ne_zero hbe.1.1 hz₂.1.1) hN₂⟩
     · rintro ⟨hc₁, hc₂⟩
       have hm₁ : Starred m₁ := (Finset.mem_filter.mp hc₁).2

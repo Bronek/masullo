@@ -50,8 +50,9 @@ def SparselyRecurrent (θ : ℝ) : Prop :=
 theorem SelfRecurrent.sparselyRecurrent {θ : ℝ} (h : SelfRecurrent θ) : SparselyRecurrent θ := by
   intro z r hK ε hε δ hδ
   obtain ⟨c, hc, hfreq⟩ := h z r hK ε hε
-  refine (hfreq.and_eventually ((tendsto_rpow_neg_atTop hδ).eventually (gt_mem_nhds hc) |>.and
-    (eventually_gt_atTop 0))).mono fun T ⟨hT, hTc, hT0⟩ => le_trans ?_ hT
+  refine (hfreq.and_eventually
+    ((tendsto_rpow_neg_atTop hδ).eventually (gt_mem_nhds hc) |>.and (eventually_gt_atTop 0))).mono
+    fun T ⟨hT, hTc, hT0⟩ => le_trans ?_ hT
   refine ENNReal.ofReal_le_ofReal ?_
   rw [sub_eq_add_neg, Real.rpow_add hT0, Real.rpow_one, mul_comm]
   exact mul_le_mul_of_nonneg_right hTc.le hT0.le

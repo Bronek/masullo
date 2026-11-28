@@ -121,8 +121,9 @@ theorem exists_firstPass_le (hpg : PairedGaussIdentities) (I : TestInterval) (j 
     have h3 := hVn (absNorm n / L)
     have h4 := norm_sextic_le_one n y
     simp only [Nat.cast_one]
-    exact mul_le_one_of_le (mul_le_one_of_le (mul_le_one_of_le h1 (norm_nonneg _) h2)
-      (norm_nonneg _) h3) (norm_nonneg _) h4
+    exact mul_le_one_of_le
+      (mul_le_one_of_le (mul_le_one_of_le h1 (norm_nonneg _) h2) (norm_nonneg _) h3) (norm_nonneg _)
+      h4
   have hstep : dualMeanSquare ξ W K L F ≤
       ∑ f ∈ dyadicStarred F, (L * F)⁻¹ * ∑' y : 𝓔, (P (elementNorm y / K)).re *
         ‖passColumn starredGauss (firstTwist ξ f) W L (I.hi * L) y‖ ^ 2 := by

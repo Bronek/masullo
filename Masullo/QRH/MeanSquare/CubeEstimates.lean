@@ -64,8 +64,8 @@ theorem cube_small_bound (hg : GaussCoefficientBound) (I : TestInterval) :
     _ ≤ ((idealsLe (R * L)).card : ℝ) := norm_columnSum_le hg hW hL ξ k f
     _ ≤ A * (R * L) := hcount _ hLo
     _ ≤ A * R := mul_le_mul_of_nonneg_left (mul_le_of_le_one_right (by linarith) hL₁) hA
-  have hentry (p : Ideal 𝓔 × 𝓔) : ‖columnSum ξ W L p.2 p.1 / (Real.sqrt L : ℂ)‖ ^ 2 ≤ (A *
-    R) ^ 2 * R := by
+  have hentry (p : Ideal 𝓔 × 𝓔) : ‖columnSum ξ W L p.2 p.1 / (Real.sqrt L : ℂ)‖ ^ 2 ≤
+    (A * R) ^ 2 * R := by
     rw [norm_div, div_pow, Complex.norm_real, Real.norm_of_nonneg (Real.sqrt_nonneg _),
       Real.sq_sqrt hL.le]
     refine (div_le_iff₀ hL).mpr ((pow_le_pow_left₀ (norm_nonneg _) (hcol _ _) 2).trans ?_)
@@ -75,8 +75,8 @@ theorem cube_small_bound (hg : GaussCoefficientBound) (I : TestInterval) :
   rw [Nat.cast_mul] at hkcard
   have hc : ((cubeRows K F).card : ℝ) ≤ (A * (2 * F)) * (A * K * U) := by
     rw [cubeRows, Finset.card_product, Nat.cast_mul]
-    refine mul_le_mul ((Nat.cast_le.mpr (Finset.card_filter_le ..)).trans (hcount _
-      (by linarith))) ?_
+    refine mul_le_mul ((Nat.cast_le.mpr (Finset.card_filter_le ..)).trans
+      (hcount _ (by linarith))) ?_
       (Nat.cast_nonneg _) (by positivity)
     exact hkcard.trans (mul_le_mul_of_nonneg_right (hcount _ hK) hU)
   calc
@@ -104,8 +104,8 @@ theorem cube_completed_bound (h : CompletedEstimate) {C₀ e : ℝ} (hC₀ : 1 �
   have hX₀ : 0 < X := by linarith
   have hL : 1 ≤ X / u := (one_le_div hu₀).mpr (hcut.trans (min_le_left ..))
   have hD' := Real.rpow_le_rpow_of_exponent_le hD₁ (show C₀ ≤ C₀ + 1 by linarith)
-  have hL' := (div_le_self hX₀.le hu).trans ((le_mul_of_one_le_right hX₀.le hF).trans
-    (hsize.trans hD'))
+  have hL' := (div_le_self hX₀.le hu).trans
+    ((le_mul_of_one_le_right hX₀.le hF).trans (hsize.trans hD'))
   have hF' : 2 * F ≤ D ^ (C₀ + 1) := calc
     _ ≤ D * D ^ C₀ := mul_le_mul hD ((le_mul_of_one_le_left (by linarith) hX).trans hsize)
       (by linarith) hD₀.le

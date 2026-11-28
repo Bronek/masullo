@@ -65,8 +65,8 @@ lemma mem_elementRows {K : ℝ} (hK : 0 ≤ K) {k : 𝓔} :
   constructor
   · rintro ⟨a, ⟨ha, hN⟩, u, rfl⟩
     have hspan : span {generator a * (u : 𝓔)} = a :=
-      (span_singleton_eq_span_singleton.mpr (show Associated (generator a) _ from
-        ⟨u, rfl⟩)).symm.trans (span_generator a)
+      (span_singleton_eq_span_singleton.mpr
+        (show Associated (generator a) _ from ⟨u, rfl⟩)).symm.trans (span_generator a)
     refine ⟨fun h => ha ?_, ?_⟩
     · simpa [h] using hspan.symm
     · simpa only [elementNorm, hspan] using hN

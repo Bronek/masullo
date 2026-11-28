@@ -101,14 +101,15 @@ private theorem SquarefreeKernelBranch.budgets {B K X : ℝ} {t G : Idl}
   let Y₀ := B * K^2 / X
   have hY₀ : 0 ≤ Y₀ := by dsimp [Y₀]; positivity
   obtain ⟨hw,hY⟩ := ideal_branch_budget ht hg b.primes b.primes_subset b.choice b.simple hY₀
-  refine ⟨b.amplitude.trans ((mul_le_mul_of_nonneg_left hw (sq_nonneg B)).trans_eq
-    (mul_one _)), ?_, ?_⟩
+  refine ⟨b.amplitude.trans
+    ((mul_le_mul_of_nonneg_left hw (sq_nonneg B)).trans_eq (mul_one _)), ?_, ?_⟩
   · calc
       _ ≤ (B^2 * ∏ p ∈ b.primes, (b.choice p).weightSq (absNorm p)) *
           (Y₀ * ∏ p ∈ b.primes, (b.choice p).length (absNorm p)) :=
         mul_le_mul b.amplitude b.length b.length_pos.le ((sq_nonneg b.a).trans b.amplitude)
-      _ ≤ B^2 * (Y₀ * (absNorm t : ℝ)^2 *
-        absNorm G) := by rw [mul_assoc]; exact mul_le_mul_of_nonneg_left hY (sq_nonneg B)
+      _ ≤ B^2 *
+        (Y₀ * (absNorm t : ℝ)^2 * absNorm
+        G) := by rw [mul_assoc]; exact mul_le_mul_of_nonneg_left hY (sq_nonneg B)
       _ = _ := by dsimp [Y₀]; ring
   · calc
       _ ≤ _ := b.length
@@ -182,8 +183,8 @@ private theorem squarefree_cover {H : ℝ} (hH : 1 ≤ H) {M : Idl} (hM : M ≠ 
     have hprime := prime_of_normalized_factor _ (Multiset.mem_toFinset.mp (mem_sdiff.mp hp).1)
     have hmax := ((Ideal.prime_iff_isPrime hprime.ne_zero).mp hprime).isMaximal hprime.ne_zero
     have hnot : ¬p ∣ M := fun hd => (mem_sdiff.mp hp).2
-      (Multiset.mem_toFinset.mpr ((UniqueFactorizationMonoid.mem_normalizedFactors_iff
-        hM).mpr ⟨hprime, hd⟩))
+      (Multiset.mem_toFinset.mpr
+        ((UniqueFactorizationMonoid.mem_normalizedFactors_iff hM).mpr ⟨hprime, hd⟩))
     apply isCoprime_iff_sup_eq.mpr
     by_contra hsup
     have heq := hmax.eq_of_le hsup (le_sup_left : p ≤ p ⊔ M)

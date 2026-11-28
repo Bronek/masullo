@@ -130,8 +130,8 @@ theorem norm_product_div (χ : ∀ i, MulChar (F i) ℂ) (j : ι → ℕ) (u : �
   dsimp only
   rw [norm_prod, Real.sqrt_prod _ (fun i _ => hD i), Real.sqrt_prod _ (fun i _ => hW i),
     ← prod_mul_distrib,← prod_div_distrib]
-  exact prod_le_prod₀ (fun i _ => div_nonneg (norm_nonneg _) (mul_nonneg
-    (Real.sqrt_nonneg _) (hB i)))
+  exact prod_le_prod₀ (fun i _ => div_nonneg (norm_nonneg _)
+    (mul_nonneg (Real.sqrt_nonneg _) (hB i)))
     (fun i _ => norm_piece_div (χ i) (j i) (u i) (n i) (b i) (e i) (he i))
 
 end Product
@@ -195,8 +195,8 @@ theorem tsum_extract {N B : Ideal 𝓔} (hN : N ≠ 0) (hB : B ≠ 0)
     ∑' x, f x = ∑' x : Ideal 𝓔 × Ideal 𝓔, f (N*x.1,B*x.2) := by
   let g := fun x : Ideal 𝓔 × Ideal 𝓔 => (N*x.1,B*x.2)
   have hg : Function.Injective g := fun _ _ he =>
-    Prod.ext (mul_left_cancel₀ hN (congrArg Prod.fst he)) (mul_left_cancel₀ hB
-      (congrArg Prod.snd he))
+    Prod.ext (mul_left_cancel₀ hN (congrArg Prod.fst he))
+      (mul_left_cancel₀ hB (congrArg Prod.snd he))
   apply (hg.tsum_eq ?_).symm
   intro a ha
   obtain ⟨⟨n,hn⟩,⟨b,hb⟩⟩ := h a ha
@@ -237,11 +237,11 @@ theorem norm_extracted_coefficient (χ : ∀ i, MulChar (𝓔 ⧸ p i) ℂ) (j :
         (e i).weightSq (absNorm (p i))) := by
   have hq (i : ι) : (Fintype.card (𝓔 ⧸ p i) : ℝ) = absNorm (p i) := by
     rw [Ideal.absNorm_eq_natCard,Nat.card_eq_fintype_card]
-  have hn (i : ι) : (absNorm (squarefreeDivisor (p i) (e i)) : ℝ) = squarefreeDivisor (absNorm
-    (p i) : ℝ) (e i) := by
+  have hn (i : ι) : (absNorm (squarefreeDivisor (p i) (e i)) : ℝ) = squarefreeDivisor
+    (absNorm (p i) : ℝ) (e i) := by
     dsimp [squarefreeDivisor]; split <;> simp
-  have hb (i : ι) : (absNorm (cubeDivisor (p i) (e i)) : ℝ) = cubeDivisor (absNorm
-    (p i) : ℝ) (e i) := by
+  have hb (i : ι) : (absNorm (cubeDivisor (p i) (e i)) : ℝ) = cubeDivisor
+    (absNorm (p i) : ℝ) (e i) := by
     dsimp [cubeDivisor]; split <;> simp
   simpa only [map_prod,Nat.cast_prod,hq,hn,hb] using
     norm_product_div χ j u (fun i => Ideal.Quotient.mk (p i) (generator n))
