@@ -215,7 +215,7 @@ lemma sum_sum_ite_eq {ι : Type*} {S T : Finset ι} {p : ι → ι → Prop} [�
 theorem sum_moebiusSplit_cols_eq (P : SchwartzMap ℝ ℂ) {χ W : ℝ → ℂ} (ξ η : RayCharacter)
     {D' Y X F R R₀ : ℝ} {b e v : Ideal 𝓔} (h : 𝓔) (c : ℂ) (hb : Starred b) (hX : 0 < X)
     (hF : 0 < F) (hR₀ : 1 ≤ R₀) (hXF : X * F = D' / absNorm b)
-    (hFe : F ≤ absNorm (e * v)) (hWz : ∀ x, W (x / D') ≠ 0 → x ≤ D') : open Classical in
+    (hFe : e * v ≠ ⊥ → F ≤ absNorm (e * v)) (hWz : ∀ x, W (x / D') ≠ 0 → x ≤ D') : open Classical in
     ∑ m₁ ∈ idealsLe D', ∑ m₂ ∈ idealsLe D',
         (if (b, e, v, m₁, m₂) ∈ moebiusSplitsLe D' ∧
             h ∈ elementRows (R * absNorm e / (absNorm (b * e) : ℝ) ^ 2) then
@@ -264,6 +264,7 @@ theorem sum_moebiusSplit_cols_eq (P : SchwartzMap ℝ ℂ) {χ W : ℝ → ℂ} 
       rw [← mul_assoc]
       exact left_ne_zero_of_mul hne
     have hev := natCast_absNorm_pos (right_ne_zero_of_mul hbev)
+    have hFe' := hFe (right_ne_zero_of_mul hbev)
     simp only [blockColumns, Finset.mem_filter, mem_idealsLe (by positivity : 0 ≤ R₀ * X)]
     refine ⟨?_, hm⟩
     have h1 : (absNorm b : ℝ) * absNorm (e * v) * absNorm m ≤ X * F * absNorm b := by
@@ -328,5 +329,171 @@ theorem sum_moebiusSplit_cols_eq (P : SchwartzMap ℝ ℂ) {χ W : ℝ → ℂ} 
         exact mul_ne_zero hbe.1.1 hz₁.1.1
       exact hρ ⟨hbev, (hle hne₁).1.trans hN₁, hrow⟩
     · rfl
+
+/-! ### The main dual frequencies as blocks -/
+
+/-- The dyadic norm `2^⌊log₂ N(e v)⌋` of `ρ = (e, v, h)`. -/
+def dyadicNorm (ρ : Ideal 𝓔 × Ideal 𝓔 × 𝓔) : ℝ := 2 ^ Nat.log 2 (absNorm (ρ.1 * ρ.2.1))
+
+/-- The column length `D' / (N b F)` of the row `ρ` of `b`, with `F = dyadicNorm ρ`. -/
+def blockLength (D' : ℝ) (b : Ideal 𝓔) (ρ : Ideal 𝓔 × Ideal 𝓔 × 𝓔) : ℝ :=
+  D' / (absNorm b * dyadicNorm ρ)
+
+lemma dyadicNorm_pos (ρ : Ideal 𝓔 × Ideal 𝓔 × 𝓔) : 0 < dyadicNorm ρ := by
+  unfold dyadicNorm
+  positivity
+
+lemma dyadicNorm_le {ρ : Ideal 𝓔 × Ideal 𝓔 × 𝓔} (h : ρ.1 * ρ.2.1 ≠ ⊥) :
+    dyadicNorm ρ ≤ absNorm (ρ.1 * ρ.2.1) := by
+  unfold dyadicNorm
+  exact_mod_cast Nat.pow_log_le_self 2 (absNorm_eq_zero_iff.not.mpr h)
+
+lemma lt_two_mul_dyadicNorm (ρ : Ideal 𝓔 × Ideal 𝓔 × 𝓔) :
+    (absNorm (ρ.1 * ρ.2.1) : ℝ) < 2 * dyadicNorm ρ := by
+  unfold dyadicNorm
+  rw [← pow_succ']
+  exact_mod_cast Nat.lt_pow_succ_log_self (by norm_num) _
+
+/-- Reordering `Σ_a Σ_b Σ_c Σ_d Σ_e` as `Σ_c Σ_d Σ_e Σ_a Σ_b`. -/
+lemma sum_comm₂₃ {ι₁ ι₂ ι₃ ι₄ ι₅ : Type*} (s₁ : Finset ι₁) (s₂ : Finset ι₂) (s₃ : Finset ι₃)
+    (s₄ : Finset ι₄) (s₅ : Finset ι₅) (f : ι₁ → ι₂ → ι₃ → ι₄ → ι₅ → ℂ) :
+    ∑ a ∈ s₁, ∑ b ∈ s₂, ∑ c ∈ s₃, ∑ d ∈ s₄, ∑ e ∈ s₅, f a b c d e =
+      ∑ c ∈ s₃, ∑ d ∈ s₄, ∑ e ∈ s₅, ∑ a ∈ s₁, ∑ b ∈ s₂, f a b c d e := by
+  calc _ = ∑ p ∈ s₁ ×ˢ s₂, ∑ q ∈ s₃ ×ˢ (s₄ ×ˢ s₅), f p.1 p.2 q.1 q.2.1 q.2.2 := by
+        simp only [Finset.sum_product]
+    _ = ∑ q ∈ s₃ ×ˢ (s₄ ×ˢ s₅), ∑ p ∈ s₁ ×ˢ s₂, f p.1 p.2 q.1 q.2.1 q.2.2 := Finset.sum_comm
+    _ = _ := by simp only [Finset.sum_product]
+
+/-- The main dual frequencies `dualMainSum` as a sum over starred `b`, rows `ρ = (e, v, h)`
+and ray characters of a row weight times a block, for `W(x / D) = W'(x / D')` with `W'`
+vanishing beyond `1` and the cut `χ` equal to `e^{-s/2}` where `W'` meets two columns. -/
+theorem dualMainSum_eq (hres : ResidueMultiplicative)
+    (hmul : ∀ b c : Ideal 𝓔, Starred b → Starred c → IsCoprime b c →
+      gaussCoefficient (b * c) = gaussCoefficient b * gaussCoefficient c *
+        sextic c (generator b) ^ 4)
+    {A : Q₇₂ → Q₇₂ → ℂ} {α : RayCharacter → RayCharacter → ℂ}
+    (hα : ∀ x y : Q₇₂, IsUnit x → IsUnit y → A x y = ∑ ξ, ∑ η, α ξ η * ξ x * conj (η y))
+    (P : SchwartzMap ℝ ℂ) {χ W W' : ℝ → ℂ} {D D' Y R R₀ : ℝ} (hD : 0 < D) (hD' : 0 < D')
+    (hW : ∀ x, W (x / D) = W' (x / D')) (hWz : ∀ x, W' (x / D') ≠ 0 → x ≤ D')
+    (hχ : ∀ β y₁ y₂ : ℝ, 1 ≤ β → β < 2 → 0 < y₁ → 0 < y₂ →
+      conj (W' (β * y₁)) * W' (β * y₂) ≠ 0 →
+        χ (Real.log y₁ + Real.log y₂) =
+          (Real.exp (-((Real.log y₁ + Real.log y₂) / 2)) : ℂ))
+    (hY : 0 < Y) (hR : 0 ≤ R) (hR₀ : 1 ≤ R₀) : open Classical in
+    dualMainSum P A W D Y R =
+      ∑ b ∈ (idealsLe D').filter Starred, ∑ e ∈ idealsLe D', ∑ v ∈ idealsLe D',
+        ∑ h ∈ elementRows R, ∑ ξ, ∑ η,
+          if Starred (b * e * v) ∧ (absNorm (b * e * v) : ℝ) ≤ D' ∧
+              h ∈ elementRows (R * absNorm e / (absNorm (b * e) : ℝ) ^ 2) then
+            α ξ η * splitRowWeight ξ η Y (blockLength D' b (e, v, h)) (e, v, h) *
+              ∑ m₁ ∈ blockColumns R₀ (blockLength D' b (e, v, h)),
+                ∑ m₂ ∈ blockColumns R₀ (blockLength D' b (e, v, h)),
+                  blockTerm P χ W' ξ η b Y (blockLength D' b (e, v, h)) (dyadicNorm (e, v, h))
+                    (e, v, h) m₁ m₂
+          else 0 := by
+  classical
+  set B := idealsLe D' with hB
+  set U := moebiusSplitsLe D'
+  -- The columns as blocks.
+  set G : Ideal 𝓔 × Ideal 𝓔 × Ideal 𝓔 × Ideal 𝓔 × Ideal 𝓔 → 𝓔 → RayCharacter →
+      RayCharacter → ℂ := fun u h ξ η =>
+    α ξ η * splitRowWeight ξ η Y (blockLength D' u.1 (u.2.1, u.2.2.1, h)) (u.2.1, u.2.2.1, h) *
+      blockTerm P χ W' ξ η u.1 Y (blockLength D' u.1 (u.2.1, u.2.2.1, h))
+        (dyadicNorm (u.2.1, u.2.2.1, h)) (u.2.1, u.2.2.1, h) u.2.2.2.1 u.2.2.2.2
+  set rows : Ideal 𝓔 × Ideal 𝓔 × Ideal 𝓔 × Ideal 𝓔 × Ideal 𝓔 → Finset 𝓔 := fun u =>
+    elementRows (R * absNorm u.2.1 / (absNorm (u.1 * u.2.1) : ℝ) ^ 2)
+  have hWz' : ∀ x, W x ≠ 0 → x ≤ D' / D := fun x hx => by
+    have := hWz (x * D) (by rwa [← hW, mul_div_cancel_right₀ _ hD.ne'])
+    rwa [le_div_iff₀ hD]
+  have h1 : dualMainSum P A W D Y R = ∑ u ∈ U, ∑ h ∈ rows u, ∑ ξ, ∑ η, G u h ξ η := by
+    rw [dualMainSum, finsum_splitWeight_eq_sum hWz' hD (by positivity),
+      div_mul_cancel₀ _ hD.ne']
+    have hH : ∀ t ∈ gcdSplitsLe D', splitWeight A W D Y t *
+        dualExclusionMain P Y R t.2.2 t.2.1 t.1 = ∑ e ∈ idealDivisors t.1,
+          splitWeight A W D Y t * ((idealMoebius e : ℂ) * pairCharacter t.2.2 t.2.1
+            (generator e) / (absNorm e : ℂ) *
+            ∑ h ∈ elementRows (R * absNorm e / (absNorm t.1 : ℝ) ^ 2),
+              conj (pairCharacter t.2.2 t.2.1 h) * gaoZhaoTransform P
+                (Real.sqrt (Y * elementNorm h / ((absNorm e : ℝ) * absNorm (t.2.2 * t.2.1))))) := by
+      intro t ht
+      unfold gcdSplitsLe at ht
+      have hg : t.1 ≠ ⊥ := (Finset.mem_filter.mp ht).2.1.1.1
+      rw [dualExclusionMain, finsum_dvd_eq_sum_idealDivisors hg (fun e =>
+        (idealMoebius e : ℂ) * pairCharacter t.2.2 t.2.1 (generator e) / (absNorm e : ℂ) *
+          ∑ h ∈ elementRows (R * absNorm e / (absNorm t.1 : ℝ) ^ 2),
+            conj (pairCharacter t.2.2 t.2.1 h) * gaoZhaoTransform P
+              (Real.sqrt (Y * elementNorm h / ((absNorm e : ℝ) * absNorm (t.2.2 * t.2.1))))),
+        Finset.mul_sum]
+    rw [Finset.sum_congr rfl hH, sum_gcdSplitsLe_eq hD'.le]
+    refine Finset.sum_congr rfl fun u hu => ?_
+    obtain ⟨b, e, v, m₁, m₂⟩ := u
+    obtain ⟨-, hg, hz₂, hz₁, hco, -⟩ := (mem_moebiusSplitsLe hD'.le).mp hu
+    simp only [Finset.mul_sum]
+    refine Finset.sum_congr rfl fun h hh => ?_
+    have hNb := natCast_absNorm_pos hg.of_mul_left.1.1
+    have hev : e * v ≠ ⊥ := mul_ne_zero hg.of_mul_right.1.1 hz₂.of_mul_left.1.1
+    have hF := dyadicNorm_pos (e, v, h)
+    refine mainSplitTerm_eq hres hmul hα P hg hz₂ hz₁ hco
+      ((mem_elementRows (by positivity)).mp hh).1 hY (by unfold blockLength; positivity) hF
+      (by unfold blockLength; field_simp) hW fun hw => ?_
+    exact hχ _ _ _ ((one_le_div hF).mpr (dyadicNorm_le hev))
+      ((div_lt_iff₀ hF).mpr (lt_two_mul_dyadicNorm (e, v, h)))
+      (div_pos (natCast_absNorm_pos hz₂.of_mul_right.1.1) (by unfold blockLength; positivity))
+      (div_pos (natCast_absNorm_pos hz₁.of_mul_right.1.1) (by unfold blockLength; positivity))
+      hw
+  have hUsub : U ⊆ B ×ˢ (B ×ˢ (B ×ˢ (B ×ˢ B))) := fun u hu => by
+    obtain ⟨b, e, v, m₁, m₂⟩ := u
+    obtain ⟨⟨h₁, h₂, h₃, h₄, h₅⟩, -⟩ := (mem_moebiusSplitsLe hD'.le).mp hu
+    simp only [Finset.mem_product, hB, mem_idealsLe hD'.le]
+    exact ⟨h₁, h₂, h₃, h₄, h₅⟩
+  have hrows : ∀ u ∈ U, rows u ⊆ elementRows R := fun u hu h hh => by
+    obtain ⟨b, e, v, m₁, m₂⟩ := u
+    obtain ⟨-, hg, -⟩ := (mem_moebiusSplitsLe hD'.le).mp hu
+    have hNe := natCast_absNorm_pos hg.of_mul_right.1.1
+    have hNbe := natCast_absNorm_pos hg.1.1
+    have hle : (absNorm e : ℝ) ≤ absNorm (b * e) := by
+      exact_mod_cast (absNorm_le_absNorm_mul hg.1.1).2
+    obtain ⟨hh0, hhN⟩ := (mem_elementRows (by positivity)).mp hh
+    refine (mem_elementRows hR).mpr ⟨hh0, hhN.trans ?_⟩
+    rw [div_le_iff₀ (by positivity)]
+    have h1 : (1 : ℝ) ≤ absNorm (b * e) := by
+      exact_mod_cast Nat.one_le_iff_ne_zero.mpr (absNorm_eq_zero_iff.not.mpr hg.1.1)
+    have : (absNorm e : ℝ) ≤ (absNorm (b * e) : ℝ) ^ 2 := by nlinarith
+    exact mul_le_mul_of_nonneg_left this hR
+  have h2 : ∑ u ∈ U, ∑ h ∈ rows u, ∑ ξ, ∑ η, G u h ξ η =
+      ∑ u ∈ B ×ˢ (B ×ˢ (B ×ˢ (B ×ˢ B))), ∑ h ∈ elementRows R, ∑ ξ, ∑ η,
+        if u ∈ U ∧ h ∈ rows u then G u h ξ η else 0 := by
+    symm
+    rw [← Finset.sum_subset hUsub fun u _ hu => by simp [hu]]
+    refine Finset.sum_congr rfl fun u hu => ?_
+    rw [← Finset.sum_subset (hrows u hu) fun h _ hh => by simp [hh]]
+    refine Finset.sum_congr rfl fun h hh => ?_
+    simp [hu, hh]
+  rw [h1, h2]
+  simp only [Finset.sum_product]
+  rw [← Finset.sum_filter_of_ne (p := Starred)]
+  · refine Finset.sum_congr rfl fun b hb => ?_
+    have hb := (Finset.mem_filter.mp hb).2
+    refine Finset.sum_congr rfl fun e _ => Finset.sum_congr rfl fun v _ => ?_
+    rw [sum_comm₂₃]
+    refine Finset.sum_congr rfl fun h _ => Finset.sum_congr rfl fun ξ _ =>
+      Finset.sum_congr rfl fun η _ => ?_
+    have hF := dyadicNorm_pos (e, v, h)
+    have hNb := natCast_absNorm_pos hb.1.1
+    have hX : 0 < blockLength D' b (e, v, h) := by unfold blockLength; positivity
+    have hXF : blockLength D' b (e, v, h) * dyadicNorm (e, v, h) = D' / absNorm b := by
+      unfold blockLength; field_simp
+    convert sum_moebiusSplit_cols_eq P ξ η h
+      (α ξ η * splitRowWeight ξ η Y (blockLength D' b (e, v, h)) (e, v, h)) hb hX hF hR₀ hXF
+      (fun hev => dyadicNorm_le hev) hWz using 3
+  · intro b _ hne
+    by_contra hb
+    refine hne (Finset.sum_eq_zero fun e _ => Finset.sum_eq_zero fun v _ =>
+      Finset.sum_eq_zero fun m₁ _ => Finset.sum_eq_zero fun m₂ _ =>
+        Finset.sum_eq_zero fun h _ => Finset.sum_eq_zero fun ξ _ =>
+          Finset.sum_eq_zero fun η _ => ?_)
+    simp only [ite_eq_right_iff]
+    rintro ⟨hu, -⟩
+    exact absurd ((mem_moebiusSplitsLe hD'.le).mp hu).2.1.of_mul_left hb
 
 end Masullo.QRH.MeanSquare
