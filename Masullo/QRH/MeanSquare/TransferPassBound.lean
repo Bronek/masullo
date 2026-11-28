@@ -107,7 +107,7 @@ lemma norm_rayCharacter_le (ξ : RayCharacter) (x : Q₇₂) : ‖ξ x‖ ≤ 1 
     exact (isOfFinOrder_iff_pow_eq_one.mpr ⟨_, Nat.card_pos, hχ⟩).norm_eq_one.le
   · simp [ξ.map_nonunit hx]
 
-private lemma mul_le_one_of_le {a b : ℝ} (ha : a ≤ 1) (hb0 : 0 ≤ b) (hb : b ≤ 1) :
+lemma mul_le_one_of_le {a b : ℝ} (ha : a ≤ 1) (hb0 : 0 ≤ b) (hb : b ≤ 1) :
     a * b ≤ 1 := by
   nlinarith
 
@@ -355,7 +355,8 @@ theorem exists_passBound (hres : ResidueMultiplicative) (I : TestInterval) (j : 
     rw [sum_passDual_tail_eq_rows hres hκ' (hφ o) hα hT hVs hℓ hY hX,
       ← sum_liveRows_eq fun r _ hc => Finset.sum_eq_zero fun h _ => Finset.sum_eq_zero
         fun ξ _ => Finset.sum_eq_zero fun η _ => by rw [passCoefficient_eq_zero hc, zero_mul]]
-    calc _ ≤ ∑ r ∈ liveRows (φ o) (X o), ∑ h ∈ E o r, ∑ ξ, ∑ η, ‖α ξ η‖ * (Wt o r * F o r h ξ η) := by
+    calc _ ≤ ∑ r ∈ liveRows (φ o) (X o), ∑ h ∈ E o r, ∑ ξ, ∑ η,
+          ‖α ξ η‖ * (Wt o r * F o r h ξ η) := by
           refine (norm_sum_le _ _).trans (Finset.sum_le_sum fun r _ => ?_)
           refine (norm_sum_le _ _).trans (Finset.sum_le_sum fun h _ => ?_)
           refine (norm_sum_le _ _).trans (Finset.sum_le_sum fun ξ _ => ?_)
