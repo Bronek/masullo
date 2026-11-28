@@ -19,7 +19,8 @@ theorem differentiableAt_reflectionKernelAmplitude {I : TestInterval} {m : ℕ} 
     (hW : UnitTest I m W) (j : ℕ) {t : ℂ} (ht : -(5/6 : ℝ) < t.re) :
     DifferentiableAt ℂ (reflectionKernelAmplitude W j) t := by
   exact ((differentiableAt_id.neg.pow _).mul ((hW.mellin_entire _).comp t
-    (by fun_prop : DifferentiableAt ℂ (fun z : ℂ => 1/2-z) t))).mul (differentiableAt_reflectionGammaRatio ht)
+    (by fun_prop : DifferentiableAt ℂ (fun z : ℂ => 1/2-z) t))).mul
+      (differentiableAt_reflectionGammaRatio ht)
 
 /-- The derivative order needed to integrate all the way across the strip
 is uniform in the test interval. -/
@@ -71,7 +72,8 @@ theorem integral_vertical_eq_of_strip {F : ℂ → ℂ} {a b C : ℝ} (hab : a �
     have hc : Continuous (fun y : ℝ => F (x + y*Complex.I)) := continuous_iff_continuousAt.mpr
       fun y => (hd _ (by simpa using hx)).continuousAt.comp (by fun_prop)
     apply (integrable_inv_one_add_sq.const_mul C).mono' hc.aestronglyMeasurable
-    exact ae_of_all _ fun y => by simpa [div_eq_mul_inv] using h (x + y*Complex.I) (by simpa using hx)
+    exact ae_of_all _ fun y =>
+      by simpa [div_eq_mul_inv] using h (x + y*Complex.I) (by simpa using hx)
   have H := WeilExplicit.rectIntegral_tendsto (f := F) tendsto_natCast_atTop_atTop
     (hi a ⟨le_rfl,hab⟩) (hi b ⟨hab,le_rfl⟩) (B := C) (by
       filter_upwards [eventually_ge_atTop 1] with n hn
@@ -156,7 +158,8 @@ theorem norm_reflectionKernel (hΓ : DLMFGammaVertical) {σ : ℝ} (hσ : -(5/6 
         exact (mul_le_mul_of_nonneg_left (by nlinarith [sq_abs y, abs_nonneg y])
           (norm_nonneg (reflectionKernelAmplitude W j (σ+y*Complex.I)))).trans hm
       _ = _ := by ring
-  have hh := norm_integral_le_of_norm_le (integrable_inv_one_add_sq.const_mul C) (ae_of_all _ hbound)
+  have hh := norm_integral_le_of_norm_le (integrable_inv_one_add_sq.const_mul C) (ae_of_all _
+    hbound)
   change ‖∫ y, F y‖ ≤ _ at hh
   rw [integral_const_mul] at hh
   change ‖(∫ y, F y) / (2 * (Real.pi : ℂ))‖ ≤ _
@@ -182,11 +185,13 @@ theorem hasDerivAt_reflectionKernel_log (hΓ : DLMFGammaVertical) {I : TestInter
     unfold reflectionKernel
     apply congrArg (fun q : ℂ => q / (2 * Real.pi))
     apply integral_congr_ae (ae_of_all _ fun y => ?_)
-    change reflectionKernelAmplitude W k ((0 : ℂ) + t y) * ((S * Real.exp v : ℝ) : ℂ) ^ (-((0 : ℂ) + t y)) = F k v y
+    change reflectionKernelAmplitude W k ((0 : ℂ) + t y) * ((S * Real.exp v : ℝ) : ℂ) ^ (-((0 : ℂ) +
+      t y)) = F k v y
     rw [zero_add]
     unfold F
     rw [Complex.cpow_def_of_ne_zero (Complex.ofReal_ne_zero.mpr (mul_pos hS (Real.exp_pos v)).ne'),
-      ← Complex.ofReal_log (mul_pos hS (Real.exp_pos v)).le, Real.log_mul hS.ne' (Real.exp_pos v).ne',
+      ← Complex.ofReal_log (mul_pos hS (Real.exp_pos v)).le, Real.log_mul hS.ne' (Real.exp_pos
+        v).ne',
       Real.log_exp, ofReal_add]
   have hdiff (k : ℕ) (v y : ℝ) : HasDerivAt (fun x => F k x y) (F (k+1) v y) v := by
     have H := ((((Complex.ofRealCLM.hasDerivAt (x := v)).const_add (↑(Real.log S) : ℂ)).mul_const
@@ -215,7 +220,8 @@ theorem hasDerivAt_reflectionKernel_log (hΓ : DLMFGammaVertical) {I : TestInter
     have he : ((↑(Real.log S) + (v : ℂ)) * (-(y * Complex.I))).re = 0 := by simp [mul_re]
     rw [he, Real.exp_zero, mul_one]
     rw [← div_eq_mul_inv, le_div_iff₀ (by positivity)]
-    exact (mul_le_mul_of_nonneg_left (show 1+y^2 ≤ (1+|y|)^2 by nlinarith [sq_abs y, abs_nonneg y]) (norm_nonneg _)).trans hm
+    exact (mul_le_mul_of_nonneg_left (show 1+y^2 ≤ (1+|y|)^2 by
+      nlinarith [sq_abs y, abs_nonneg y]) (norm_nonneg _)).trans hm
   obtain ⟨B,_,h₀⟩ := hmajor j (by omega)
   obtain ⟨C,_,h₁⟩ := hmajor (j+1) le_rfl
   have hi := (integrable_inv_one_add_sq.const_mul B).mono' (hmeas j u) (ae_of_all _ (h₀ u))
@@ -237,7 +243,8 @@ theorem reflectionKernel_log_decay (hΓ : DLMFGammaVertical) (j : ℕ) {A : ℝ}
   obtain ⟨B,hB,hsmall⟩ := norm_reflectionKernel hΓ (σ := -(1/4)) (by norm_num) j I
   obtain ⟨D,hD,hlarge⟩ := norm_reflectionKernel hΓ (σ := A) (by linarith) j I
   refine ⟨max B D, hB.trans (le_max_left ..), fun W hw u => ?_⟩
-  have hm (k : ℕ) (hk : k ≤ j) : iteratedDeriv k (fun v : ℝ => reflectionKernel W 0 0 (Real.exp v)) =
+  have hm (k : ℕ) (hk : k ≤ j) : iteratedDeriv k (fun v : ℝ => reflectionKernel W 0 0 (Real.exp
+    v)) =
       fun v => reflectionKernel W k 0 (Real.exp v) := by
     induction k with
     | zero => rfl

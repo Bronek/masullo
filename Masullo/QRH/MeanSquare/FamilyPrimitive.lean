@@ -30,7 +30,8 @@ theorem isPrimitiveRayCharacter_of_prime_tests {f : Ideal (𝓞 K)} {χ : Ideal 
   obtain ⟨x, hx, hm, hval⟩ := htest P (d * b) hp' hfactor
   have hx₀ : x ≠ 0 := by
     rintro rfl
-    have hu : IsUnit f := isCoprime_zero_left.mp (by simpa only [span_singleton_zero, Ideal.zero_eq_bot] using hx)
+    have hu : IsUnit f := isCoprime_zero_left.mp (by
+      simpa only [span_singleton_zero, Ideal.zero_eq_bot] using hx)
     exact hp.not_isUnit (isUnit_of_dvd_unit ⟨_, hfactor⟩ hu)
   exact (hval ((heq _ (by simpa using hx₀) hx).symm.trans
     (hψ.2.2 x hx₀ (Ideal.mul_le_left hm)))).elim
@@ -64,7 +65,8 @@ theorem isPrimitiveRayCharacter_of_local_characters {f : Ideal (𝓞 K)} {χ : I
   obtain ⟨ρ, hρ, hval⟩ := hlocal P m hp hfactor
   obtain ⟨u, hu⟩ := MulChar.ne_one_iff.mp hρ
   have hcop : IsCoprime P m := isCoprime_iff_sup_eq.mpr <| Ideal.isUnit_iff.mp <|
-    IsRelPrime.of_squarefree_mul (hfactor ▸ hf) (dvd_iff_le.mpr le_sup_left) (dvd_iff_le.mpr le_sup_right)
+    IsRelPrime.of_squarefree_mul (hfactor ▸ hf) (dvd_iff_le.mpr le_sup_left) (dvd_iff_le.mpr
+      le_sup_right)
   obtain ⟨x, hx, hm, hc⟩ := exists_prime_test hcop u
   rw [← hfactor] at hc
   exact ⟨x, hc, hm, by rwa [hval _ hc hm, hx]⟩

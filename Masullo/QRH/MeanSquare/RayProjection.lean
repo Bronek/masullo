@@ -73,7 +73,8 @@ theorem exists_rayFourthLayer {x : RayResidue 7} (hx : rayDivides 3 x) :
     (pow_dvd_pow _ hj).trans (dvd_mul_right _ _)
   refine ⟨dvd_add dvd_rfl (hd 4 (by decide)), fun h => ?_⟩
   have hf : eisLambda ^ 5 ∣ eisLambda ^ 4 := by simpa using dvd_sub h (hd 5 (by decide))
-  exact (by decide : ¬ 5 ≤ 4) ((pow_dvd_pow_iff eisLambda_prime.ne_zero eisLambda_prime.not_isUnit).mp hf)
+  exact (by decide : ¬ 5 ≤ 4) ((pow_dvd_pow_iff eisLambda_prime.ne_zero
+    eisLambda_prime.not_isUnit).mp hf)
 
 open scoped Classical in
 /-- Modify a residue weight by a constant on the exact-four layer of each

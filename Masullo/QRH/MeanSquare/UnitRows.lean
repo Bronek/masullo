@@ -100,7 +100,8 @@ theorem norm_columnSum_le {I : TestInterval} {W : ℝ → ℂ} {X : ℝ}
     exact (div_le_iff₀ (by linarith : 0 < X)).mp ((hsub hy).2.trans (le_max_left _ _))
 
 /-- Counting the columns and the finitely many unit rows gives the terminal estimate. -/
-theorem unitRowEstimate_of_gaussCoefficientBound (hg : GaussCoefficientBound) : UnitRowEstimate := by
+theorem unitRowEstimate_of_gaussCoefficientBound (hg : GaussCoefficientBound) : UnitRowEstimate
+    := by
   classical
   obtain ⟨A, hA⟩ := exists_card_idealsLe_le
   have hA₀ : 0 ≤ A := by

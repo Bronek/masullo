@@ -20,7 +20,8 @@ private lemma symbol_zero {a b : Ideal 𝓔} (hb : AwayFromSix b) (h : ¬ IsCopr
   by_contra hx
   exact h (by simpa only [span_generator] using (quadraticResidue_ne_zero hb).mp hx)
 
-private lemma sieve_starred {k : Ideal 𝓔} {M : ℝ} (hk : k ∈ sieveIdeals (span {6}) M) : Starred k := by
+private lemma sieve_starred {k : Ideal 𝓔} {M : ℝ} (hk : k ∈ sieveIdeals (span {6}) M) : Starred k
+    := by
   classical
   obtain ⟨_, hsq, hc⟩ := mem_filter.mp hk
   exact ⟨⟨hsq.ne_zero, hc⟩, hsq⟩
@@ -54,7 +55,8 @@ cube ideal contribute a row multiplier of norm at most one. This also includes
 the zero at a common prime divisor of the numerator and denominator. -/
 theorem split_column_symbol {k : Ideal 𝓔} (hk : AwayFromSix k) (n : Ideal 𝓔) (d b : 𝓔) :
     quadraticResidue hk (d * generator n * b) =
-      quadraticResidue hk (d * b) * primaryQuadraticSymbol n k ∧ ‖quadraticResidue hk (d * b)‖ ≤ 1 := by
+      quadraticResidue hk (d * b) * primaryQuadraticSymbol n k ∧ ‖quadraticResidue hk (d * b)‖ ≤ 1
+        := by
   constructor
   · change _ = _ * sextic k (generator n) ^ 3
     rw [← quadraticResidue_apply hk]
@@ -117,11 +119,13 @@ private lemma norm_column {R S : Finset (Ideal 𝓔)} {L a A : ℝ}
       dsimp only [z]
       rw [norm_div, Complex.norm_real, Real.norm_eq_abs, abs_of_nonneg (Real.sqrt_nonneg _),
         div_pow, Real.sq_sqrt (Nat.cast_nonneg _), div_eq_mul_inv]
-      exact mul_le_mul_of_nonneg_right (pow_le_pow_left₀ (norm_nonneg _) (hZ n hn) 2) (by positivity)
+      exact mul_le_mul_of_nonneg_right (pow_le_pow_left₀ (norm_nonneg _) (hZ n hn) 2) (by
+        positivity)
     _ ≤ _ := by rw [← Finset.mul_sum]; exact mul_le_mul_of_nonneg_left hS (sq_nonneg _)
   rw [norm_vector]
   calc
-    _ ≤ Real.sqrt (L * (a ^ 2 * A)) := Real.sqrt_le_sqrt ((h z).trans (mul_le_mul_of_nonneg_left hz hL))
+    _ ≤ Real.sqrt (L * (a ^ 2 * A)) := Real.sqrt_le_sqrt ((h z).trans (mul_le_mul_of_nonneg_left hz
+      hL))
     _ = _ := by rw [Real.sqrt_mul hL, Real.sqrt_mul (sq_nonneg a), Real.sqrt_sq ha, mul_assoc]
 
 /-- A separated block of (15), before multiplication by the scalar `3^(-m/3)`. -/
@@ -221,7 +225,8 @@ theorem separated_dyadic_block (quad : DeloupTuraevTheorem1)
     apply mul_le_mul_of_nonneg_left _ (by positivity)
     apply Real.sqrt_le_iff.mpr
     refine ⟨by positivity, ?_⟩
-    nlinarith [Real.sq_sqrt hK₀, Real.sq_sqrt hV₀, mul_nonneg (Real.sqrt_nonneg K) (Real.sqrt_nonneg V)]
+    nlinarith [Real.sq_sqrt hK₀, Real.sq_sqrt hV₀, mul_nonneg (Real.sqrt_nonneg K)
+      (Real.sqrt_nonneg V)]
   rw [norm_vector] at hb
   calc
     _ ≤ (3 : ℝ) ^ (-(m : ℝ) / 3) * ((2 * A) * ((H / (1 + kernelScale m V B Y) ^ 3) *
@@ -265,7 +270,8 @@ private lemma local_cost {q : ℝ} (hq : 1 ≤ q) {v : ℕ} (hv : 1 ≤ v) (e : 
   have hp : 0 < q := by linarith
   have hq₂ : q ≤ q ^ 2 := by simpa using pow_le_pow_right₀ hq (by decide : 1 ≤ 2)
   have hinv := inv_le_one_of_one_le₀ hq
-  have hinv₂ : q⁻¹ * q⁻¹ ≤ 1 := by simpa using mul_le_mul hinv hinv (inv_nonneg.mpr hp.le) zero_le_one
+  have hinv₂ : q⁻¹ * q⁻¹ ≤ 1 :=
+    by simpa using mul_le_mul hinv hinv (inv_nonneg.mpr hp.le) zero_le_one
   have hprod : q⁻¹ * q ^ 2 = q := by field_simp
   by_cases hv₁ : v = 1
   · rw [hv₁, show min 2 1 = 1 by decide, pow_one]
@@ -273,7 +279,8 @@ private lemma local_cost {q : ℝ} (hq : 1 ≤ q) {v : ℕ} (hv : 1 ≤ v) (e : 
     all_goals first | exact hq | exact (he hv₁ rfl).elim | exact le_rfl | exact hinv₂.trans hq
   · rw [min_eq_left (by omega : 2 ≤ v)]
     cases e <;> simp only [TameBranch.weightSq, TameBranch.length, one_mul, hprod]
-    all_goals first | exact hq.trans hq₂ | exact le_rfl | exact hq₂ | exact hinv₂.trans (hq.trans hq₂)
+    all_goals first | exact hq.trans hq₂ | exact le_rfl | exact hq₂ | exact hinv₂.trans (hq.trans
+      hq₂)
 
 /-- Multiplying the local inequalities in (16) preserves the bound on the
 squared amplitude. A prime of `t` is assigned valuation two. Outside `t`
@@ -316,7 +323,8 @@ theorem dyadic_kernel_sum {s d : ℝ} (hs : s < d) (hd : 0 < d) (hd₃ : d ≤ 3
   have ht : 0 ≤ t := by dsimp [t]; positivity
   have hr₁ : r < 1 := Real.rpow_lt_one_of_one_lt_of_neg (by norm_num) (by linarith)
   have ht₁ : t < 1 := Real.rpow_lt_one_of_one_lt_of_neg (by norm_num) (by linarith)
-  refine ⟨(1 - r)⁻¹ * (1 - t)⁻¹, mul_nonneg (inv_nonneg.mpr (by linarith)) (inv_nonneg.mpr (by linarith)), ?_⟩
+  refine ⟨(1 - r)⁻¹ * (1 - t)⁻¹, mul_nonneg (inv_nonneg.mpr (by linarith)) (inv_nonneg.mpr (by
+    linarith)), ?_⟩
   intro Z hZ U B
   have hterm (u b : ℝ) (hu : 0 < u) (hb : 0 < b) :
       u ^ s / (1 + u * b ^ 3 / Z) ^ 3 ≤ Z ^ d * (u ^ (s - d) * b ^ (-(3 * d))) := by
@@ -326,7 +334,8 @@ theorem dyadic_kernel_sum {s d : ℝ} (hs : s < d) (hd : 0 < d) (hd₃ : d ≤ 3
       _ ≤ (1 + x) ^ d := Real.rpow_le_rpow hx.le (by linarith) hd.le
       _ ≤ (1 + x) ^ (3 : ℝ) := Real.rpow_le_rpow_of_exponent_le (by linarith) hd₃
       _ = _ := by norm_num
-    refine (div_le_div_of_nonneg_left (Real.rpow_nonneg hu.le _) (Real.rpow_pos_of_pos hx _) hx₃).trans_eq ?_
+    refine (div_le_div_of_nonneg_left (Real.rpow_nonneg hu.le _) (Real.rpow_pos_of_pos hx _)
+      hx₃).trans_eq ?_
     dsimp only [x]
     rw [Real.div_rpow (by positivity) hZ.le, Real.mul_rpow hu.le (by positivity),
       ← Real.rpow_natCast_mul hb.le, Real.rpow_sub hu, Real.rpow_neg hb.le]
@@ -335,7 +344,8 @@ theorem dyadic_kernel_sum {s d : ℝ} (hs : s < d) (hd : 0 < d) (hd₃ : d ≤ 3
   calc
     _ ≤ ∑ i ∈ U, ∑ j ∈ B, Z ^ d * (r ^ i * t ^ j) := by
       refine sum_le_sum fun i _ => sum_le_sum fun j _ => ?_
-      simpa only [dyadic_rpow, r, t] using hterm ((2 : ℝ) ^ i) ((2 : ℝ) ^ j) (by positivity) (by positivity)
+      simpa only [dyadic_rpow, r, t] using hterm ((2 : ℝ) ^ i) ((2 : ℝ) ^ j) (by positivity) (by
+        positivity)
     _ = Z ^ d * ((∑ i ∈ U, r ^ i) * ∑ j ∈ B, t ^ j) := by
       rw [Finset.sum_mul_sum]
       simp only [Finset.mul_sum]
@@ -443,7 +453,8 @@ theorem partial_norm_product {a : Ideal 𝓔} (ha : a ≠ 0) (P : Finset (Ideal 
       rcases mem_union.mp h with h | h
       · exact hp _ h
       · exact (prime_of_normalized_factor _ (Multiset.mem_toFinset.mp h)).ne_zero
-    exact_mod_cast Ideal.absNorm_pos_iff_mem_nonZeroDivisors.mpr (mem_nonZeroDivisors_of_ne_zero hne)
+    exact_mod_cast Ideal.absNorm_pos_iff_mem_nonZeroDivisors.mpr (mem_nonZeroDivisors_of_ne_zero
+      hne)
   calc
     _ ≤ ∏ p ∈ P, (absNorm p : ℝ) ^ (normalizedFactors a).count p := by
       exact prod_le_prod₀ (fun _ _ => by positivity)
@@ -456,7 +467,8 @@ theorem partial_norm_product {a : Ideal 𝓔} (ha : a ≠ 0) (P : Finset (Ideal 
 /-- The ideal norm form of (16). The primes occurring in `t` can cost their
 squared norms, and the remaining primes cost at most the norm of `g`. -/
 theorem ideal_branch_budget {t g : Ideal 𝓔} (ht : t ≠ 0) (hg : g ≠ 0)
-    (P : Finset (Ideal 𝓔)) (hP : P ⊆ (normalizedFactors t).toFinset ∪ (normalizedFactors g).toFinset)
+    (P : Finset (Ideal 𝓔)) (hP : P ⊆ (normalizedFactors t).toFinset ∪ (normalizedFactors
+      g).toFinset)
     (e : Ideal 𝓔 → TameBranch)
     (he : ∀ p ∈ P, p ∉ normalizedFactors t → (normalizedFactors g).count p = 1 → e p ≠ .ordinary)
     {Y₀ : ℝ} (hY : 0 ≤ Y₀) :
@@ -475,7 +487,8 @@ theorem ideal_branch_budget {t g : Ideal 𝓔} (ht : t ≠ 0) (hg : g ≠ 0)
       dsimp [v]
       split <;> omega
   have hcost := branch_product_bound P (fun p => (absNorm p : ℝ)) v e (fun p hp => by
-    exact_mod_cast Ideal.absNorm_pos_iff_mem_nonZeroDivisors.mpr (mem_nonZeroDivisors_of_ne_zero (hne p hp)))
+    exact_mod_cast Ideal.absNorm_pos_iff_mem_nonZeroDivisors.mpr (mem_nonZeroDivisors_of_ne_zero
+      (hne p hp)))
     hv (fun p hp hv₁ => by
       by_cases h : p ∈ normalizedFactors t
       · simp [v, h] at hv₁

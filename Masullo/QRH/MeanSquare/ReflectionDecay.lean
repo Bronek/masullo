@@ -148,7 +148,8 @@ theorem PattersonRow.norm_normalized_coefficient_le (r : PattersonRow) :
   | unshifted j =>
     have h := hcommon (a := 1) (by simp)
     simp only [PattersonRow.coefficient, PattersonLayer.lambdaExponent, norm_div, Complex.norm_conj,
-      norm_mul, Complex.norm_real, Real.norm_of_nonneg (Real.rpow_nonneg (by norm_num : (0 : ℝ) ≤ 3) _),
+      norm_mul, Complex.norm_real, Real.norm_of_nonneg (Real.rpow_nonneg (by
+        norm_num : (0 : ℝ) ≤ 3) _),
       Real.norm_of_nonneg (norm_nonneg _), Complex.norm_ofNat, Nat.cast_mul, Nat.cast_ofNat]
     calc
       _ ≤ ‖eisEmbedding d‖ * (3 ^ (((j : ℝ) + 5) / 2) / 27) := by
@@ -163,7 +164,8 @@ theorem PattersonRow.norm_normalized_coefficient_le (r : PattersonRow) :
     have h := hcommon (isUnit_row_shift ⟨.shifted k i, c, d, hc, hd, hs⟩ i)
     simp only [PattersonRow.coefficient, PattersonLayer.lambdaExponent, norm_div, Complex.norm_conj,
       norm_mul, norm_pattersonPhase, one_mul, Complex.norm_real,
-      Real.norm_of_nonneg (Real.rpow_nonneg (by norm_num : (0 : ℝ) ≤ 3) _), Real.norm_of_nonneg (norm_nonneg _),
+      Real.norm_of_nonneg (Real.rpow_nonneg (by norm_num : (0 : ℝ) ≤ 3) _),
+        Real.norm_of_nonneg (norm_nonneg _),
       Complex.norm_ofNat, Nat.cast_add, Nat.cast_mul, Nat.cast_ofNat]
     calc
       _ ≤ ‖eisEmbedding d‖ * (3 ^ (((k : ℝ) + 1) / 2 + 2) / 27) := by
@@ -192,7 +194,8 @@ theorem PattersonRow.norm_frequency (r : PattersonRow) :
   rw [r.frequency_eq_div]
   simp only [norm_div, PattersonRow.numerator, map_mul, map_pow, norm_mul, norm_pow, norm_lambda,
     norm_layer_unit, one_mul]
-  rw [← Real.rpow_mul_natCast (by norm_num : (0 : ℝ) ≤ 3), ← Real.rpow_mul_natCast (by norm_num : (0 : ℝ) ≤ 3)]
+  rw [← Real.rpow_mul_natCast (by norm_num : (0 : ℝ) ≤ 3), ← Real.rpow_mul_natCast (by
+    norm_num : (0 : ℝ) ≤ 3)]
   rw [show ((r.layer.lambdaExponent : ℝ) - 3) / 2 =
       (1 / 2 : ℝ) * r.layer.lambdaExponent - (1 / 2 : ℝ) * 3 by ring,
     Real.rpow_sub (by norm_num : 0 < (3 : ℝ))]
@@ -212,7 +215,8 @@ theorem PattersonRow.norm_normalized_coefficient_le_frequency (r : PattersonRow)
   calc
     _ = ((3 : ℝ) ^ (((r.layer.lambdaExponent : ℝ) - 3) / 2) *
         ‖eisEmbedding r.d‖ ^ 3) ^ (1 / 3 : ℝ) := by
-      rw [Real.mul_rpow (by positivity) (by positivity), ← Real.rpow_mul (by norm_num : (0 : ℝ) ≤ 3),
+      rw [Real.mul_rpow (by positivity) (by positivity), ← Real.rpow_mul (by
+        norm_num : (0 : ℝ) ≤ 3),
         ← Real.rpow_natCast (x := ‖eisEmbedding r.d‖) 3,
         ← Real.rpow_mul (norm_nonneg _)]
       rw [show ((r.layer.lambdaExponent : ℝ) - 3) / 2 * (1 / 3) =
@@ -224,7 +228,8 @@ theorem PattersonRow.norm_normalized_coefficient_le_frequency (r : PattersonRow)
       exact le_mul_of_one_le_left (by positivity) (one_le_norm_eisEmbedding r.primary_c.ne_zero)
 
 /-- The signed coefficient table, extended by zero, has at most cube-root growth. -/
-theorem PattersonCoefficients.norm_normalized_le {τ : ℂ → ℂ} (ht : PattersonCoefficients τ) (μ : ℂ) :
+theorem PattersonCoefficients.norm_normalized_le {τ : ℂ → ℂ} (ht : PattersonCoefficients τ) (μ :
+    ℂ) :
     ‖conj (τ μ) / 27‖ ≤ ‖μ‖ ^ (1 / 3 : ℝ) := by
   classical
   by_cases hs : ∃ r : PattersonRow, μ = r.frequency ∨ μ = -r.frequency
@@ -288,7 +293,8 @@ set_option maxHeartbeats 1500000 in
 set_option backward.isDefEq.respectTransparency false in
 theorem tendsto_norm_pattersonFrequency :
     Tendsto (fun m : 𝓔 => ‖pattersonFrequency m‖) cofinite atTop := by
-  let : DiscreteTopology frequencyLattice.toAddSubgroup := inferInstanceAs (DiscreteTopology frequencyLattice)
+  let : DiscreteTopology frequencyLattice.toAddSubgroup := inferInstanceAs (DiscreteTopology
+    frequencyLattice)
   have hclosed : IsClosed ((frequencyLattice : Submodule ℤ ℂ) : Set ℂ) :=
     frequencyLattice.toAddSubgroup.isClosed_of_discreteTopology
   have h : Tendsto (fun x : frequencyLattice => ‖(x : ℂ)‖) cofinite atTop :=
@@ -310,7 +316,8 @@ theorem summable_pattersonFrequency_rpow_exp (s : ℝ) {A : ℝ} (hA : 0 < A) :
     Summable fun m : 𝓔 => ‖pattersonFrequency m‖ ^ s * Real.exp (-A * ‖pattersonFrequency m‖) := by
   have hzero := tendsto_rpow_mul_exp_neg_mul_atTop_nhds_zero (s + 3) A hA
   apply (summable_pattersonFrequency_rpow (s := -3) (by norm_num)).of_norm_bounded_eventually
-  filter_upwards [(hzero.comp tendsto_norm_pattersonFrequency).eventually_le_const (by norm_num : (0 : ℝ) < 1),
+  filter_upwards [(hzero.comp tendsto_norm_pattersonFrequency).eventually_le_const (by
+    norm_num : (0 : ℝ) < 1),
     tendsto_norm_pattersonFrequency.eventually_gt_atTop 0] with m hm hm₀
   set t := ‖pattersonFrequency m‖
   change t ^ (s + 3) * Real.exp (-A * t) ≤ 1 at hm
@@ -324,7 +331,8 @@ theorem summable_pattersonFrequency_rpow_exp (s : ℝ) {A : ℝ} (hA : 0 < A) :
 /-- The Bessel-weighted absolute terms, including any fixed extra frequency power
 from horizontal differentiation, have a summable majorant uniformly at heights
 bounded below. Finitely many low frequencies are excluded from the asymptotic estimate. -/
-theorem PattersonCoefficients.exists_summable_hankel_majorant {τ : ℂ → ℂ} (ht : PattersonCoefficients τ)
+theorem PattersonCoefficients.exists_summable_hankel_majorant {τ : ℂ →
+    ℂ} (ht : PattersonCoefficients τ)
     {F : ℝ → ℂ} {a : ℕ → ℂ} (hF : HasHankelExpansion F a) (s : ℝ) {A₀ : ℝ} (hA : 0 < A₀) :
     ∃ g : 𝓔 → ℝ, Summable g ∧ ∀ᶠ m in cofinite, ∀ A : ℝ, A₀ ≤ A →
       ‖conj (τ (pattersonFrequency m)) / 27‖ * ‖pattersonFrequency m‖ ^ s *

@@ -31,7 +31,8 @@ variable {F : Type*} [Field F] [Fintype F] [DecidableEq F]
 def piece (χ : MulChar F ℂ) (j : ℕ) (u : Fˣ) (n b : F) : TameBranch → ℂ
   | .inactive => 0
   | .ordinary => ReflectionTame.factor χ j ((u : F)*n*b^3)
-  | .principal => if j = 4 then -1 / Real.sqrt (Fintype.card F) else ReflectionTame.factor χ j ((u : F)*n*b^3)
+  | .principal => if j = 4 then -1 / Real.sqrt (Fintype.card F) else ReflectionTame.factor χ j ((u :
+    F)*n*b^3)
   | .dividesSquarefree => if n = 0 then Real.sqrt (Fintype.card F) else 0
   | .dividesCube => if n ≠ 0 ∧ b = 0 then Real.sqrt (Fintype.card F) else 0
 
@@ -50,7 +51,8 @@ theorem factor_eq_sum (χ : MulChar F ℂ) (j : ℕ) (u : Fˣ) (n b : F) :
 
 private theorem norm_char_le (χ : MulChar F ℂ) (a : F) : ‖χ a‖ ≤ 1 := by
   by_cases h : IsUnit a
-  · simpa [h.unit_spec] using (Complex.norm_eq_one_of_mem_rootsOfUnity (χ.apply_mem_rootsOfUnity h.unit)).le
+  · simpa [h.unit_spec] using (Complex.norm_eq_one_of_mem_rootsOfUnity (χ.apply_mem_rootsOfUnity
+      h.unit)).le
   · simp [χ.map_nonunit h]
 
 /-- Dividing by the norm factors introduced by extraction gives exactly the
@@ -58,14 +60,16 @@ local coefficient budget, including the extra square root in the cube branch. -/
 theorem norm_piece_div (χ : MulChar F ℂ) (j : ℕ) (u : Fˣ) (n b : F)
     (e : TameBranch) (he : e ∈ activeChoices j) :
     let q : ℝ := Fintype.card F
-    ‖piece χ j u n b e‖ / (Real.sqrt (squarefreeDivisor q e) * cubeDivisor q e) ≤ Real.sqrt (e.weightSq q) := by
+    ‖piece χ j u n b e‖ / (Real.sqrt (squarefreeDivisor q e) * cubeDivisor q e) ≤
+      Real.sqrt (e.weightSq q) := by
   let q : ℝ := Fintype.card F
   have hq : 0 < q := Nat.cast_pos.mpr Fintype.card_pos
   have hs : 0 < Real.sqrt q := Real.sqrt_pos.mpr hq
   have hsq : Real.sqrt q / q = (Real.sqrt q)⁻¹ := by
     field_simp; nlinarith [Real.sq_sqrt hq.le]
   have hr : ‖(Real.sqrt q : ℂ)‖ = Real.sqrt q := by simp [Real.sqrt_nonneg]
-  change ‖piece χ j u n b e‖ / (Real.sqrt (squarefreeDivisor q e)*cubeDivisor q e) ≤ Real.sqrt (e.weightSq q)
+  change ‖piece χ j u n b e‖ / (Real.sqrt (squarefreeDivisor q e)*cubeDivisor q e) ≤
+    Real.sqrt (e.weightSq q)
   by_cases h4 : j = 4
   · simp [activeChoices,h4] at he
     rcases he with rfl | rfl | rfl
@@ -82,10 +86,12 @@ theorem norm_piece_div (χ : MulChar F ℂ) (j : ℕ) (u : Fˣ) (n b : F)
         cubeDivisor,weightSq,norm_div,Real.sqrt_one,one_mul,div_one,Real.sqrt_inv]
       change ‖_‖ / ‖(Real.sqrt q : ℂ)‖ ≤ _
       rw [hr,div_eq_mul_inv]
-      exact (mul_le_mul_of_nonneg_right (norm_char_le _ _) (inv_nonneg.mpr hs.le)).trans_eq (one_mul _)
+      exact (mul_le_mul_of_nonneg_right (norm_char_le _ _) (inv_nonneg.mpr hs.le)).trans_eq
+        (one_mul _)
     · have he' : e = .ordinary := by simpa [activeChoices,h4,h0] using he
       subst e
-      simpa only [piece,h4,h0,ReflectionTame.factor,ite_false,reduceCtorEq,squarefreeDivisor,cubeDivisor,
+      simpa only
+        [piece,h4,h0,ReflectionTame.factor,ite_false,reduceCtorEq,squarefreeDivisor,cubeDivisor,
         weightSq,Real.sqrt_one,one_mul,div_one] using
         norm_char_le ((χ^(j+2))⁻¹) ((u:F)*n*b^3)
 
@@ -101,7 +107,8 @@ cube divisor only on the corresponding branch of the three-term expression. -/
 theorem factor_product (χ : ∀ i, MulChar (F i) ℂ) (j : ι → ℕ) (u : ∀ i, (F i)ˣ)
     (n b : ∀ i, F i) :
     ∏ i, ReflectionTame.factor (χ i) (j i) ((u i : F i)*n i*(b i)^3) =
-      ∑ e ∈ Fintype.piFinset (fun i => activeChoices (j i)), ∏ i, piece (χ i) (j i) (u i) (n i) (b i) (e i) := by
+      ∑ e ∈ Fintype.piFinset (fun i => activeChoices (j i)), ∏ i, piece (χ i) (j i) (u i) (n i) (b
+        i) (e i) := by
   simp_rw [factor_eq_sum]
   exact prod_univ_sum ..
 
@@ -124,7 +131,8 @@ theorem norm_product_div (χ : ∀ i, MulChar (F i) ℂ) (j : ι → ℕ) (u : �
   dsimp only
   rw [norm_prod, Real.sqrt_prod _ (fun i _ => hD i), Real.sqrt_prod _ (fun i _ => hW i),
     ← prod_mul_distrib,← prod_div_distrib]
-  exact prod_le_prod₀ (fun i _ => div_nonneg (norm_nonneg _) (mul_nonneg (Real.sqrt_nonneg _) (hB i)))
+  exact prod_le_prod₀ (fun i _ => div_nonneg (norm_nonneg _) (mul_nonneg (Real.sqrt_nonneg _) (hB
+    i)))
     (fun i _ => norm_piece_div (χ i) (j i) (u i) (n i) (b i) (e i) (he i))
 
 end Product
@@ -188,7 +196,8 @@ theorem tsum_extract {N B : Ideal 𝓔} (hN : N ≠ 0) (hB : B ≠ 0)
     ∑' x, f x = ∑' x : Ideal 𝓔 × Ideal 𝓔, f (N*x.1,B*x.2) := by
   let g := fun x : Ideal 𝓔 × Ideal 𝓔 => (N*x.1,B*x.2)
   have hg : Function.Injective g := fun _ _ he =>
-    Prod.ext (mul_left_cancel₀ hN (congrArg Prod.fst he)) (mul_left_cancel₀ hB (congrArg Prod.snd he))
+    Prod.ext (mul_left_cancel₀ hN (congrArg Prod.fst he)) (mul_left_cancel₀ hB (congrArg Prod.snd
+      he))
   apply (hg.tsum_eq ?_).symm
   intro a ha
   obtain ⟨⟨n,hn⟩,⟨b,hb⟩⟩ := h a ha
@@ -208,8 +217,10 @@ theorem extract_branch (hp : Pairwise (fun i j => IsCoprime (p i) (p j))) (hnz :
     (∑' x, P x * f x) = ∑' x : Ideal 𝓔 × Ideal 𝓔, P (N*x.1,B*x.2) * f (N*x.1,B*x.2) := by
   dsimp only
   apply tsum_extract
-  · exact prod_ne_zero_iff.mpr fun i _ => by dsimp [squarefreeDivisor]; split <;> first | exact hnz i | exact one_ne_zero
-  · exact prod_ne_zero_iff.mpr fun i _ => by dsimp [cubeDivisor]; split <;> first | exact hnz i | exact one_ne_zero
+  · exact prod_ne_zero_iff.mpr fun i _ =>
+      by dsimp [squarefreeDivisor]; split <;> first | exact hnz i | exact one_ne_zero
+  · exact prod_ne_zero_iff.mpr fun i _ =>
+      by dsimp [cubeDivisor]; split <;> first | exact hnz i | exact one_ne_zero
   · intro x hx
     exact piece_divisors p hp χ j u x.1 x.2 e (left_ne_zero_of_mul hx)
 
@@ -223,12 +234,15 @@ theorem norm_extracted_coefficient (χ : ∀ i, MulChar (𝓔 ⧸ p i) ℂ) (j :
     let B := ∏ i, cubeDivisor (p i) (e i)
     ‖∏ i, piece (χ i) (j i) (u i) (Ideal.Quotient.mk (p i) (generator n))
         (Ideal.Quotient.mk (p i) (generator b)) (e i)‖ /
-      (Real.sqrt (absNorm N) * (absNorm B : ℝ)) ≤ Real.sqrt (∏ i, (e i).weightSq (absNorm (p i))) := by
+      (Real.sqrt (absNorm N) * (absNorm B : ℝ)) ≤ Real.sqrt (∏ i, (e i).weightSq (absNorm (p i)))
+        := by
   have hq (i : ι) : (Fintype.card (𝓔 ⧸ p i) : ℝ) = absNorm (p i) := by
     rw [Ideal.absNorm_eq_natCard,Nat.card_eq_fintype_card]
-  have hn (i : ι) : (absNorm (squarefreeDivisor (p i) (e i)) : ℝ) = squarefreeDivisor (absNorm (p i) : ℝ) (e i) := by
+  have hn (i : ι) : (absNorm (squarefreeDivisor (p i) (e i)) : ℝ) = squarefreeDivisor (absNorm (p i)
+    : ℝ) (e i) := by
     dsimp [squarefreeDivisor]; split <;> simp
-  have hb (i : ι) : (absNorm (cubeDivisor (p i) (e i)) : ℝ) = cubeDivisor (absNorm (p i) : ℝ) (e i) := by
+  have hb (i : ι) : (absNorm (cubeDivisor (p i) (e i)) : ℝ) = cubeDivisor (absNorm (p i) : ℝ) (e i)
+    := by
     dsimp [cubeDivisor]; split <;> simp
   simpa only [map_prod,Nat.cast_prod,hq,hn,hb] using
     norm_product_div χ j u (fun i => Ideal.Quotient.mk (p i) (generator n))

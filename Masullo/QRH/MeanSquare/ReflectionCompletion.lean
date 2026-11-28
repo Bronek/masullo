@@ -26,10 +26,13 @@ theorem squarefree_mul_cube_inj {a b c d : Ideal 𝓔} (ha : a ≠ 0) (hb : b �
     (h : a * b ^ 3 = c * d ^ 3) : a = c ∧ b = d := by
   classical
   have hF := congrArg normalizedFactors h
-  simp only [normalizedFactors_mul ha (pow_ne_zero _ hb), normalizedFactors_mul hc (pow_ne_zero _ hd),
+  simp only [normalizedFactors_mul ha (pow_ne_zero _ hb), normalizedFactors_mul hc (pow_ne_zero _
+    hd),
     normalizedFactors_pow] at hF
-  have ha₁ := Multiset.nodup_iff_count_le_one.mp ((squarefree_iff_nodup_normalizedFactors ha).mp ha')
-  have hc₁ := Multiset.nodup_iff_count_le_one.mp ((squarefree_iff_nodup_normalizedFactors hc).mp hc')
+  have ha₁ := Multiset.nodup_iff_count_le_one.mp ((squarefree_iff_nodup_normalizedFactors ha).mp
+    ha')
+  have hc₁ := Multiset.nodup_iff_count_le_one.mp ((squarefree_iff_nodup_normalizedFactors hc).mp
+    hc')
   have counts (p : Ideal 𝓔) : (normalizedFactors a).count p = (normalizedFactors c).count p ∧
       (normalizedFactors b).count p = (normalizedFactors d).count p := by
     have he := congrArg (Multiset.count p) hF
@@ -78,7 +81,8 @@ theorem completedSum_eq_primary_theta {τ : ℂ → ℂ} (hτ : PattersonCoeffic
         eisEmbedding (powerResidueSymbol 3 eisLambda m.val) * twist ξ k f m.val *
         W (absNorm m.val / X) / Real.sqrt X := by
   classical
-  let F (m : Good) : ℂ := conj (angularFactor m.val) * (conj (τ (eisEmbedding (generator m.val))) / 27) *
+  let F (m : Good) : ℂ := conj (angularFactor m.val) * (conj (τ (eisEmbedding (generator m.val))) /
+    27) *
     eisEmbedding (powerResidueSymbol 3 eisLambda m.val) * twist ξ k f m.val *
     W (absNorm m.val / X) / Real.sqrt X
   have hf : Function.HasFiniteSupport F := by
@@ -98,7 +102,8 @@ theorem completedSum_eq_primary_theta {τ : ℂ → ℂ} (hτ : PattersonCoeffic
     apply cubeIndex_mem_range hτ
     exact fun h => hm (by simp [F,h])
   change _ = ∑ᶠ m, F m
-  rw [← tsum_eq_finsum (L := SummationFilter.unconditional Good) hf, ← cubeIndex_injective.tsum_eq hs]
+  rw [← tsum_eq_finsum (L := SummationFilter.unconditional Good) hf,
+    ← cubeIndex_injective.tsum_eq hs]
   change _ = ∑' p, (F ∘ cubeIndex) p
   rw [tsum_eq_finsum hfc, finsum_curry _ hfc]
   unfold completedSum

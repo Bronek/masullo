@@ -59,9 +59,11 @@ theorem gaussCoefficient_eq_pattersonGauss {n : Ideal 𝓔} (hn : AwayFromSix n)
   let := Fintype.ofFinite (𝓔 ⧸ n)
   obtain ⟨u, hu⟩ := (isUnit_mk_iff_coprime_span n eisLambda).mpr (coprime_span_lambda hn)
   have h := gaussSum_mulShift (sexticChar hn ^ 2) (quotientDifferentCharacter n) u
-  rw [hu, ← pattersonGauss_eq_mulShift hn, MulChar.pow_apply' _ two_ne_zero, sexticChar_apply_mk] at h
+  rw [hu, ← pattersonGauss_eq_mulShift hn, MulChar.pow_apply' _ two_ne_zero,
+    sexticChar_apply_mk] at h
   rw [gaussCoefficient, finsum_eq_sum_of_fintype, norm_eisEmbedding_generator]
-  change conj (angularFactor n) / _ * ∑ x : 𝓔 ⧸ n, sexticChar hn x ^ 2 * quotientDifferentCharacter n x = _
+  change conj (angularFactor n) / _ * ∑ x : 𝓔 ⧸ n, sexticChar hn x ^ 2 * quotientDifferentCharacter
+    n x = _
   simp_rw [← MulChar.pow_apply' _ (by decide : 2 ≠ 0)]
   rw [← gaussSum]
   rw [← h]

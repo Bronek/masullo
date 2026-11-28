@@ -27,7 +27,8 @@ private lemma embedded_generator_ne_zero {n : Ideal 𝓔} (hn : n ≠ ⊥) :
 private def gaussCRT {b c : Ideal 𝓔} (h : IsCoprime b c) :
     ((𝓔 ⧸ b) × (𝓔 ⧸ c)) ≃ (𝓔 ⧸ (b * c)) :=
   let u := ((isUnit_mk_iff_coprime_span b (generator c)).mpr (by rwa [span_generator])).unit
-  let v := ((isUnit_mk_iff_coprime_span c (generator b)).mpr (by rwa [span_generator, isCoprime_comm])).unit
+  let v := ((isUnit_mk_iff_coprime_span c (generator b)).mpr (by
+    rwa [span_generator, isCoprime_comm])).unit
   ((u.mulLeft).prodCongr v.mulLeft).trans (quotientMulEquivQuotientProd b c h).symm.toEquiv
 
 private lemma gaussCRT_mk {b c : Ideal 𝓔} (h : IsCoprime b c) (x y : 𝓔) :
@@ -135,7 +136,8 @@ theorem gaussCoefficient_mul (recip : DunnRadziwillReciprocity) {b c : Ideal �
     (hb : AwayFromSix b) (hc : AwayFromSix c) (h : IsCoprime b c) :
     gaussCoefficient (b * c) = gaussCoefficient b * gaussCoefficient c *
       sextic c (generator b) ^ 4 := by
-  rw [gaussCoefficient_eq, angularFactor_mul hb hc, map_mul, normalizedGauss_mul hb hc h two_ne_zero,
+  rw [gaussCoefficient_eq, angularFactor_mul hb hc, map_mul, normalizedGauss_mul hb hc h
+    two_ne_zero,
     mul_pow, sextic_sq_reciprocity recip hb hc, gaussCoefficient_eq, gaussCoefficient_eq]
   ring
 

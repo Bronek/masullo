@@ -37,7 +37,8 @@ private theorem sextic_zero {a b : Ideal 𝓔} (ha : AwayFromSix a) (h : ¬ IsCo
 
 /-- Cubic reciprocity determines the square of each sextic value. Quadratic
 reciprocity then gives the mod-four sign, also when a common factor forces zero. -/
-theorem sextic_squarefree_reciprocity (recip : DunnRadziwillReciprocity) (quad : DeloupTuraevTheorem1)
+theorem sextic_squarefree_reciprocity (recip : DunnRadziwillReciprocity) (quad :
+    DeloupTuraevTheorem1)
     {a n : Ideal 𝓔} (ha : Starred a) (hn : Starred n) :
     sextic n (generator a) =
       sextic a (generator n) * familySign (familyClass n) (familyClass a) := by
@@ -48,7 +49,8 @@ theorem sextic_squarefree_reciprocity (recip : DunnRadziwillReciprocity) (quad :
     have ht : x ^ 3 = y ^ 3 * familySign (familyClass n) (familyClass a) :=
       primaryQuadraticSymbol_reciprocity quad hn ha hc
     have hy : y ≠ 0 := by
-      have hu := norm_sextic_of_coprime ha.1 (a := generator n) (by rwa [span_generator, isCoprime_comm])
+      have hu := norm_sextic_of_coprime ha.1 (a := generator n) (by
+        rwa [span_generator, isCoprime_comm])
       exact norm_ne_zero_iff.mp (hu.trans_ne one_ne_zero)
     change x = y * _
     apply mul_right_cancel₀ (pow_ne_zero 2 hy)
@@ -59,7 +61,8 @@ theorem sextic_squarefree_reciprocity (recip : DunnRadziwillReciprocity) (quad :
   · simp [sextic_zero hn.1 hc, sextic_zero ha.1 (fun h => hc h.symm)]
 
 private theorem away_of_dvd {d n : Ideal 𝓔} (hn : AwayFromSix n) (hd : d ∣ n) : AwayFromSix d :=
-  ⟨fun h => hn.1 (zero_dvd_iff.mp (show (0 : Ideal 𝓔) ∣ n by rwa [h] at hd)), hn.2.of_isCoprime_of_dvd_left hd⟩
+  ⟨fun h => hn.1 (zero_dvd_iff.mp (show (0 : Ideal 𝓔) ∣ n by rwa [h] at hd)),
+    hn.2.of_isCoprime_of_dvd_left hd⟩
 
 /-- For a squarefree good numerator, only the squarefree part of the denominator
 enters the sign. The square factor of the denominator obeys cubic reciprocity. -/
@@ -69,7 +72,8 @@ theorem sextic_reciprocity_sq_mul (recip : DunnRadziwillReciprocity) (quad : Del
       sextic a (generator (v ^ 2 * s)) * familySign (familyClass s) (familyClass a) := by
   have hv₂ := hv.mul hv
   simp only [pow_two, sextic_den_mul,
-    generator_mul hv.coprime_three hv.coprime_three, generator_mul hv₂.coprime_three hs.1.coprime_three,
+    generator_mul hv.coprime_three hv.coprime_three, generator_mul hv₂.coprime_three
+      hs.1.coprime_three,
     sextic_mul ha.1]
   rw [← sq, sextic_sq_reciprocity recip hv ha.1, sextic_squarefree_reciprocity recip quad ha hs]
   ring
@@ -79,7 +83,8 @@ power at exponent zero retains the zero on nonunits after reduction modulo six. 
 def tame (p : Ideal 𝓔) (hp : AwayFromSix p) (e : ℕ) (x : 𝓔) : ℂ :=
   (sexticChar hp ^ (e % 6)) (Ideal.Quotient.mk p x)
 
-theorem tame_eq_pow {p : Ideal 𝓔} (hp : AwayFromSix p) (hp' : Prime p) {e : ℕ} (he : e ≠ 0) (x : 𝓔) :
+theorem tame_eq_pow {p : Ideal 𝓔} (hp : AwayFromSix p) (hp' : Prime p) {e : ℕ} (he : e ≠
+    0) (x : 𝓔) :
     tame p hp e x = sextic p x ^ e := by
   have hmod := pow_mod_orderOf (sexticChar hp) e
   rw [orderOf_sexticChar_prime hp hp'] at hmod
@@ -122,7 +127,8 @@ private lemma even_iff (v w : Fin 2 → ℤ) :
     simp only [Pi.sub_apply, Pi.smul_apply, smul_eq_mul, lift]
     exact_mod_cast (ha i).symm
 
-private theorem grid_reps : Representatives (lattice 1) ((fun x => (2 : ℝ) • x) '' lattice 1) grid := by
+private theorem grid_reps : Representatives (lattice 1) ((fun x => (2 : ℝ) • x) '' lattice 1) grid
+    := by
   constructor
   · intro x hx
     obtain ⟨i, _, rfl⟩ := mem_image.mp hx
@@ -152,10 +158,12 @@ private lemma ray_eval (quad : DeloupTuraevTheorem1) (a b : ℤ) (hN : 0 < (a : 
     quadraticRayValue (Ideal.Quotient.mk (span {(4 : 𝓔)}) ((a : 𝓔) + (b : 𝓔)*eisOmega)) =
       (phase 0 + phase (((b : ℝ)-a)/2) + phase ((a : ℝ)/2) + phase (-(b : ℝ)/2)) / 2 := by
   rw [quadraticRayValue_of_representatives quad a b hN grid_reps, grid, sum_image]
-  · simp [Fin.sum_univ_four, gridPoint, lift, dotProduct, Matrix.mulVec, eisMatrix, Fin.sum_univ_two]
+  · simp [Fin.sum_univ_four, gridPoint, lift, dotProduct, Matrix.mulVec, eisMatrix,
+      Fin.sum_univ_two]
   · intro i _ j _ h
     have he := lift_injective h
-    exact (tag_grid i).symm.trans ((congrArg₂ tag (congrFun he 0) (congrFun he 1)).trans (tag_grid j))
+    exact (tag_grid i).symm.trans ((congrArg₂ tag (congrFun he 0) (congrFun he 1)).trans
+      (tag_grid j))
 
 private lemma omega_rel : eisOmega^2 + eisOmega + 1 = 0 := by
   let : IsCyclotomicExtension {3} ℚ (CyclotomicField 3 ℚ) :=
@@ -191,8 +199,10 @@ private lemma square_mod_four (u : R₄ˣ) :
   obtain ⟨a,b,rfl⟩ := eisInteger_coordinates x
   let d : 𝓔 := ((a%2 : ℤ) : 𝓔) + ((b%2 : ℤ) : 𝓔)*eisOmega
   let z : 𝓔 := ((a/2 : ℤ) : 𝓔) + ((b/2 : ℤ) : 𝓔)*eisOmega
-  have ha : (a : 𝓔) = ((a%2 : ℤ) : 𝓔) + 2*((a/2 : ℤ) : 𝓔) := by exact_mod_cast (show a = a%2+2*(a/2) by omega)
-  have hb : (b : 𝓔) = ((b%2 : ℤ) : 𝓔) + 2*((b/2 : ℤ) : 𝓔) := by exact_mod_cast (show b = b%2+2*(b/2) by omega)
+  have ha : (a : 𝓔) = ((a%2 : ℤ) : 𝓔) + 2*((a/2 : ℤ) : 𝓔) :=
+    by exact_mod_cast (show a = a%2+2*(a/2) by omega)
+  have hb : (b : 𝓔) = ((b%2 : ℤ) : 𝓔) + 2*((b/2 : ℤ) : 𝓔) :=
+    by exact_mod_cast (show b = b%2+2*(b/2) by omega)
   have hdec : (a : 𝓔) + (b : 𝓔)*eisOmega = d+2*z := by
     dsimp [d,z]
     linear_combination ha + eisOmega * hb
@@ -224,7 +234,8 @@ private lemma sign_square_left (quad : DeloupTuraevTheorem1) (x y v : QuadraticF
   have hleft : quadraticRayValue (((v^2*x : R₄ˣ) : R₄) * (y : R₄)) =
       quadraticRayValue ((x : R₄)*y) := calc
     _ = quadraticRayValue (((x : R₄)*y) * (v : R₄)^2) :=
-      congrArg _ (by simp only [Units.val_mul, Units.val_pow_eq_pow_val]; rw [mul_assoc, mul_comm ((v : R₄)^2)])
+      congrArg _ (by
+        simp only [Units.val_mul, Units.val_pow_eq_pow_val]; rw [mul_assoc, mul_comm ((v : R₄)^2)])
     _ = _ := ray_square quad _ v
   have hright : quadraticRayValue ((v^2*x : R₄ˣ) : R₄) = quadraticRayValue x := calc
     _ = quadraticRayValue ((x : R₄) * (v : R₄)^2) :=
@@ -244,17 +255,21 @@ private lemma sign_comm (x y : QuadraticFamilyClass) : familySign x y = familySi
 of primes and may share primes. The sign depends only on their primary classes modulo four. -/
 theorem sextic_reciprocity (recip : DunnRadziwillReciprocity) (quad : DeloupTuraevTheorem1)
     {a n : Ideal 𝓔} (ha : AwayFromSix a) (hn : AwayFromSix n) :
-    sextic n (generator a) = sextic a (generator n) * familySign (familyClass n) (familyClass a) := by
+    sextic n (generator a) = sextic a (generator n) * familySign (familyClass n) (familyClass a)
+      := by
   have sf {b k : Ideal 𝓔} (hb : Starred b) (hk : AwayFromSix k) :
-      sextic k (generator b) = sextic b (generator k) * familySign (familyClass k) (familyClass b) := by
+      sextic k (generator b) = sextic b (generator k) * familySign (familyClass k) (familyClass b)
+        := by
     obtain ⟨v,s,rfl,hs⟩ := exists_sq_mul_squarefree k
-    have hv := away_of_dvd hk (show v ∣ v^2*s by exact (dvd_pow_self _ (by decide : 2 ≠ 0)).trans (dvd_mul_right ..))
+    have hv := away_of_dvd hk (show v ∣
+      v^2*s by exact (dvd_pow_self _ (by decide : 2 ≠ 0)).trans (dvd_mul_right ..))
     have hs' := away_of_dvd hk (dvd_mul_left s (v^2))
     have hcl : familyClass (v^2 * s) = familyClass v ^ 2 * familyClass s := by
       simp only [pow_two, familyClass_mul (hv.mul hv) hs', familyClass_mul hv hv]
     rw [sextic_reciprocity_sq_mul recip quad hb hv ⟨hs',hs⟩, hcl, sign_square_left quad]
   obtain ⟨v,s,rfl,hs⟩ := exists_sq_mul_squarefree a
-  have hv := away_of_dvd ha (show v ∣ v^2*s by exact (dvd_pow_self _ (by decide : 2 ≠ 0)).trans (dvd_mul_right ..))
+  have hv := away_of_dvd ha (show v ∣
+    v^2*s by exact (dvd_pow_self _ (by decide : 2 ≠ 0)).trans (dvd_mul_right ..))
   have hs' := away_of_dvd ha (dvd_mul_left s (v^2))
   have hcl : familyClass (v^2 * s) = familyClass v ^ 2 * familyClass s := by
     simp only [pow_two, familyClass_mul (hv.mul hv) hs', familyClass_mul hv hv]
@@ -304,11 +319,13 @@ private theorem rayFactor_mk (ξ : RayCharacter) (k : QuadraticFamilyClass) (n :
 Only the class of the squarefree row modulo four enters the ray factor. Every
 prime of `k g` occurs, including those whose positive exponent is zero modulo six. -/
 theorem factor_twist_good (recip : DunnRadziwillReciprocity) (quad : DeloupTuraevTheorem1)
-    (ξ : RayCharacter) {k g n : Ideal 𝓔} (hk : AwayFromSix k) (hg : AwayFromSix g) (hn : AwayFromSix n) :
+    (ξ : RayCharacter) {k g n : Ideal 𝓔} (hk : AwayFromSix k) (hg : AwayFromSix g) (hn : AwayFromSix
+      n) :
     ξ (Ideal.Quotient.mk _ (generator n)) * sextic n (generator k * generator g ^ 4) =
       rayFactor ξ (familyClass k) (Ideal.Quotient.mk _ (generator n)) *
         ∏ p ∈ (normalizedFactors (k*g)).toFinset,
-          localFactor p ((normalizedFactors k).count p + 4 * (normalizedFactors g).count p) (generator n) := by
+          localFactor p ((normalizedFactors k).count p + 4 * (normalizedFactors g).count
+            p) (generator n) := by
   classical
   have hg₂ := hg.mul hg
   have hg₄ : AwayFromSix (g^4) := by rw [show g^4 = (g*g)*(g*g) by ring]; exact hg₂.mul hg₂
@@ -317,7 +334,8 @@ theorem factor_twist_good (recip : DunnRadziwillReciprocity) (quad : DeloupTurae
   have hden : sextic (k*g^4) (generator n) = sextic k (generator n) * sextic g (generator n)^4 := by
     simp only [show (4:ℕ) = 2+2 by decide, pow_add, pow_two, sextic_den_mul]
   have hprod := prime_product (hk.mul hg₄) (generator n)
-  simp only [normalizedFactors_mul hk.1 (pow_ne_zero 4 hg.1), normalizedFactors_pow, Multiset.count_add,
+  simp only [normalizedFactors_mul hk.1 (pow_ne_zero 4 hg.1), normalizedFactors_pow,
+    Multiset.count_add,
     Multiset.count_nsmul, Multiset.toFinset_add] at hprod
   have hs : (4 • normalizedFactors g).toFinset = (normalizedFactors g).toFinset := by
     ext p
@@ -336,10 +354,13 @@ private theorem prime_rational {p : Ideal 𝓔} (hp' : Prime p) (hp : AwayFromSi
   let := Fintype.ofFinite (𝓔 ⧸ p)
   have hχ (y : 𝓔) : sextic p y ^ 3 = (quadraticChar (𝓔 ⧸ p) (Ideal.Quotient.mk p y) : ℂ) := by
     rw [← sexticChar_apply_mk hp, ← MulChar.pow_apply' _ (by decide : 3 ≠ 0),
-      cubic_power_eq_quadraticChar (orderOf_sexticChar_prime hp hp') (ringChar_quotient_ne_two hp' hp)]
+      cubic_power_eq_quadraticChar (orderOf_sexticChar_prime hp hp') (ringChar_quotient_ne_two hp'
+        hp)]
     rfl
-  have hN : Fintype.card (𝓔 ⧸ p) = absNorm p := by rw [Ideal.absNorm_eq_natCard, Nat.card_eq_fintype_card]
-  simp only [hχ, map_neg, map_one, map_ofNat, quadraticChar_neg_one (ringChar_quotient_ne_two hp' hp),
+  have hN : Fintype.card (𝓔 ⧸ p) = absNorm p :=
+    by rw [Ideal.absNorm_eq_natCard, Nat.card_eq_fintype_card]
+  simp only [hχ, map_neg, map_one, map_ofNat, quadraticChar_neg_one (ringChar_quotient_ne_two hp'
+    hp),
     quadraticChar_neg_two (ringChar_quotient_ne_two hp' hp), hN, and_self]
 
 /-- The quadratic supplements for the rational numerators `-1` and `-2`
@@ -361,7 +382,8 @@ theorem rational_supplements {n : Ideal 𝓔} (hn : AwayFromSix n) :
     have ha₆ := away_of_dvd hn (dvd_mul_left a p)
     obtain ⟨h1,h2⟩ := prime_rational hp hp₆
     obtain ⟨ha1,ha2⟩ := ih ha₆
-    simp only [sextic_den_mul, mul_pow, h1,h2,ha1,ha2, map_mul, Nat.cast_mul, Int.cast_mul, and_self]
+    simp only [sextic_den_mul, mul_pow, h1,h2,ha1,ha2, map_mul, Nat.cast_mul, Int.cast_mul,
+      and_self]
 
 private lemma norm_coords (a b : ℤ) :
     (elementNorm ((a : 𝓔)+(b : 𝓔)*eisOmega) : ℤ) = a^2-a*b+b^2 := by
@@ -424,26 +446,31 @@ theorem sextic_neg_two_congr (recip : DunnRadziwillReciprocity) {n m : Ideal �
     (he : Ideal.Quotient.mk (span {(72 : 𝓔)}) (generator n) = Ideal.Quotient.mk _ (generator m)) :
     sextic n (-2) = sextic m (-2) := by
   apply eq_of_sq_cube
-  · rw [square_cubic hn, square_cubic hm, cubicSymbol_neg_two recip (eisPrimary_generator hn.coprime_three),
+  · rw [square_cubic hn, square_cubic hm, cubicSymbol_neg_two recip (eisPrimary_generator
+      hn.coprime_three),
       cubicSymbol_neg_two recip (eisPrimary_generator hm.coprime_three)]
     apply congrArg eisEmbedding
     apply powerResidueSymbol_congr
     apply Ideal.Quotient.eq.mpr
     apply mem_span_singleton.mpr
     simpa using ray_dvd he (by decide : 2 ∣ 72)
-  · rw [(rational_supplements hn).2, (rational_supplements hm).2, norm_ray_congr he (by decide : 8 ∣ 72)]
+  · rw [(rational_supplements hn).2, (rational_supplements hm).2, norm_ray_congr he (by
+      decide : 8 ∣ 72)]
 
 private lemma sextic_one_num {n : Ideal 𝓔} (hn : AwayFromSix n) : sextic n 1 = 1 := by
   rw [← sexticChar_apply_mk hn, map_one, map_one]
 
 theorem sextic_unit_congr (recip : DunnRadziwillReciprocity) {n m : Ideal 𝓔}
     (hn : AwayFromSix n) (hm : AwayFromSix m)
-    (he : Ideal.Quotient.mk (span {(72 : 𝓔)}) (generator n) = Ideal.Quotient.mk _ (generator m)) (u : 𝓔ˣ) :
+    (he : Ideal.Quotient.mk (span {(72 : 𝓔)}) (generator n) = Ideal.Quotient.mk _ (generator m)) (u
+      : 𝓔ˣ) :
     sextic n u = sextic m u := by
   have pow_neg {a : Ideal 𝓔} (ha : AwayFromSix a) : sextic a (-1) ^ 2 = 1 := by
     rw [← sextic_pow ha]; norm_num [sextic_one_num ha]
-  have hneg : sextic n (-1) = sextic m (-1) := eq_of_sq_cube ((pow_neg hn).trans (pow_neg hm).symm) (by
-    rw [(rational_supplements hn).1, (rational_supplements hm).1, norm_ray_congr he (by decide : 4 ∣ 72)])
+  have hneg : sextic n (-1) = sextic m (-1) := eq_of_sq_cube ((pow_neg hn).trans (pow_neg
+    hm).symm) (by
+    rw [(rational_supplements hn).1, (rational_supplements hm).1, norm_ray_congr he (by
+      decide : 4 ∣ 72)])
   have h9 : (9 : 𝓔) ∣ generator m - generator n := ray_dvd he.symm (by decide : 9 ∣ 72)
   have hcube : eisOmega^3 = 1 := by linear_combination (eisOmega-1) * omega_rel
   have ho : sextic n eisOmega = sextic m eisOmega := by
@@ -451,7 +478,8 @@ theorem sextic_unit_congr (recip : DunnRadziwillReciprocity) {n m : Ideal 𝓔}
     · rw [square_cubic hn, square_cubic hm,
         (cubic_supplements_congr recip (eisPrimary_generator hn.coprime_three) h9).2]
     · rw [← sextic_pow hn, ← sextic_pow hm, hcube, sextic_one_num hn, sextic_one_num hm]
-  let : IsCyclotomicExtension {3} ℚ (CyclotomicField 3 ℚ) := CyclotomicField.isCyclotomicExtension 3 ℚ
+  let : IsCyclotomicExtension {3} ℚ (CyclotomicField 3 ℚ) :=
+    CyclotomicField.isCyclotomicExtension 3 ℚ
   let spec := IsCyclotomicExtension.zeta_spec 3 ℚ (CyclotomicField 3 ℚ)
   let η : 𝓔ˣ := (spec.toInteger_isPrimitiveRoot.isUnit (by decide)).unit
   have hη : (η : 𝓔) = eisOmega := rfl
@@ -475,7 +503,8 @@ private def localPhase (n : Ideal 𝓔) (z a : 𝓔) (x : 𝓔 ⧸ n) : ℂ :=
   differentCharacter (eisEmbedding (a * (Quotient.out x)^2) / eisEmbedding z)
 
 private lemma localPhase_mk {n : Ideal 𝓔} {z : 𝓔} (hz : span {z} = n) (a x : 𝓔) :
-    localPhase n z a (Ideal.Quotient.mk n x) = differentCharacter (eisEmbedding (a*x^2) / eisEmbedding z) := by
+    localPhase n z a (Ideal.Quotient.mk n x) = differentCharacter (eisEmbedding (a*x^2) /
+      eisEmbedding z) := by
   apply differentCharacter_div_congr
   rw [← mem_span_singleton, hz, ← Ideal.Quotient.eq]
   simp
@@ -506,13 +535,17 @@ private theorem localSum_crt {n m : Ideal 𝓔} {c d : 𝓔} (hc : span {c} = n)
   let := Fintype.ofFinite (𝓔 ⧸ (n*m))
   have hu := (isUnit_mk_iff_coprime_span n d).mpr (hd ▸ h)
   have hv := (isUnit_mk_iff_coprime_span m c).mpr (hc ▸ h.symm)
-  let e := (hu.unit.mulLeft.prodCongr hv.unit.mulLeft).trans (quotientMulEquivQuotientProd n m h).symm.toEquiv
-  have hc' : Ideal.Quotient.mk n c = 0 := Ideal.Quotient.eq_zero_iff_mem.mpr (hc ▸ mem_span_singleton_self c)
-  have hd' : Ideal.Quotient.mk m d = 0 := Ideal.Quotient.eq_zero_iff_mem.mpr (hd ▸ mem_span_singleton_self d)
+  let e := (hu.unit.mulLeft.prodCongr hv.unit.mulLeft).trans (quotientMulEquivQuotientProd n m
+    h).symm.toEquiv
+  have hc' : Ideal.Quotient.mk n c = 0 := Ideal.Quotient.eq_zero_iff_mem.mpr (hc ▸
+    mem_span_singleton_self c)
+  have hd' : Ideal.Quotient.mk m d = 0 := Ideal.Quotient.eq_zero_iff_mem.mpr (hd ▸
+    mem_span_singleton_self d)
   have he (x y : 𝓔) : e (Ideal.Quotient.mk n x, Ideal.Quotient.mk m y) =
       Ideal.Quotient.mk (n*m) (d*x + c*y) := by
     apply (quotientMulEquivQuotientProd n m h).injective
-    simp only [e, Equiv.trans_apply, RingEquiv.toEquiv_eq_coe, RingEquiv.coe_toEquiv, RingEquiv.apply_symm_apply]
+    simp only [e, Equiv.trans_apply, RingEquiv.toEquiv_eq_coe, RingEquiv.coe_toEquiv,
+      RingEquiv.apply_symm_apply]
     apply Prod.ext <;> simp [Units.mulLeft, hc', hd']
   have hcd : span {c*d} = n*m := by rw [← span_singleton_mul_span_singleton, hc, hd]
   have hcE : eisEmbedding c ≠ 0 := fun e => hc₀ (eisEmbedding_injective (e.trans (map_zero _).symm))
@@ -524,7 +557,8 @@ private theorem localSum_crt {n m : Ideal 𝓔} {c d : 𝓔} (hc : span {c} = n)
   obtain ⟨y,rfl⟩ := Ideal.Quotient.mk_surjective v
   rw [he, localPhase_mk hcd, localPhase_mk hc, localPhase_mk hd, one_mul]
   have hp : eisEmbedding ((d*x+c*y)^2) / eisEmbedding (c*d) =
-      eisEmbedding (d*x^2) / eisEmbedding c + eisEmbedding (c*y^2) / eisEmbedding d + eisEmbedding (2*x*y) := by
+      eisEmbedding (d*x^2) / eisEmbedding c + eisEmbedding (c*y^2) / eisEmbedding d +
+        eisEmbedding (2*x*y) := by
     simp only [map_mul, map_pow, map_add, map_ofNat]
     field_simp
     ring
@@ -552,9 +586,11 @@ private theorem localSum_shift {n : Ideal 𝓔} (hn : Starred n) (a : 𝓔)
     intro b hb
     rw [AddChar.mulShift_mulShift]
     exact hψ (fun h => hb ((u.isUnit.mul_right_inj).mp (h.trans (mul_zero _).symm)))
-  have hval : χ u = sextic n a ^ 3 := by rw [hu]; simp only [χ, MulChar.pow_apply' _ (by decide : 3 ≠ 0),
+  have hval : χ u = sextic n a ^ 3 :=
+    by rw [hu]; simp only [χ, MulChar.pow_apply' _ (by decide : 3 ≠ 0),
     sexticChar_apply_mk]
-  have hs : (sextic n a ^ 3)^2 = 1 := by simpa only [quadraticResidue_apply] using quadraticResidue_sq hn.1 ha
+  have hs : (sextic n a ^ 3)^2 = 1 :=
+    by simpa only [quadraticResidue_apply] using quadraticResidue_sq hn.1 ha
   have hInv : χ⁻¹ u = sextic n a ^ 3 := by
     rw [MulChar.inv_apply_eq_inv', hval]
     exact inv_eq_of_mul_eq_one_right (by simpa [sq] using hs)
@@ -564,7 +600,8 @@ private theorem localSum_shift {n : Ideal 𝓔} (hn : Starred n) (a : 𝓔)
   rw [hInv]
 
 
-private lemma lambda_dvd_three : eisLambda ∣ (3 : 𝓔) := ⟨-eisLambda, by rw [mul_neg, ← sq, eisLambda_sq, neg_neg]⟩
+private lemma lambda_dvd_three : eisLambda ∣ (3 : 𝓔) := ⟨-eisLambda,
+    by rw [mul_neg, ← sq, eisLambda_sq, neg_neg]⟩
 
 private lemma lambda_ray_ne_zero (quad : DeloupTuraevTheorem1) :
     quadraticRayValue (Ideal.Quotient.mk (span {(4 : 𝓔)}) eisLambda) ≠ 0 := by
@@ -602,13 +639,16 @@ private lemma lambda_ratio_squarefree (quad : DeloupTuraevTheorem1) {n : Ideal �
   have hg : generator n ≠ 0 := fun hz => hn.1.1 (by simpa [hz] using (span_generator n).symm)
   have hspan : span {generator n * eisLambda} = n*L := by
     rw [← span_singleton_mul_span_singleton, span_generator]
-  have hc := localSum_crt (span_generator n) (rfl : span {eisLambda} = L) (coprime_span_lambda hn.1) hg eisLambda_prime.ne_zero
+  have hc := localSum_crt (span_generator n) (rfl : span {eisLambda} = L) (coprime_span_lambda
+    hn.1) hg eisLambda_prime.ne_zero
   rw [localSum_shift hn _ (coprime_span_lambda hn.1),
-    localSum_congr (rfl : span {eisLambda} = L) (lambda_dvd_three.trans (eisPrimary_generator hn.1.coprime_three))] at hc
+    localSum_congr (rfl : span {eisLambda} = L) (lambda_dvd_three.trans (eisPrimary_generator
+      hn.1.coprime_three))] at hc
   have hQ {m : Ideal 𝓔} {a : 𝓔} (h : span {a} = m) (ha : a ≠ 0) :
       quadraticRayValue (Ideal.Quotient.mk (span {(4 : 𝓔)}) a) =
         localSum m a 1 / Real.sqrt (absNorm m) := by
-    simpa only [localSum,localPhase,one_mul,map_pow] using quadraticRayValue_eq_element_sum quad a ha h
+    simpa only [localSum,localPhase,one_mul,map_pow] using quadraticRayValue_eq_element_sum quad a
+      ha h
   apply (eq_div_iff (mul_ne_zero hq (lambda_ray_ne_zero quad))).mpr
   rw [hQ hspan (mul_ne_zero hg eisLambda_prime.ne_zero), hQ (span_generator n) hg,
     hQ (rfl : span {eisLambda} = L) eisLambda_prime.ne_zero, hc, map_mul, Nat.cast_mul,
@@ -621,14 +661,16 @@ private lemma lambda_ratio (quad : DeloupTuraevTheorem1) {n : Ideal 𝓔} (hn : 
         (quadraticRayValue (Ideal.Quotient.mk _ (generator n)) *
           quadraticRayValue (Ideal.Quotient.mk _ eisLambda)) := by
   obtain ⟨v,s,rfl,hs⟩ := exists_sq_mul_squarefree n
-  have hv := away_of_dvd hn (show v ∣ v^2*s by exact (dvd_pow_self _ (by decide : 2 ≠ 0)).trans (dvd_mul_right ..))
+  have hv := away_of_dvd hn (show v ∣
+    v^2*s by exact (dvd_pow_self _ (by decide : 2 ≠ 0)).trans (dvd_mul_right ..))
   have hs' := away_of_dvd hn (dvd_mul_left s (v^2))
   have hden : generator (v^2*s) = generator v ^ 2 * generator s := by
     simp only [sq, generator_mul (hv.mul hv).coprime_three hs'.coprime_three,
       generator_mul hv.coprime_three hv.coprime_three]
   have he : sextic (v^2*s) eisLambda ^ 3 = sextic s eisLambda ^ 3 := by
     have hu : sextic v eisLambda ^ 6 = 1 := by
-      simp only [sextic, ← map_pow, powerResidueSymbol_six_pow_six hv.1 hv.2, ite_eq_left (coprime_span_lambda hv), map_one]
+      simp only [sextic, ← map_pow, powerResidueSymbol_six_pow_six hv.1 hv.2,
+        ite_eq_left (coprime_span_lambda hv), map_one]
     rw [sq,sextic_den_mul,sextic_den_mul,mul_pow,← sq,← pow_mul,hu,one_mul]
   obtain ⟨u,hu⟩ := good_ray_unit hv
   rw [he, lambda_ratio_squarefree quad ⟨hs',hs⟩, hden]
@@ -638,7 +680,8 @@ private lemma lambda_ratio (quad : DeloupTuraevTheorem1) {n : Ideal 𝓔} (hn : 
     ray_square quad _ u, mul_comm ((u : R₄)^2), ray_square quad _ u]
 
 /-- The ramified sextic supplement at λ depends only on the primary denominator modulo 72. -/
-theorem sextic_lambda_congr (recip : DunnRadziwillReciprocity) (quad : DeloupTuraevTheorem1) {n m : Ideal 𝓔}
+theorem sextic_lambda_congr (recip : DunnRadziwillReciprocity) (quad : DeloupTuraevTheorem1) {n m :
+    Ideal 𝓔}
     (hn : AwayFromSix n) (hm : AwayFromSix m)
     (he : Ideal.Quotient.mk (span {(72 : 𝓔)}) (generator n) = Ideal.Quotient.mk _ (generator m)) :
     sextic n eisLambda = sextic m eisLambda := by
@@ -706,16 +749,19 @@ theorem exists_good_part {x : 𝓔} (hx : x ≠ 0) :
 
 /-- The fixed ray weight of (12). The residues which do not occur for good primary
 denominators have weight zero. All its parameters vary in finite sets. -/
-def fixedFactor (ξ : RayCharacter) (u : 𝓔ˣ) (i j : Fin 6) (k : QuadraticFamilyClass) (r : R₇₂) : ℂ :=
+def fixedFactor (ξ : RayCharacter) (u : 𝓔ˣ) (i j : Fin 6) (k : QuadraticFamilyClass) (r :
+    R₇₂) : ℂ :=
   open Classical in
   if h : ∃ n : Ideal 𝓔, AwayFromSix n ∧ Ideal.Quotient.mk _ (generator n) = r then
     rayFactor ξ k r * sextic h.choose ((u : 𝓔) * (-2)^(i : ℕ) * eisLambda^(j : ℕ))
   else 0
 
 theorem fixedFactor_mk (recip : DunnRadziwillReciprocity) (quad : DeloupTuraevTheorem1)
-    (ξ : RayCharacter) (u : 𝓔ˣ) (i j : ℕ) (k : QuadraticFamilyClass) {n : Ideal 𝓔} (hn : AwayFromSix n) :
+    (ξ : RayCharacter) (u : 𝓔ˣ) (i j : ℕ) (k : QuadraticFamilyClass) {n : Ideal 𝓔} (hn : AwayFromSix
+      n) :
     fixedFactor ξ u (Fin.ofNat 6 i) (Fin.ofNat 6 j) k (Ideal.Quotient.mk _ (generator n)) =
-      rayFactor ξ k (Ideal.Quotient.mk _ (generator n)) * sextic n ((u : 𝓔)*(-2)^i*eisLambda^j) := by
+      rayFactor ξ k (Ideal.Quotient.mk _ (generator n)) * sextic n ((u : 𝓔)*(-2)^i*eisLambda^j)
+        := by
   classical
   have h : ∃ m : Ideal 𝓔, AwayFromSix m ∧ Ideal.Quotient.mk (span {(72 : 𝓔)}) (generator m) =
       Ideal.Quotient.mk _ (generator n) := ⟨n, hn, rfl⟩
@@ -727,11 +773,13 @@ theorem fixedFactor_mk (recip : DunnRadziwillReciprocity) (quad : DeloupTuraevTh
     simp only [sextic, ← map_pow, powerResidueSymbol_six_pow_six hn.1 hn.2, ite_eq_left hx,map_one]
   rw [fixedFactor,dite_eq_left h]
   simp only [sextic_mul hm, sextic_pow hm, sextic_mul hn, sextic_pow hn,
-    sextic_unit_congr recip hm hn he, sextic_neg_two_congr recip hm hn he, sextic_lambda_congr recip quad hm hn he]
+    sextic_unit_congr recip hm hn he, sextic_neg_two_congr recip hm hn he, sextic_lambda_congr recip
+      quad hm hn he]
   rw [pow_eq_pow_mod i (hs _ h₂), pow_eq_pow_mod j (hs _ (coprime_span_lambda hn))]
   rfl
 
-theorem norm_fixedFactor_le (ξ : RayCharacter) (u : 𝓔ˣ) (i j : Fin 6) (k : QuadraticFamilyClass) (r : R₇₂) :
+theorem norm_fixedFactor_le (ξ : RayCharacter) (u : 𝓔ˣ) (i j : Fin 6) (k : QuadraticFamilyClass) (r
+    : R₇₂) :
     ‖fixedFactor ξ u i j k r‖ ≤ 1 := by
   classical
   unfold fixedFactor
@@ -741,7 +789,8 @@ theorem norm_fixedFactor_le (ξ : RayCharacter) (u : 𝓔ˣ) (i j : Fin 6) (k : 
     have hn : AwayFromSix n := h.choose_spec.1
     have hr := congrArg (rayFactor ξ k) h.choose_spec.2.symm
     rw [hr,rayFactor_mk,mul_right_comm, norm_mul]
-    have hsign := (isOfFinOrder_iff_pow_eq_one.mpr ⟨2, by decide, familySign_sq (familyClass n) k⟩).norm_eq_one
+    have hsign := (isOfFinOrder_iff_pow_eq_one.mpr ⟨2,
+      by decide, familySign_sq (familyClass n) k⟩).norm_eq_one
     rw [hsign,mul_one]
     simpa only [twist,ite_eq_left hn,generator_one,one_pow,mul_one] using
       norm_twist_le_one ξ ((u : 𝓔) * (-2)^(i : ℕ) * eisLambda^(j : ℕ)) 1 n
@@ -770,7 +819,8 @@ theorem factor_twist_of_parts (recip : DunnRadziwillReciprocity) (quad : DeloupT
       fixedFactor ξ (u*v^4) (Fin.ofNat 6 (i+4*a)) (Fin.ofNat 6 (j+4*b)) (familyClass k)
           (Ideal.Quotient.mk _ (generator n)) *
         ∏ p ∈ (normalizedFactors (k*g)).toFinset,
-          localFactor p ((normalizedFactors k).count p + 4*(normalizedFactors g).count p) (generator n) := by
+          localFactor p ((normalizedFactors k).count p + 4*(normalizedFactors g).count p) (generator
+            n) := by
   classical
   let w : 𝓔 := ((u * v^4 : 𝓔ˣ) : 𝓔) * (-2)^(i+4*a) * eisLambda^(j+4*b)
   have hxy : x * y^4 = w * (generator k * generator g^4) := by
@@ -793,7 +843,8 @@ theorem factor_twist (recip : DunnRadziwillReciprocity) (quad : DeloupTuraevTheo
         ξ (Ideal.Quotient.mk _ (generator n)) * sextic n (x*y^4) =
           fixedFactor ξ u i j (familyClass k) (Ideal.Quotient.mk _ (generator n)) *
             ∏ p ∈ (normalizedFactors (k*g)).toFinset,
-              localFactor p ((normalizedFactors k).count p + 4*(normalizedFactors g).count p) (generator n)) := by
+              localFactor p ((normalizedFactors k).count p + 4*(normalizedFactors g).count
+                p) (generator n)) := by
   obtain ⟨u,i,j,k,hk,hx⟩ := exists_good_part hx
   obtain ⟨v,a,b,g,hg,hy⟩ := exists_good_part hy
   exact ⟨u*v^4,_,_,k,g,hk,hg, fun _ hn => factor_twist_of_parts recip quad ξ hk hg hn hx hy⟩

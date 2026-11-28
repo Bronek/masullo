@@ -91,13 +91,15 @@ theorem gaussSum_three_eq_sum_sq (n : Ideal 𝓔) : ∀ (hn : Starred n) [Fintyp
     have hb : AwayFromSix p := ⟨hp.ne_zero, hn.1.2.of_mul_left_left⟩
     have hc : AwayFromSix a := ⟨ha, hn.1.2.of_mul_left_right⟩
     have hpa : IsCoprime p a := isCoprime_iff_sup_eq.mpr (Ideal.isUnit_iff.mp
-      (IsRelPrime.of_squarefree_mul hn.2 (dvd_iff_le.mpr le_sup_left) (dvd_iff_le.mpr le_sup_right)))
+      (IsRelPrime.of_squarefree_mul hn.2 (dvd_iff_le.mpr le_sup_left) (dvd_iff_le.mpr
+        le_sup_right)))
     let := Ring.HasFiniteQuotients.finiteQuotient hb.1
     let := Ring.HasFiniteQuotients.finiteQuotient hc.1
     let := Fintype.ofFinite (𝓔 ⧸ p)
     let := Fintype.ofFinite (𝓔 ⧸ a)
     apply gaussSum_sq_of_prod (quotientMulEquivQuotientProd p a hpa) _
-      (sexticChar hb ^ 3) (sexticChar hc ^ 3) _ (gaussSum_three_eq_sum_sq_prime hb hp) (ih ⟨hc, hn.2.of_mul_right⟩) ψ hψ
+      (sexticChar hb ^ 3) (sexticChar hc ^ 3) _ (gaussSum_three_eq_sum_sq_prime hb hp) (ih ⟨hc,
+        hn.2.of_mul_right⟩) ψ hψ
     intro z
     obtain ⟨x, rfl⟩ := Ideal.Quotient.mk_surjective z
     simp [MulChar.pow_apply' _ (by decide : 3 ≠ 0), sextic, powerResidueSymbol_mul_right, mul_pow]

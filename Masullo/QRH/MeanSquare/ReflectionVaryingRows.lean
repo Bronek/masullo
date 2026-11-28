@@ -14,7 +14,8 @@ namespace Masullo.QRH.MeanSquare.ReflectionVaryingRows
 local notation "𝓔" => 𝓞 (CyclotomicField 3 ℚ)
 
 private lemma coprime_of_rel {a b : Ideal 𝓔} (h : IsRelPrime a b) : IsCoprime a b :=
-  isCoprime_iff_sup_eq.mpr (Ideal.isUnit_iff.mp (h (dvd_iff_le.mpr le_sup_left) (dvd_iff_le.mpr le_sup_right)))
+  isCoprime_iff_sup_eq.mpr (Ideal.isUnit_iff.mp (h (dvd_iff_le.mpr le_sup_left) (dvd_iff_le.mpr
+    le_sup_right)))
 
 /-- The part of a squarefree row supported on an ideal is its gcd with that
 ideal. The remaining factor is squarefree and coprime to the supporting ideal. -/
@@ -45,8 +46,10 @@ theorem varying_exponent {k t g p : Ideal 𝓔} (hk : Squarefree k) (ht : t ≠ 
   classical
   obtain ⟨hpp,hpk⟩ := (UniqueFactorizationMonoid.mem_normalizedFactors_iff hk.ne_zero).mp hp
   have h0 {a : Ideal 𝓔} (ha : IsCoprime k a) : (normalizedFactors a).count p = 0 :=
-    Multiset.count_eq_zero.mpr (fun h => hpp.not_isUnit (ha.isRelPrime hpk (dvd_of_mem_normalizedFactors h)))
-  have hle := Multiset.nodup_iff_count_le_one.mp ((squarefree_iff_nodup_normalizedFactors hk.ne_zero).mp hk) p
+    Multiset.count_eq_zero.mpr (fun h => hpp.not_isUnit (ha.isRelPrime hpk
+      (dvd_of_mem_normalizedFactors h)))
+  have hle := Multiset.nodup_iff_count_le_one.mp ((squarefree_iff_nodup_normalizedFactors
+    hk.ne_zero).mp hk) p
   have hpos := Multiset.count_pos.mpr hp
   rw [normalizedFactors_mul ht hk.ne_zero,Multiset.count_add,h0 hkt,h0 hkg]
   omega
@@ -83,7 +86,8 @@ private lemma factor_one {p : Ideal 𝓔} (hp : AwayFromSix p) (hpp : Prime p) (
   rw [reflectedFactor, dite_eq_left (And.intro hp hpp), ReflectionTame.factor_one
     (orderOf_sexticChar_prime hp hpp) (ringChar_quotient_ne_two hpp hp)]
   rw [quadraticResidue_apply,← sexticChar_apply_mk hp,← MulChar.pow_apply' _ (by decide : 3 ≠ 0),
-    cubic_power_eq_quadraticChar (orderOf_sexticChar_prime hp hpp) (ringChar_quotient_ne_two hpp hp)]
+    cubic_power_eq_quadraticChar (orderOf_sexticChar_prime hp hpp) (ringChar_quotient_ne_two hpp
+      hp)]
   rfl
 
 private lemma coefficient_one_zero {p : Ideal 𝓔} (hp : AwayFromSix p) (hpp : Prime p) :
@@ -117,14 +121,16 @@ theorem varying_active {k t g : Ideal 𝓔} (hk : Starred k) (ht : t ≠ 0)
 private lemma quadratic_product {k : Ideal 𝓔} (hk : Starred k) (m : 𝓔) :
     ∏ p ∈ (normalizedFactors k).toFinset, reflectedFactor p 1 m = quadraticResidue hk.1 m := by
   classical
-  let F : Ideal 𝓔 →* ℂ := ⟨⟨fun p => sextic p m ^ 3, by simp [sextic, Ideal.one_eq_top, powerResidueSymbol_top]⟩,
+  let F : Ideal 𝓔 →* ℂ := ⟨⟨fun p => sextic p m ^ 3,
+    by simp [sextic, Ideal.one_eq_top, powerResidueSymbol_top]⟩,
     fun a b => by simp only [sextic,powerResidueSymbol_mul_right,map_mul,mul_pow]⟩
   have he : (normalizedFactors k).prod = k := associated_iff_eq.mp (prod_normalizedFactors hk.1.1)
   have hnd := (squarefree_iff_nodup_normalizedFactors hk.1.1).mp hk.2
   calc
     _ = ∏ p ∈ (normalizedFactors k).toFinset, F p := by
       refine prod_congr rfl fun p hp => ?_
-      obtain ⟨hpp,hpk⟩ := (UniqueFactorizationMonoid.mem_normalizedFactors_iff hk.1.1).mp (Multiset.mem_toFinset.mp hp)
+      obtain ⟨hpp,hpk⟩ := (UniqueFactorizationMonoid.mem_normalizedFactors_iff
+        hk.1.1).mp (Multiset.mem_toFinset.mp hp)
       exact (factor_one (good_dvd hk.1 hpk) hpp m).trans (quadraticResidue_apply _ _)
     _ = F (normalizedFactors k).prod := by
       rw [prod_eq_multiset_prod,Multiset.toFinset_val,hnd.dedup,map_multiset_prod]
@@ -135,7 +141,8 @@ private lemma quadratic_cube {k : Ideal 𝓔} (hk : AwayFromSix k) (b : 𝓔) :
   rw [map_pow]
   by_cases h : IsCoprime k (span {b})
   · rw [pow_succ,quadraticResidue_sq hk h,one_mul]
-  · have hz : quadraticResidue hk b = 0 := by_contra fun h' => h ((quadraticResidue_ne_zero hk).mp h')
+  · have hz : quadraticResidue hk b = 0 := by_contra fun h' => h ((quadraticResidue_ne_zero
+      hk).mp h')
     simp [hz]
 
 /-- The product of (13) over all varying primes leaves the squarefree sieve
@@ -164,9 +171,11 @@ theorem split_column_two {n : Ideal 𝓔} (hn : Squarefree n) (h₃ : IsCoprime 
       generator n = (-2 : 𝓔)^(e : ℕ)*generator n' := by
   let P := span {(-2 : 𝓔)}
   have hp : Prime P := prime_span_singleton_iff.mpr ReflectionTwist.neg_two_prime
-  have h₆ {a : Ideal 𝓔} (ha : IsCoprime a P) (hb : IsCoprime a (span {3})) : IsCoprime a (span {6}) := by
+  have h₆ {a : Ideal 𝓔} (ha : IsCoprime a P) (hb : IsCoprime a (span {3})) : IsCoprime a (span {6})
+    := by
     have h := ha.mul_right hb
-    simpa only [P,span_singleton_neg,span_singleton_mul_span_singleton,show (2:𝓔)*3 = 6 by norm_num] using h
+    simpa only [P,span_singleton_neg,span_singleton_mul_span_singleton,show (2:𝓔)*3 =
+      6 by norm_num] using h
   by_cases hd : P ∣ n
   · obtain ⟨m,he⟩ := hd
     have hs : Squarefree (P*m) := he ▸ hn
@@ -174,7 +183,8 @@ theorem split_column_two {n : Ideal 𝓔} (hn : Squarefree n) (h₃ : IsCoprime 
     have hc := h₃.of_isCoprime_of_dvd_left (he ▸ dvd_mul_left m P)
     have hP := h₃.of_isCoprime_of_dvd_left (he ▸ dvd_mul_right P m)
     have hgen : generator P = -2 := generator_eq_of_eisPrimary rfl ⟨-1,by ring⟩
-    refine ⟨1,m,⟨⟨hm.ne_zero,h₆ ((coprime_of_rel (IsRelPrime.of_squarefree_mul hs)).symm) hc⟩,hm⟩,?_,?_⟩
+    refine ⟨1,m,⟨⟨hm.ne_zero,h₆ ((coprime_of_rel (IsRelPrime.of_squarefree_mul hs)).symm)
+      hc⟩,hm⟩,?_,?_⟩
     · simpa [P] using he
     · simp [he,generator_mul hP hc,hgen]
   · have hc := coprime_of_rel (hp.irreducible.isRelPrime_iff_not_dvd.mpr hd).symm
@@ -223,7 +233,8 @@ theorem factor_squarefree_row (recip : DunnRadziwillReciprocity) (quad : DeloupT
     ∃ (T G : Ideal 𝓔) (i j : Fin 6), AwayFromSix T ∧ AwayFromSix G ∧ T ∣ t ∧ G ∣ span {y} ∧
       ∀ k : Ideal 𝓔, AwayFromSix k → ∃ u : 𝓔ˣ, ∀ n : Ideal 𝓔, AwayFromSix n →
         ξ (Ideal.Quotient.mk _ (generator n)) * sextic n ((u₀ * generator (t*k)) * y^4) =
-          ReflectionTwist.fixedFactor ξ u i j (familyClass T * familyClass k) (Ideal.Quotient.mk _ (generator n)) *
+          ReflectionTwist.fixedFactor ξ u i j (familyClass T * familyClass k) (Ideal.Quotient.mk _
+            (generator n)) *
             ∏ p ∈ (normalizedFactors ((T*k)*G)).toFinset,
               ReflectionTwist.localFactor p ((normalizedFactors (T*k)).count p +
                 4*(normalizedFactors G).count p) (generator n) := by

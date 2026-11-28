@@ -33,13 +33,16 @@ theorem numerator_ne (x : ReflectedIndex) : x.numerator ≠ 0 :=
     (mul_ne_zero (eisPrimary_generator x.coprime_n).ne_zero
       (pow_ne_zero _ (eisPrimary_generator x.coprime_b).ne_zero)))
 
-private theorem valuation (x : ReflectedIndex) : emultiplicity eisLambda x.numerator = x.exponent := by
+private theorem valuation (x : ReflectedIndex) : emultiplicity eisLambda x.numerator = x.exponent
+    := by
   have hu : ¬ eisLambda ∣ (x.unit : 𝓔) := fun h =>
     eisLambda_prime.not_isUnit (isUnit_of_dvd_unit h x.unit.isUnit)
   have hb : ¬ eisLambda ∣ generator x.b ^ 3 := fun h =>
     (eisPrimary_generator x.coprime_b).lambda_not_dvd (eisLambda_prime.dvd_of_dvd_pow h)
-  simp only [numerator,emultiplicity_mul eisLambda_prime,emultiplicity_pow_self_of_prime eisLambda_prime,
-    emultiplicity_eq_zero.mpr hu,emultiplicity_eq_zero.mpr (eisPrimary_generator x.coprime_n).lambda_not_dvd,
+  simp only [numerator,emultiplicity_mul eisLambda_prime,emultiplicity_pow_self_of_prime
+    eisLambda_prime,
+    emultiplicity_eq_zero.mpr hu,emultiplicity_eq_zero.mpr (eisPrimary_generator
+      x.coprime_n).lambda_not_dvd,
     emultiplicity_eq_zero.mpr hb,add_zero]
 
 theorem numerator_injective : Function.Injective numerator := by
@@ -57,7 +60,8 @@ theorem numerator_injective : Function.Injective numerator := by
     exact (eisPrimary_generator h).ne_zero (span_singleton_eq_bot.mp ((span_generator a).trans ha))
   obtain ⟨rfl,rfl⟩ := squarefree_mul_cube_inj (hnz hn) (hnz hb) (hnz hk) (hnz hd) hs hk' hI
   obtain rfl : u = v := Units.ext (mul_right_cancel₀
-    (mul_ne_zero (eisPrimary_generator hn).ne_zero (pow_ne_zero _ (eisPrimary_generator hb).ne_zero)) h)
+    (mul_ne_zero (eisPrimary_generator hn).ne_zero (pow_ne_zero _ (eisPrimary_generator
+      hb).ne_zero)) h)
   rfl
 
 /-- Encode a signed row of Patterson's original coefficient table. -/
@@ -72,7 +76,8 @@ def ofRow (r : PattersonRow) (neg : Bool) : ReflectedIndex where
 
 theorem numerator_ofRow (r : PattersonRow) (neg : Bool) :
     (ofRow r neg).numerator = if neg then -r.numerator else r.numerator := by
-  cases neg <;> simp [ofRow,numerator,PattersonRow.numerator,generator_eq_of_eisPrimary rfl r.primary_c,
+  cases neg <;> simp [ofRow,numerator,PattersonRow.numerator,generator_eq_of_eisPrimary rfl
+    r.primary_c,
     generator_eq_of_eisPrimary rfl r.primary_d,mul_assoc]
 
 private theorem frequency_injective : Function.Injective pattersonFrequency := fun _ _ he =>
@@ -83,14 +88,17 @@ private theorem frequency_injective : Function.Injective pattersonFrequency := f
 theorem exists_signed_row {τ : ℂ → ℂ} (hτ : PattersonCoefficients τ) {m : 𝓔}
     (h : τ (pattersonFrequency m) ≠ 0) :
     ∃ (r : PattersonRow) (neg : Bool), (ofRow r neg).numerator = m := by
-  obtain ⟨r, hr⟩ : ∃ r : PattersonRow, pattersonFrequency m = r.frequency ∨ pattersonFrequency m = -r.frequency := by
+  obtain ⟨r, hr⟩ : ∃ r : PattersonRow, pattersonFrequency m = r.frequency ∨ pattersonFrequency m =
+    -r.frequency := by
     by_contra! hx
     exact h (hτ.2 _ hx)
   rcases hr with hr | hr
   · refine ⟨r,false,frequency_injective ?_⟩
-    simpa only [numerator_ofRow,Bool.false_eq_true,ite_false,← r.frequency_eq_div,pattersonFrequency] using hr.symm
+    simpa only [numerator_ofRow,Bool.false_eq_true,ite_false,←
+      r.frequency_eq_div,pattersonFrequency] using hr.symm
   · refine ⟨r,true,frequency_injective ?_⟩
-    simpa only [numerator_ofRow,ite_true,pattersonFrequency,map_neg,neg_div,← r.frequency_eq_div] using hr.symm
+    simpa only [numerator_ofRow,ite_true,pattersonFrequency,map_neg,neg_div,← r.frequency_eq_div]
+      using hr.symm
 
 /-- Reindex a reflected sum, including weights depending on the full integral numerator. -/
 theorem tsum_coefficients {τ : ℂ → ℂ} (hτ : PattersonCoefficients τ) (w : 𝓔 → ℂ) :
@@ -114,9 +122,11 @@ theorem normSq_frequency (x : ReflectedIndex) : normSq (pattersonFrequency x.num
     rw [norm_eisEmbedding_sq,span_singleton_eq_top.mpr x.unit.isUnit]; simp
   have hn (n : Ideal 𝓔) : ‖eisEmbedding (generator n)‖^2 = absNorm n := by
     rw [norm_eisEmbedding_sq,span_generator]
-  simp only [normSq_eq_norm_sq,pattersonFrequency,numerator,norm_div,map_mul,map_pow,norm_mul,norm_pow,
+  simp only
+    [normSq_eq_norm_sq,pattersonFrequency,numerator,norm_div,map_mul,map_pow,norm_mul,norm_pow,
     div_pow,mul_pow]
-  rw [pow_right_comm _ x.exponent 2,pow_right_comm _ 3 2,pow_right_comm _ 3 2,hlambda,hu,hn,hn,one_mul,
+  rw [pow_right_comm _ x.exponent 2,pow_right_comm _ 3 2,pow_right_comm _ 3
+    2,hlambda,hu,hn,hn,one_mul,
     zpow_sub₀ (by norm_num : (3:ℝ) ≠ 0),zpow_natCast]
   ring
 
@@ -128,7 +138,8 @@ theorem norm_coefficient (x : ReflectedIndex) {τ : ℂ → ℂ} (hτ : Patterso
   obtain ⟨r,neg,hr⟩ := exists_signed_row hτ h
   obtain rfl := numerator_injective hr
   have hg := generator_eq_of_eisPrimary rfl r.primary_d
-  have hb : Real.sqrt (absNorm (span {r.d})) = ‖eisEmbedding r.d‖ := by rw [← norm_eisEmbedding_generator,hg]
+  have hb : Real.sqrt (absNorm (span {r.d})) = ‖eisEmbedding r.d‖ :=
+    by rw [← norm_eisEmbedding_generator,hg]
   change _ ≤ (3:ℝ)^(((r.layer.lambdaExponent:ℝ)-3)/6)*Real.sqrt (absNorm (span {r.d}))
   rw [hb,numerator_ofRow]
   cases neg <;> simp only [Bool.false_eq_true,ite_false,ite_true,pattersonFrequency,map_neg,neg_div,
@@ -161,7 +172,8 @@ theorem norm_amplitude (x : ReflectedIndex) {τ : ℂ → ℂ} (hτ : PattersonC
 /-- The full coefficient divided by the square root of the dual frequency norm
 has exactly the three explicit weights of (15). -/
 theorem angularCoefficient_div_sqrt (x : ReflectedIndex) (τ : ℂ → ℂ) (z : ℂ) :
-    pattersonAngularCoefficient τ false z x.numerator / Real.sqrt (normSq (pattersonFrequency x.numerator)) =
+    pattersonAngularCoefficient τ false z x.numerator / Real.sqrt (normSq (pattersonFrequency
+      x.numerator)) =
       (((3:ℝ)^(-((x.exponent:ℝ)-3)/3) : ℝ) : ℂ) * x.amplitude τ *
         pattersonCharacter (pattersonFrequency x.numerator * z) /
         (Real.sqrt (absNorm x.n) * (absNorm x.b : ℂ)) := by
@@ -170,7 +182,8 @@ theorem angularCoefficient_div_sqrt (x : ReflectedIndex) (τ : ℂ → ℂ) (z :
   let B : ℝ := absNorm x.b
   have hpos {a : Ideal 𝓔} (ha : IsCoprime a (span {3})) : 0 < Real.sqrt (absNorm a) := by
     rw [← norm_eisEmbedding_generator]
-    exact norm_pos_iff.mpr ((map_ne_zero_iff eisEmbedding eisEmbedding_injective).mpr (eisPrimary_generator ha).ne_zero)
+    exact norm_pos_iff.mpr ((map_ne_zero_iff eisEmbedding eisEmbedding_injective).mpr
+      (eisPrimary_generator ha).ne_zero)
   have hN : 0 < Real.sqrt N := hpos x.coprime_n
   have hB : 0 < Real.sqrt B := hpos x.coprime_b
   have hp (r : ℝ) : 0 < (3:ℝ)^r := Real.rpow_pos_of_pos (by norm_num) _

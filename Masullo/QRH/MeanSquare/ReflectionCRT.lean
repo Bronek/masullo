@@ -109,7 +109,8 @@ theorem fixed_symbol_congr (hR : DunnRadziwillReciprocity) {c a b : 𝓔}
     (hc : c ≠ 0) (ha : eisPrimary a) (hb : eisPrimary b) (hab : 9*c ∣ b-a) :
     eisEmbedding (cubicSymbol c a) = eisEmbedding (cubicSymbol c b) := by
   have h₉ := (dvd_mul_right (9 : 𝓔) c).trans hab
-  obtain ⟨t, he, ht⟩ := (FiniteMultiplicity.of_prime_left eisLambda_prime hc).exists_eq_pow_mul_and_not_dvd
+  obtain ⟨t, he, ht⟩ := (FiniteMultiplicity.of_prime_left eisLambda_prime
+    hc).exists_eq_pow_mul_and_not_dvd
   have hLt : IsCoprime eisLambda t := eisLambda_prime.irreducible.coprime_iff_not_dvd.mpr ht
   have ht₃ : IsCoprime t (3 : 𝓔) := by
     have hpow : IsCoprime t (eisLambda ^ 2) := hLt.symm.pow_right
@@ -168,7 +169,8 @@ theorem coprime_D_r : IsCoprime S.D S.r := IsCoprime.prod_right fun i _ => (S.ta
 omit [Fintype ι] [DecidableEq ι] in
 theorem coprime_D_a₀ : IsCoprime S.D S.a₀ := by
   rw [D, eisLambda_sq, neg_mul]
-  exact (S.fixed_coprime.of_isCoprime_of_dvd_right S.three_dvd_c₀).symm.mul_left S.fixed_coprime.symm
+  exact (S.fixed_coprime.of_isCoprime_of_dvd_right S.three_dvd_c₀).symm.mul_left
+    S.fixed_coprime.symm
     |>.neg_left
 
 private theorem coprime_cofactor (i : ι) : IsCoprime (S.p i) (S.cofactor i) :=
@@ -243,7 +245,8 @@ theorem shift_eq (h : ι → 𝓔) :
     apply sum_congr rfl
     intro i _
     have hpi : S.p i ≠ 0 := fun h => (S.primary_p i).lambda_not_dvd (h ▸ dvd_zero _)
-    have hcof : S.cofactor i ≠ 0 := fun h => S.r_ne_zero (by rw [← S.prime_mul_cofactor i, h, mul_zero])
+    have hcof : S.cofactor i ≠ 0 := fun h => S.r_ne_zero (by
+      rw [← S.prime_mul_cofactor i, h, mul_zero])
     rw [← S.prime_mul_cofactor i, map_mul]
     field_simp [emb_ne_zero S.c₀_ne_zero, emb_ne_zero hpi, emb_ne_zero hcof]
 
@@ -307,7 +310,8 @@ theorem phase_split {x : 𝓔} (y₀ : Residue S.D) (y : ∀ i, Residue (S.p i))
     · apply sum_congr rfl
       intro i _
       have hp : S.p i ≠ 0 := fun h => (S.primary_p i).lambda_not_dvd (h ▸ dvd_zero _)
-      have hco : S.cofactor i ≠ 0 := fun h => S.r_ne_zero (by rw [← S.prime_mul_cofactor i, h, mul_zero])
+      have hco : S.cofactor i ≠ 0 := fun h => S.r_ne_zero (by
+        rw [← S.prime_mul_cofactor i, h, mul_zero])
       rw [← S.prime_mul_cofactor i, map_mul]
       field_simp [emb_ne_zero S.D_ne_zero, emb_ne_zero hp, emb_ne_zero hco]
   rw [hfrac, differentCharacter_add, differentCharacter_sum]
@@ -391,7 +395,8 @@ theorem dual_phase (u : ∀ i, (Residue (S.p i))ˣ) (h : ι → 𝓔)
       exact ⟨-t*S.r, by rw [D, ht, eisLambda_sq]; ring⟩
     have he := congrArg f (sub_eq_iff_eq_add.mp hdet)
     simp only [map_add, map_one, hbc, add_zero] at he
-    simpa only [map_mul, S.numerator_mod_fixed, Units.val_mul, A, R, residueUnit_val, f] using (show red S.D (S.numerator h * d) = 1 from he)
+    simpa only [map_mul, S.numerator_mod_fixed, Units.val_mul, A, R, residueUnit_val, f] using (show
+      red S.D (S.numerator h * d) = 1 from he)
   have hf : (↑(A * R^2) : Residue S.D) = f S.a₀ * f S.r ^ 2 := by
     simp only [Units.val_mul, Units.val_pow_eq_pow_val, A, R, residueUnit_val, f]
   unfold fixedPhase
@@ -451,7 +456,8 @@ theorem multiplier_split (hR : DunnRadziwillReciprocity) (hgood : ∀ i, AwayFro
     rw [eisPrimary_iff_mk_eq_one, r, map_prod]
     exact prod_eq_one fun i _ => (eisPrimary_iff_mk_eq_one _).mp (S.primary_p i)
   have h₃ : IsCoprime (span {S.numerator h}) (span {3}) :=
-    (isUnit_mk_iff_coprime_span _ _).mp (by rw [(eisPrimary_iff_mk_eq_one _).mp ha]; exact isUnit_one) |>.symm
+    (isUnit_mk_iff_coprime_span _ _).mp (by
+      rw [(eisPrimary_iff_mk_eq_one _).mp ha]; exact isUnit_one) |>.symm
   rw [pattersonMultiplier, ite_eq_right (mul_ne_zero S.c₀_ne_zero S.r_ne_zero)]
   rw [show cubicSymbol (S.c₀*S.r) (S.numerator h) =
       cubicSymbol S.c₀ (S.numerator h) * cubicSymbol S.r (S.numerator h) from
@@ -517,11 +523,13 @@ def fixedWeight (c₀ a₀ r m : 𝓔) : ℂ :=
 
 theorem fixedWeight_congr (hR : DunnRadziwillReciprocity) {c₀ a₀ r r' : 𝓔} (hc : c₀ ≠ 0)
     (ha : eisPrimary a₀) (hr : eisPrimary r) (hr' : eisPrimary r')
-    (h : red (9*c₀) r = red (9*c₀) r') (m : 𝓔) : fixedWeight c₀ a₀ r m = fixedWeight c₀ a₀ r' m := by
+    (h : red (9*c₀) r = red (9*c₀) r') (m : 𝓔) : fixedWeight c₀ a₀ r m = fixedWeight c₀ a₀ r' m
+      := by
   have hcub := fixed_symbol_congr hR hc (ha.mul hr) (ha.mul hr')
     (show 9*c₀ ∣ a₀*r'-a₀*r by rw [← mul_sub]; exact dvd_mul_of_dvd_right (mk_eq_iff.mp h.symm) _)
   have hred : red (eisLambda^2*c₀) r = red (eisLambda^2*c₀) r' :=
-    mk_eq_iff.mpr ((show eisLambda^2*c₀ ∣ 9*c₀ from ⟨-3, by rw [eisLambda_sq]; ring⟩).trans (mk_eq_iff.mp h))
+    mk_eq_iff.mpr ((show eisLambda^2*c₀ ∣ 9*c₀ from ⟨-3, by rw [eisLambda_sq]; ring⟩).trans
+      (mk_eq_iff.mp h))
   simp only [fixedWeight, hcub, hred]
 
 omit [Fintype ι] [DecidableEq ι] in
@@ -639,7 +647,8 @@ theorem exists_fixed_cusp {W : RayResidue 7 → ℂ}
     exists_rayShift_cusp hW hh 0 (r := 1) one_ne_zero isCoprime_one_right
   have he' : rayShift h = eisEmbedding a / eisEmbedding c := by simpa using he
   have hcop : IsCoprime a c := ⟨d, -b, by linear_combination hdet⟩
-  have hL : (8 : 𝓔) * eisLambda^7 ≠ 0 := mul_ne_zero (by norm_num) (pow_ne_zero _ eisLambda_prime.ne_zero)
+  have hL : (8 : 𝓔) * eisLambda^7 ≠ 0 := mul_ne_zero (by norm_num) (pow_ne_zero _
+    eisLambda_prime.ne_zero)
   have he'' := (div_eq_div_iff
     ((map_ne_zero_iff eisEmbedding eisEmbedding_injective).mpr hL)
     ((map_ne_zero_iff eisEmbedding eisEmbedding_injective).mpr hc)).mp he'
@@ -654,7 +663,8 @@ theorem good_coprime_fixed {p c₀ : 𝓔} (hp : AwayFromSix (span {p})) (hc : c
   have h₆ := (isCoprime_span_singleton_iff _ _).mp hp.2
   have h₂ := h₆.of_isCoprime_of_dvd_right (show (2 : 𝓔) ∣ 6 from ⟨3, by norm_num⟩)
   have hL := h₆.of_isCoprime_of_dvd_right (show eisLambda ∣ (6 : 𝓔) from
-    ⟨-2*eisLambda, by rw [show eisLambda*(-2*eisLambda) = -2 * eisLambda^2 by ring, eisLambda_sq]; norm_num⟩)
+    ⟨-2*eisLambda,
+      by rw [show eisLambda*(-2*eisLambda) = -2 * eisLambda^2 by ring, eisLambda_sq]; norm_num⟩)
   have h₈ : IsCoprime p (8 : 𝓔) := by
     rw [show (8 : 𝓔) = 2^3 by norm_num]
     exact h₂.pow_right
