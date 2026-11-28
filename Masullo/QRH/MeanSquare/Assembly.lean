@@ -1,5 +1,6 @@
 import Masullo.QRH.MeanSquare.GaussNorm
 import Masullo.QRH.MeanSquare.GaussPair
+import Masullo.QRH.MeanSquare.PrimitivePoissonSteps
 import Masullo.QRH.MeanSquare.PrimeRows
 import Masullo.QRH.MeanSquare.Reciprocity
 import Masullo.QRH.MeanSquare.Sieve
@@ -14,7 +15,6 @@ proposition gives its source and its normalization. -/
 structure PrintedInputs : Prop where
   largeSieve : GoldmakherLouvel (CyclotomicField 3 ℚ)
   theta : PattersonTheorem81
-  cosetPoisson : GaoZhaoLemma23
   cubicReciprocity : DunnRadziwillReciprocity
   cubicGaussCube : DunnRadziwillGaussCube
   quadraticGauss : DeloupTuraevTheorem1
@@ -40,7 +40,7 @@ theorem meanSquareA_of_reductions (h : PrintedInputs)
   have h7 := quadraticSieve_of_goldmakherLouvel h.largeSieve (family h.quadraticGauss)
   have h5 := reflection h.theta h.cubicReciprocity h.quadraticGauss h.besselMellin h.besselDecay
     h.besselDeriv h.gammaVertical h7
-  have hp := poisson h.cosetPoisson
+  have hp := poisson gaoZhaoLemma23
   have hg := pairedGaussIdentities h.cubicReciprocity h.cubicGaussCube h.quadraticGauss
   have hn := gaussCoefficientBound
   have h₁ := unitRowEstimate_of_gaussCoefficientBound hn
