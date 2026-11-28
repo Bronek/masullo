@@ -54,6 +54,7 @@ import Masullo.QRH.MeanSquare.TransferFirst
 import Masullo.QRH.MeanSquare.TransferFactor
 import Masullo.QRH.MeanSquare.TransferPass
 import Masullo.QRH.MeanSquare.TransferPassBound
+import Masullo.QRH.MeanSquare.TransferProof
 import Masullo.QRH.MeanSquare.TransferRegroup
 import Masullo.QRH.MeanSquare.TransferSecond
 import Masullo.QRH.MeanSquare.TransferTail

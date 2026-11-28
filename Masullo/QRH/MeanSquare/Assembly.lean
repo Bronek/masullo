@@ -8,6 +8,7 @@ import Masullo.QRH.MeanSquare.Reciprocity
 import Masullo.QRH.MeanSquare.Reflection
 import Masullo.QRH.MeanSquare.Sieve
 import Masullo.QRH.MeanSquare.Theta
+import Masullo.QRH.MeanSquare.TransferProof
 
 /-! # Proof obligations between the printed inputs and estimate (A) -/
 
@@ -27,8 +28,6 @@ structure PrintedInputs : Prop where
 /-- Compose the printed inputs with the outstanding arithmetic and analytic reductions.
 Each arrow names a proof still needed to obtain (A) from `PrintedInputs` alone. -/
 theorem meanSquareA_of_reductions (h : PrintedInputs)
-    (transfer : PrimitivePoisson → PairedGaussIdentities → GaussCoefficientBound →
-      TransferEstimate)
     (firstPoisson : PrimitivePoisson → PairedGaussIdentities → GaussCoefficientBound →
       GapEstimate → FullRowEstimate) :
     Masullo.QRH.MeanSquareA := by
@@ -41,7 +40,7 @@ theorem meanSquareA_of_reductions (h : PrintedInputs)
   have hn := gaussCoefficientBound
   have h₁ := unitRowEstimate_of_gaussCoefficientBound hn
   have h4 := gapEstimate_of_tail_transfer h₁ (cubeTailEstimate_of_completedEstimate hn h5)
-    (transfer hp hg hn)
+    (transferEstimate hg)
   exact meanSquareA_of_fullRows (firstPoisson hp hg hn h4)
 
 end Masullo.QRH.MeanSquare
