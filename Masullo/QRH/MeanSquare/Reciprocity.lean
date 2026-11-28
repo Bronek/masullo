@@ -30,7 +30,8 @@ end DeloupTuraev
 open DeloupTuraev
 
 /-- F. Deloup and V. Turaev, *On reciprocity*, J. Pure Appl. Algebra 208 (2007), 153–158,
-Theorem 1, equation (3) under (1), arXiv:math/0512050 p. 1. In orthonormal coordinates `B`
+Theorem 1, equation (3) under (1), arXiv:math/0512050 p. 1. The numbering is the journal's;
+the arXiv version states the result as an unnumbered theorem. In orthonormal coordinates `B`
 has the basis of `W` as columns, so `(Bᵀ)⁻¹` gives the basis of the dual and its determinant
 gives the dual covolume. The two finite sets choose arbitrary lifts in the two lattices.
 <https://arxiv.org/pdf/math/0512050#page=1> -/
