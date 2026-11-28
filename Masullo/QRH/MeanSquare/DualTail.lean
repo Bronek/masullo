@@ -11,6 +11,8 @@ Steps toward `DualTailEstimate rowMajorant` from `GapEstimate`.
   families, by four-term polarization.
 * `exists_norm_tsum_far_le`: the dual frequencies beyond a radius contribute a negative power
   of the radius.
+* `exists_norm_dualExclusionTail_sub_le`: `dualExclusionTail` is its main dual frequencies
+  `dualExclusionMain` up to such a power.
 -/
 
 noncomputable section
@@ -262,5 +264,113 @@ theorem exists_norm_tsum_far_le (P : SchwartzMap ℝ ℂ) (k : ℕ) :
   refine (hs.norm.tsum_le_tsum hpt hφs).trans ((hφs.tsum_le_of_sum_le hfs).trans_eq ?_)
   rw [hS₀, hZ, ← add_div, div_pow, div_eq_mul_inv, inv_div]
   ring
+
+/-- The main dual frequencies of `dualExclusionTail`: for each `e ∣ g` the rows `h` with
+`N h ≤ R Ne / Ng²`. -/
+def dualExclusionMain (P : SchwartzMap ℝ ℂ) (Y R : ℝ) (b c g : Ideal 𝓔) : ℂ :=
+  ∑ᶠ e : {e : Ideal 𝓔 // e ∣ g},
+    (idealMoebius e : ℂ) * pairCharacter b c (generator e) / (absNorm e.val : ℂ) *
+      ∑ h ∈ elementRows (R * absNorm e.val / (absNorm g : ℝ) ^ 2),
+        conj (pairCharacter b c h) * gaoZhaoTransform P
+          (Real.sqrt (Y * elementNorm h / ((absNorm e.val : ℝ) * absNorm (b * c))))
+
+/-- `dualExclusionTail` is `dualExclusionMain` up to `(Ng² N(bc) / (Y R))^k`. -/
+theorem exists_norm_dualExclusionTail_sub_le (P : SchwartzMap ℝ ℂ) (k : ℕ) :
+    ∃ C ≥ (0 : ℝ), ∀ b c g : Ideal 𝓔, AwayFromSix b → AwayFromSix c → Starred g →
+      ∀ Y R : ℝ, 0 < Y → 0 < R →
+        ‖dualExclusionTail P Y b c g - dualExclusionMain P Y R b c g‖ ≤
+          C * 2 ^ Multiset.card (normalizedFactors g) *
+            ((absNorm g : ℝ) * absNorm (b * c) / Y + 1) *
+            ((absNorm g : ℝ) ^ 2 * absNorm (b * c) / (Y * R)) ^ k := by
+  classical
+  obtain ⟨C, hC, hfar⟩ := exists_norm_tsum_far_le P k
+  refine ⟨C, hC, fun b c g hb hc hg Y R hY hR => ?_⟩
+  have hbc : (0 : ℝ) < absNorm (b * c) := by
+    exact_mod_cast Nat.pos_of_ne_zero (absNorm_eq_zero_iff.not.mpr (mul_ne_zero hb.1 hc.1))
+  have hg0 : (0 : ℝ) < absNorm g := by
+    exact_mod_cast Nat.pos_of_ne_zero (absNorm_eq_zero_iff.not.mpr hg.2.ne_zero)
+  set F : Ideal 𝓔 → ℂ := fun e =>
+    (idealMoebius e : ℂ) * pairCharacter b c (generator e) / (absNorm e : ℂ) *
+      ∑' h : 𝓔, if R * absNorm e / (absNorm g : ℝ) ^ 2 < (elementNorm h : ℝ) then
+        conj (pairCharacter b c h) * gaoZhaoTransform P
+          (Real.sqrt (Y * elementNorm h / ((absNorm e : ℝ) * absNorm (b * c)))) else 0
+  have hdiff : dualExclusionTail P Y b c g - dualExclusionMain P Y R b c g =
+      ∑ᶠ e : {e : Ideal 𝓔 // e ∣ g}, F e := by
+    set T₁ : Ideal 𝓔 → ℂ := fun e =>
+      (idealMoebius e : ℂ) * pairCharacter b c (generator e) / (absNorm e : ℂ) *
+        ∑' h : 𝓔, if h = 0 then 0 else conj (pairCharacter b c h) * gaoZhaoTransform P
+          (Real.sqrt (Y * elementNorm h / ((absNorm e : ℝ) * absNorm (b * c))))
+    set T₂ : Ideal 𝓔 → ℂ := fun e =>
+      (idealMoebius e : ℂ) * pairCharacter b c (generator e) / (absNorm e : ℂ) *
+        ∑ h ∈ elementRows (R * absNorm e / (absNorm g : ℝ) ^ 2),
+          conj (pairCharacter b c h) * gaoZhaoTransform P
+            (Real.sqrt (Y * elementNorm h / ((absNorm e : ℝ) * absNorm (b * c))))
+    rw [show dualExclusionTail P Y b c g = ∑ᶠ e : {e : Ideal 𝓔 // e ∣ g}, T₁ e from rfl,
+      show dualExclusionMain P Y R b c g = ∑ᶠ e : {e : Ideal 𝓔 // e ∣ g}, T₂ e from rfl,
+      finsum_dvd_eq_sum hg.2 T₁, finsum_dvd_eq_sum hg.2 T₂, finsum_dvd_eq_sum hg.2 F,
+      ← Finset.sum_sub_distrib]
+    refine Finset.sum_congr rfl fun s hs => ?_
+    set e := ∏ P ∈ s, P
+    have he : e ≠ ⊥ := Finset.prod_ne_zero_iff.mpr fun P hP => (prime_of_normalized_factor P
+      (Multiset.mem_toFinset.mp (Finset.mem_powerset.mp hs hP))).ne_zero
+    have he0 : (0 : ℝ) < absNorm e := by
+      exact_mod_cast Nat.pos_of_ne_zero (absNorm_eq_zero_iff.not.mpr he)
+    set R' := R * absNorm e / (absNorm g : ℝ) ^ 2
+    have hR' : 0 ≤ R' := by positivity
+    set S : 𝓔 → ℂ := fun h => conj (pairCharacter b c h) * gaoZhaoTransform P
+      (Real.sqrt (Y * elementNorm h / ((absNorm e : ℝ) * absNorm (b * c))))
+    have hpt : ∀ h : 𝓔, (if h = 0 then 0 else S h) =
+        (if h ∈ elementRows R' then S h else 0) +
+          (if R' < (elementNorm h : ℝ) then S h else 0) := by
+      intro h
+      simp only [mem_elementRows hR']
+      by_cases h0 : h = 0
+      · subst h0
+        have : (elementNorm (0 : 𝓔) : ℝ) = 0 := by simp [elementNorm]
+        simp [this, not_lt.mpr hR']
+      · by_cases hN : (elementNorm h : ℝ) ≤ R'
+        · simp [h0, hN, not_lt.mpr hN]
+        · simp [h0, hN, lt_of_not_ge hN]
+    have hfin : Summable fun h : 𝓔 => if h ∈ elementRows R' then S h else 0 :=
+      summable_of_ne_finset_zero (s := elementRows R') fun h hh => ite_eq_right hh
+    have hfarS := (hfar (fun h => conj (pairCharacter b c h))
+      (fun h => by rw [Complex.norm_conj]; exact norm_pairCharacter_le b c h) Y
+      ((absNorm e : ℝ) * absNorm (b * c)) R' hY (by positivity) (by positivity)).1
+    have htsum : (∑' h : 𝓔, if h = 0 then 0 else S h) =
+        ∑ h ∈ elementRows R', S h + ∑' h : 𝓔, if R' < (elementNorm h : ℝ) then S h else 0 := by
+      rw [tsum_congr hpt, hfin.tsum_add hfarS, tsum_eq_sum (s := elementRows R')
+        fun h hh => ite_eq_right hh]
+      congr 1
+      exact Finset.sum_congr rfl fun h hh => ite_eq_left hh
+    simp only [T₁, T₂, F, S] at htsum ⊢
+    rw [htsum]
+    ring
+  rw [hdiff]
+  refine (norm_finsum_dvd_le_of hg.2 F (B := C * ((absNorm g : ℝ) * absNorm (b * c) / Y + 1) *
+    ((absNorm g : ℝ) ^ 2 * absNorm (b * c) / (Y * R)) ^ k) (by positivity)
+    fun e he => ?_).trans_eq (by ring)
+  have he0 : (0 : ℝ) < absNorm e := by
+    exact_mod_cast Nat.pos_of_ne_zero (absNorm_eq_zero_iff.not.mpr
+      (ne_bot_of_le_ne_bot hg.2.ne_zero (le_of_dvd he)))
+  have hNe : (absNorm e : ℝ) ≤ absNorm g := by
+    exact_mod_cast Nat.le_of_dvd (Nat.pos_of_ne_zero
+      (absNorm_eq_zero_iff.not.mpr hg.2.ne_zero)) (absNorm_dvd_absNorm_of_le (le_of_dvd he))
+  obtain ⟨-, hb⟩ := hfar (fun h => conj (pairCharacter b c h))
+    (fun h => by rw [Complex.norm_conj]; exact norm_pairCharacter_le b c h) Y
+    ((absNorm e : ℝ) * absNorm (b * c)) (R * absNorm e / (absNorm g : ℝ) ^ 2) hY
+    (by positivity) (by positivity)
+  simp only [F]
+  rw [norm_mul]
+  have hc1 : ‖(idealMoebius e : ℂ) * pairCharacter b c (generator e) / (absNorm e : ℂ)‖ ≤ 1 :=
+    (norm_div_natCast_le _ _).trans (by
+      rw [norm_mul]
+      exact (mul_le_mul (norm_idealMoebius_le _) (norm_pairCharacter_le _ _ _)
+        (norm_nonneg _) zero_le_one).trans_eq (one_mul 1))
+  refine (mul_le_of_le_one_left (norm_nonneg _) hc1).trans (hb.trans ?_)
+  have hq : (absNorm e : ℝ) * absNorm (b * c) / (Y * (R * absNorm e / (absNorm g : ℝ) ^ 2)) =
+      (absNorm g : ℝ) ^ 2 * absNorm (b * c) / (Y * R) := by
+    field_simp
+  rw [hq]
+  gcongr
 
 end Masullo.QRH.MeanSquare
