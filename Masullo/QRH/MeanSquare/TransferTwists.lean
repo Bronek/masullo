@@ -78,7 +78,7 @@ lemma norm_secondTwist_le (ξ ξ' : RayCharacter) (g e c n : Ideal 𝓔) :
     exact mul_le_one_of_le h4 (norm_nonneg _) h3
   · simp
 
-private lemma sextic_pow_six {n : Ideal 𝓔} (hn : AwayFromSix n) {a : 𝓔}
+lemma sextic_pow_six {n : Ideal 𝓔} (hn : AwayFromSix n) {a : 𝓔}
     (ha : IsCoprime n (span {a})) : sextic n a ^ 6 = 1 := by
   simp only [sextic, ← map_pow, powerResidueSymbol_six_pow_six hn.1 hn.2, ite_eq_left ha, map_one]
 

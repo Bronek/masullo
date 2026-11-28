@@ -49,6 +49,7 @@ import Masullo.QRH.MeanSquare.TransferKernel
 import Masullo.QRH.MeanSquare.TransferBlocks
 import Masullo.QRH.MeanSquare.TransferDilation
 import Masullo.QRH.MeanSquare.TransferExpand
+import Masullo.QRH.MeanSquare.TransferFirst
 import Masullo.QRH.MeanSquare.TransferFactor
 import Masullo.QRH.MeanSquare.TransferPass
 import Masullo.QRH.MeanSquare.TransferPassBound
