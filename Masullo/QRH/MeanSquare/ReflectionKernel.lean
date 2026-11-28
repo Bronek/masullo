@@ -58,7 +58,7 @@ theorem norm_reflectionKernelAmplitude (hΓ : DLMFGammaVertical) {a b : ℝ}
   calc
     _ ≤ ((R*T)^j * ‖mellin W (1/2-t)‖ * (B*T^n)) * T^2 := by
       gcongr
-    _ = R^j * B * (‖mellin W (1/2-t)‖ * T^(j+n+2)) := by ring
+    _ = R^j * B * (‖mellin W (1/2-t)‖ * T^(j+n+2)) := by simp only [mul_pow, pow_add]; ring
     _ ≤ _ := mul_le_mul_of_nonneg_left hw' (by positivity)
 
 /-- Moving a vertical integral across a holomorphic strip with a uniform
@@ -256,7 +256,7 @@ theorem reflectionKernel_log_decay (hΓ : DLMFGammaVertical) (j : ℕ) {A : ℝ}
     apply le_trans (hsmall _ (by norm_num at *; exact hs) _ (Real.exp_pos u))
     simp only [neg_neg]
     gcongr
-    exact le_max_left .. 
+    exact le_max_left ..
   · rw [hshift']
     apply (hlarge _ hl _ (Real.exp_pos u)).trans
     gcongr
