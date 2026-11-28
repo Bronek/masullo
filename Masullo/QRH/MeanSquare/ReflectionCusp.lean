@@ -199,7 +199,7 @@ theorem PattersonAutomorphyWith.horizontalBarDeriv_at_cusp {χ : 𝓔 → 𝓔 �
   change (χ a c * L (q, 0) + _) / 2 = _
   linear_combination (χ a c / 2) * horizontal_linear L q
 
-private theorem hasDerivAt_patterson_mode (a l z u : ℂ) :
+theorem hasDerivAt_patterson_mode (a l z u : ℂ) :
     HasDerivAt (fun t : ℝ => a * pattersonCharacter (l * (z + t * u)))
       (a * pattersonCharacter (l * z) * (4 * Real.pi * Complex.I * ((l * u).re : ℂ))) 0 := by
   have hr (t : ℝ) : (l * (z + t * u)).re = (l * z).re + t * (l * u).re := by
