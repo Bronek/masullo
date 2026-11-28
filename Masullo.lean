@@ -45,5 +45,20 @@ import Masullo.QRH.MeanSquare.OffDiagonal
 import Masullo.QRH.MeanSquare.DualTail
 import Masullo.QRH.MeanSquare.DualAssembly
 import Masullo.Lattice.Eisenstein
+import Masullo.QRH.MeanSquare.Majorant
+import Masullo.QRH.MeanSquare.TransferKernel
+import Masullo.QRH.MeanSquare.TransferBlocks
+import Masullo.QRH.MeanSquare.TransferCount
+import Masullo.QRH.MeanSquare.TransferDilation
+import Masullo.QRH.MeanSquare.TransferExpand
+import Masullo.QRH.MeanSquare.TransferFirst
+import Masullo.QRH.MeanSquare.TransferFactor
+import Masullo.QRH.MeanSquare.TransferPass
+import Masullo.QRH.MeanSquare.TransferPassBound
+import Masullo.QRH.MeanSquare.TransferProof
+import Masullo.QRH.MeanSquare.TransferRegroup
+import Masullo.QRH.MeanSquare.TransferSecond
+import Masullo.QRH.MeanSquare.TransferTail
+import Masullo.QRH.MeanSquare.TransferTwists
 
 #print RiemannHypothesis

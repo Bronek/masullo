@@ -9,8 +9,9 @@ import Masullo.QRH.MeanSquare.Reciprocity
 import Masullo.QRH.MeanSquare.Reflection
 import Masullo.QRH.MeanSquare.Sieve
 import Masullo.QRH.MeanSquare.Theta
+import Masullo.QRH.MeanSquare.TransferProof
 
-/-! # Proof obligations between the printed inputs and estimate (A) -/
+/-! # Estimate (A) from the printed inputs -/
 
 namespace Masullo.QRH.MeanSquare
 
@@ -25,22 +26,23 @@ structure PrintedInputs : Prop where
   besselMellin : DLMFBesselMellin
   gammaVertical : DLMFGammaVertical
 
-/-- Compose the printed inputs with the outstanding analytic reduction.
-The `transfer` arrow names the proof still needed to obtain (A) from `PrintedInputs` alone. -/
-theorem meanSquareA_of_reductions (h : PrintedInputs)
-    (transfer : PrimitivePoisson → PairedGaussIdentities → GaussCoefficientBound →
-      TransferEstimate) :
-    Masullo.QRH.MeanSquareA := by
+/-- Estimate (A) from the printed inputs alone. -/
+theorem meanSquareA_of_printedInputs (h : PrintedInputs) : Masullo.QRH.MeanSquareA := by
   have h7 :=
     quadraticSieve_of_goldmakherLouvel h.largeSieve (eisensteinFamilyRealizes h.quadraticGauss)
   have h5 := completedEstimate_of_reflection h.theta h.cubicReciprocity h.quadraticGauss
     h.besselMellin h.gammaVertical h7
-  have hp := primitivePoisson
   have hg := pairedGaussIdentities h.cubicReciprocity h.cubicGaussCube h.quadraticGauss
   have hn := gaussCoefficientBound
   have h₁ := unitRowEstimate_of_gaussCoefficientBound hn
   have h4 := gapEstimate_of_tail_transfer h₁ (cubeTailEstimate_of_completedEstimate hn h5)
-    (transfer hp hg hn)
+    (transferEstimate hg)
   exact meanSquareA_of_fullRows (fullRowEstimate_of_gapEstimate hg h4)
+
+/-- The trace identity at every width above 5/12, from the printed inputs alone. -/
+theorem hasTrace_of_printedInputs (h : PrintedInputs) {a : ℝ} (ha : 5 / 12 < a)
+    (φ : TestFunction) :
+    Trace.HasTrace (Trace.induced (by linarith : (0 : ℝ) < a) φ) φ.efFunctional :=
+  Masullo.QRH.hasTrace_of_meanSquareA (meanSquareA_of_printedInputs h) ha φ
 
 end Masullo.QRH.MeanSquare
