@@ -123,8 +123,8 @@ theorem generator_eq_of_eisPrimary {x : 𝓔} {I : Ideal 𝓔} (hspan : span {x}
 
 theorem generator_mul {I J : Ideal 𝓔} (hI : IsCoprime I (span {3})) (hJ : IsCoprime J (span {3})) :
     generator (I * J) = generator I * generator J :=
-  generator_eq_of_eisPrimary (by
-    rw [← span_singleton_mul_span_singleton, span_generator, span_generator])
+  generator_eq_of_eisPrimary
+    (by rw [← span_singleton_mul_span_singleton, span_generator, span_generator])
     ((eisPrimary_generator hI).mul (eisPrimary_generator hJ))
 
 open InfinitePlace in

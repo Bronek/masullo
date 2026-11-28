@@ -29,12 +29,12 @@ private theorem horizontalMode_integral_norm (s : ℂ) {l : ℂ} (hl : l ≠ 0) 
     intro v hv
     have hv' : 0 < v := hv
     dsimp only [horizontalMode, F]
-    simp only [norm_mul, norm_cpow_eq_rpow_re_of_pos hv', sub_re, show (2*s).re = s.re+s.re by
-      simp [two_mul], one_re,
+    simp only [norm_mul, norm_cpow_eq_rpow_re_of_pos hv', sub_re, show (2*s).re =
+      s.re+s.re by simp [two_mul], one_re,
       norm_real, Real.norm_of_nonneg Real.pi_pos.le, Real.norm_of_nonneg hv'.le,
       norm_I, mul_one, norm_conj, norm_ofNat, Real.mul_rpow hr.le hv'.le]
-    rw [Real.rpow_neg hr.le, Real.rpow_sub_one hv'.ne', show 4*Real.pi*(r*v) = 4*Real.pi*‖l‖*v by
-      dsimp [r]; ring]
+    rw [Real.rpow_neg hr.le, Real.rpow_sub_one hv'.ne', show 4*Real.pi*(r*v) =
+      4*Real.pi*‖l‖*v by dsimp [r]; ring]
     dsimp only [r]
     field_simp [hv'.ne', (Real.rpow_pos_of_pos hr _).ne']
     ring_nf
@@ -153,8 +153,8 @@ private theorem row_weight_bound (r : PattersonRow) (neg : Bool) (σ : ℝ) :
       rw [normSq_eq_norm_sq, ← Real.rpow_natCast_mul (norm_nonneg _), r.norm_frequency]
       rw [Real.mul_rpow (mul_nonneg (Real.rpow_nonneg (by norm_num : (0:ℝ) ≤ 3) _) hc.le)
         (pow_nonneg hd.le _),
-        Real.mul_rpow (Real.rpow_nonneg (by norm_num : (0:ℝ) ≤ 3) _) hc.le, ← Real.rpow_mul (by
-          norm_num : (0:ℝ) ≤ 3),
+        Real.mul_rpow (Real.rpow_nonneg (by norm_num : (0:ℝ) ≤ 3) _) hc.le,
+          ← Real.rpow_mul (by norm_num : (0:ℝ) ≤ 3),
         ← Real.rpow_natCast_mul hd.le]
       dsimp only [rowWeight, tag]
       norm_num only [Nat.cast_ofNat]
@@ -169,8 +169,8 @@ private theorem row_weight_bound (r : PattersonRow) (neg : Bool) (σ : ℝ) :
 set_option maxHeartbeats 700000 in
 /-- Absolute convergence in the full right half-plane comes from summing the primary
 cube parameter separately from the squarefree parameter in Patterson's table. -/
-theorem PattersonCoefficients.summable_normalized_dirichlet {τ : ℂ →
-    ℂ} (ht : PattersonCoefficients τ)
+theorem PattersonCoefficients.summable_normalized_dirichlet {τ : ℂ → ℂ}
+    (ht : PattersonCoefficients τ)
     {σ : ℝ} (hs : 1 < σ) :
     Summable fun m : 𝓔 => ‖conj (τ (pattersonFrequency m)) / 27‖ *
       normSq (pattersonFrequency m) ^ (-σ) := by
@@ -182,8 +182,8 @@ theorem PattersonCoefficients.summable_normalized_dirichlet {τ : ℂ →
       fun h => eisLambda_prime.ne_zero (eisEmbedding_injective (h.trans (map_zero _).symm))
     intro x y h
     exact eisEmbedding_injective ((div_left_inj₀ (pow_ne_zero _ hl)).mp h)
-  have hex (m : Function.support f) : ∃ k : RowIndex, decodeRow k = m.val ∧ f m ≤ rowWeight σ k
-    := by
+  have hex (m : Function.support f) : ∃ k : RowIndex, decodeRow k = m.val ∧
+    f m ≤ rowWeight σ k := by
     have hne : τ (μ m) ≠ 0 := by
       intro hz
       exact m.property (by simp [f, hz])
@@ -203,8 +203,8 @@ theorem PattersonCoefficients.summable_normalized_dirichlet {τ : ℂ →
   have hki : Function.Injective k := fun x y he => Subtype.ext ((hk x).symm.trans
     ((congrArg decodeRow he).trans (hk y)))
   have h : Summable fun m : Function.support f => f m :=
-    Summable.of_nonneg_of_le (fun m => mul_nonneg (norm_nonneg _) (Real.rpow_nonneg (normSq_nonneg
-      _) _)) hle
+    Summable.of_nonneg_of_le (fun m => mul_nonneg (norm_nonneg _) (Real.rpow_nonneg
+      (normSq_nonneg _) _)) hle
       ((summable_rowWeight hs).comp_injective hki)
   exact (summable_subtype_iff_indicator.mp h).congr fun m => by
     change (Function.support f).indicator f m = f m
@@ -221,8 +221,8 @@ theorem PattersonCoefficients.mellin_horizontalSeries {τ : ℂ → ℂ} (ht : P
     let l := fun m : {m : 𝓔 // m ≠ 0} => pattersonFrequency m.val
     let a := fun m : {m : 𝓔 // m ≠ 0} => conj (τ (l m)) / 27 * w m
     mellin (fun v => ∑' m, horizontalMode (l m) (a m) v) (2*s) =
-      I / 4 * reflectionGammaFactor s * ∑' m, a m * (conj (l m) / ‖l m‖) * (normSq (l m) : ℂ) ^ (-s)
-        := by
+      I / 4 * reflectionGammaFactor s * ∑' m, a m * (conj (l m) / ‖l m‖) *
+        (normSq (l m) : ℂ) ^ (-s) := by
   intro l a
   let : Countable 𝓔 := by
     apply Function.Surjective.countable (f := fun p : ℤ × ℤ => (p.1 : 𝓔) + p.2 * eisOmega)

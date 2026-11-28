@@ -57,8 +57,8 @@ private lemma regroup {α : Type*} [DecidableEq α] {K H : Finset α} (hd : Disj
     · rintro ⟨⟨x,hx,rfl⟩,hx'⟩
       exact hx.resolve_left hx'
     · intro hp
-      exact ⟨⟨⟨p,mem_union_right K (hF hp)⟩,Or.inr hp,rfl⟩, fun hk => disjoint_left.mp hd hk (hF
-        hp)⟩
+      exact ⟨⟨⟨p,mem_union_right K (hF hp)⟩,Or.inr hp,rfl⟩, fun hk =>
+        disjoint_left.mp hd hk (hF hp)⟩
   refine sum_bij' (fun s _ => rest s) (fun F _ => active K H F)
     (fun s _ => mem_powerset.mpr (hrest s)) (fun F _ => mem_filter.mpr ⟨mem_univ _,?_⟩)
     (fun s hs => hfull (mem_filter.mp hs).2) (fun F hF => hfix (mem_powerset.mp hF)) ?_
@@ -69,8 +69,8 @@ private lemma regroup {α : Type*} [DecidableEq α] {K H : Finset α} (hd : Disj
 
 private lemma support_good {n : Idl} (hn : AwayFromSix n) {p : Idl} (hp : p ∈ support n) :
     AwayFromSix p ∧ Prime p := by
-  obtain ⟨hpp,hd⟩ := (UniqueFactorizationMonoid.mem_normalizedFactors_iff
-    hn.1).mp (Multiset.mem_toFinset.mp hp)
+  obtain ⟨hpp,hd⟩ := (UniqueFactorizationMonoid.mem_normalizedFactors_iff hn.1).mp
+    (Multiset.mem_toFinset.mp hp)
   exact ⟨⟨hpp.ne_zero,hn.2.of_isCoprime_of_dvd_left hd⟩,hpp⟩
 
 private lemma support_mul {a b : Idl} (ha : a ≠ 0) (hb : b ≠ 0) : support (a*b) = support a ∪
@@ -126,8 +126,8 @@ instance : Finite RowClass := by
   infer_instance
 
 private def rowLift (r : RowResidue) : 𝓔 :=
-  if h : ∃ k : Idl, AwayFromSix k ∧ red (72*eisLambda^7) (generator k) = r then generator h.choose
-    else 1
+  if h : ∃ k : Idl, AwayFromSix k ∧ red (72*eisLambda^7) (generator k) =
+    r then generator h.choose else 1
 
 private lemma rowLift_primary (r : RowResidue) : eisPrimary (rowLift r) := by
   unfold rowLift
@@ -181,8 +181,8 @@ private lemma classWeight_mk (hR : DunnRadziwillReciprocity) {h : RayResidue 7} 
   · simp only [map_mul,he,rowLift_congr hk he]
   · exact (Ideal.Quotient.mk_out _).symm
 
-theorem idealFactor_eq_reflectedFactor {q : Idl} (hq : AwayFromSix q) (hp : Prime q) (j : ℕ) (m :
-    𝓔) :
+theorem idealFactor_eq_reflectedFactor {q : Idl} (hq : AwayFromSix q) (hp : Prime q)
+    (j : ℕ) (m : 𝓔) :
     idealFactor hq j m = reflectedFactor q j m := by
   classical
   let := ((Ideal.prime_iff_isPrime hp.ne_zero).mp hp).isMaximal hp.ne_zero
@@ -190,19 +190,19 @@ theorem idealFactor_eq_reflectedFactor {q : Idl} (hq : AwayFromSix q) (hp : Prim
   let := Fintype.ofFinite (𝓔 ⧸ q)
   rw [reflectedFactor, dite_eq_left (And.intro hq hp), factor_eq_idealFactor]
 
-private lemma norm_fourier_le {φ : RayResidue 7 → ℂ} {B : ℝ} (hb : ∀ q, ‖φ q‖ ≤ B) (h : RayResidue
-    7) :
+private lemma norm_fourier_le {φ : RayResidue 7 → ℂ} {B : ℝ} (hb : ∀ q, ‖φ q‖ ≤ B)
+    (h : RayResidue 7) :
     ‖rayFourierCoeff 7 φ h‖ ≤ B := by
-  rw [rayFourierCoeff, norm_div, Complex.norm_natCast, div_le_iff₀ (by
-    exact_mod_cast Fintype.card_pos)]
+  rw [rayFourierCoeff, norm_div, Complex.norm_natCast,
+    div_le_iff₀ (by exact_mod_cast Fintype.card_pos)]
   calc
     _ ≤ ∑ y, ‖φ y * rayAddChar 7 (-(h*y))‖ := norm_sum_le _ _
-    _ ≤ ∑ _ : RayResidue 7, B := sum_le_sum fun y _ =>
-      by simpa only [norm_mul,AddChar.norm_apply,mul_one] using hb y
+    _ ≤ ∑ _ : RayResidue 7, B :=
+      sum_le_sum fun y _ => by simpa only [norm_mul,AddChar.norm_apply,mul_one] using hb y
     _ = _ := by simp [nsmul_eq_mul,mul_comm]
 
-private lemma norm_idealInactive_le {P : Finset Idl} (e : Idl → ℕ) (s : Finset P) (hgood : ∀ p ∈ P,
-    AwayFromSix p) :
+private lemma norm_idealInactive_le {P : Finset Idl} (e : Idl → ℕ) (s : Finset P)
+    (hgood : ∀ p ∈ P, AwayFromSix p) :
     ‖idealInactive e s‖ ≤ 1 := by
   rw [idealInactive,norm_prod]
   apply prod_le_one₀ (fun _ _ => norm_nonneg _)
@@ -253,26 +253,26 @@ theorem branch_denominator_norm {h : RayResidue 7} (D : FixedCusp h) (k : Idl) (
   have hprod : elementNorm (∏ p ∈ F, generator p) = ∏ p ∈ F, absNorm p := by
     induction F using Finset.induction_on with
     | empty => simp [elementNorm]
-    | insert p f hp ih => rw [prod_insert hp,prod_insert hp,hm,ih]; simp
-      [elementNorm,span_generator]
+    | insert p f hp ih =>
+      rw [prod_insert hp,prod_insert hp,hm,ih]; simp [elementNorm,span_generator]
   rw [hm,hm,hprod]
   simp only [elementNorm,span_generator]
   ring
 
 private lemma projected_row {θ : ℂ → ℝ → ℂ} {τ : ℂ → ℂ} {σ : ℝ}
     (he : PattersonExpansion θ τ σ) (ht : PattersonCoefficients τ)
-    (hχ : PattersonAutomorphyWith pattersonMultiplier θ) (hB : DLMFBesselMellin) (hΓ :
-      DLMFGammaVertical)
-    (hR : DunnRadziwillReciprocity) {k T G : Idl} (hk : Starred k) (hT : AwayFromSix T) (hG :
-      AwayFromSix G)
-    (hkt : IsCoprime k T) (hkg : IsCoprime k G) {r : RowResidue} (hr : red (72*eisLambda^7)
-      (generator k) = r)
+    (hχ : PattersonAutomorphyWith pattersonMultiplier θ) (hB : DLMFBesselMellin)
+      (hΓ : DLMFGammaVertical)
+    (hR : DunnRadziwillReciprocity) {k T G : Idl} (hk : Starred k) (hT : AwayFromSix T)
+      (hG : AwayFromSix G)
+    (hkt : IsCoprime k T) (hkg : IsCoprime k G) {r : RowResidue}
+      (hr : red (72*eisLambda^7) (generator k) = r)
     {φ : RayResidue 7 → ℂ} (hφ : ∀ g : RayResidue 3 → ℂ, ∑ x, φ x * g (rayReduction x) = 0)
     {B : ℝ} (hbound : ∀ x, ‖φ x‖ ≤ B) :
     ∃ C : RaySupport φ → Finset Idl → ℂ, (∀ h F, ‖C h F‖ ≤ B) ∧
       ∀ {J : TestInterval} {V : ℝ → ℂ} {X : ℝ}, UnitTest J 6 V → 0 < X →
-        projectedPattersonSum τ φ (numeratorTameProduct (support k ∪ support (T*G)) (exponent (T*k)
-          G)) V X =
+        projectedPattersonSum τ φ (numeratorTameProduct (support k ∪ support (T*G)) (exponent
+          (T*k) G)) V X =
         ∑ h : RaySupport φ, ∑ F ∈ (support (T*G)).powerset,
           C h F * branchSum (fixedCusp hφ h) r T G F hk.1 τ V X := by
   let K := support k
@@ -360,8 +360,8 @@ theorem simple_exponent {t y T G p : Idl} (ht : t ≠ 0) (hy : y ≠ 0) (hT : T 
   have hz : (normalizedFactors T).count p = 0 := Multiset.count_eq_zero.mpr (fun h =>
     h0 (Multiset.mem_toFinset.mpr h))
   have hp₁ := Multiset.count_pos.mpr (Multiset.mem_toFinset.mp hpG)
-  have hp₂ := Multiset.count_le_of_le p ((dvd_iff_normalizedFactors_le_normalizedFactors hnG
-    hy).mp hG)
+  have hp₂ := Multiset.count_le_of_le p
+    ((dvd_iff_normalizedFactors_le_normalizedFactors hnG hy).mp hG)
   dsimp [exponent]
   omega
 
@@ -371,8 +371,8 @@ frequency weight is shared by the whole class. Every scalar which can vary
 with the row lies outside its frequency sum. -/
 theorem completed_row_inversion {θ : ℂ → ℝ → ℂ} {τ : ℂ → ℂ} {σ : ℝ}
     (he : PattersonExpansion θ τ σ) (ht : PattersonCoefficients τ)
-    (hχ : PattersonAutomorphyWith pattersonMultiplier θ) (hB : DLMFBesselMellin) (hΓ :
-      DLMFGammaVertical)
+    (hχ : PattersonAutomorphyWith pattersonMultiplier θ) (hB : DLMFBesselMellin)
+      (hΓ : DLMFGammaVertical)
     (hR : DunnRadziwillReciprocity) (quad : DeloupTuraevTheorem1)
     (ξ : RayCharacter) (u₀ : 𝓔ˣ) {t : Idl} (ht₀ : t ≠ 0) {y : 𝓔} (hy : y ≠ 0) :
     ∃ (T G : Idl) (classOf : Idl → RowClass), AwayFromSix T ∧ AwayFromSix G ∧ T ∣ t ∧ G ∣ span {y} ∧
@@ -418,10 +418,10 @@ theorem completed_row_inversion {θ : ℂ → ℝ → ℂ} {τ : ℂ → ℂ} {�
     (hkt.of_isCoprime_of_dvd_right hTt) (hky.of_isCoprime_of_dvd_right hGy) hkr hφ
     (hbound (ReflectionTwist.norm_fixedFactor_le ξ c.1 i j _))
   let rowScalar := (numeratorTameProduct P e (eisLambda^3))⁻¹
-  have hScalar : ‖rowScalar‖ = 1 :=
-    by rw [norm_inv,norm_numeratorTameProduct_lambda_cube P e hP,inv_one]
-  refine ⟨fun h F => rowScalar*C h F,fun h F =>
-    by simpa only [norm_mul,hScalar,one_mul] using hC h F,?_⟩
+  have hScalar : ‖rowScalar‖ =
+    1 := by rw [norm_inv,norm_numeratorTameProduct_lambda_cube P e hP,inv_one]
+  refine ⟨fun h F =>
+    rowScalar*C h F,fun h F => by simpa only [norm_mul,hScalar,one_mul] using hC h F,?_⟩
   intro J V X hV hX
   rw [ReflectionRows.completedAtElement,hproject ht P e hP hV hX _ _ _ htwist,heq hV hX,mul_sum]
   refine sum_congr rfl fun h _ => ?_

@@ -56,8 +56,8 @@ theorem hasMellin_horizontalMode (h : DLMFBesselMellin) {s : ℂ} (hs : -(1 / 3 
   simp only [cpow_one, smul_eq_mul] at hh
   refine ⟨hh.1, hh.2.trans ?_⟩
   have hnorm : (normSq l : ℂ) ^ (-s) = (‖l‖ : ℂ) ^ (-2*s) := by
-    rw [normSq_eq_norm_sq, sq, ofReal_mul, ofReal_mul_cpow hr.le, ← cpow_add _ _ (ofReal_ne_zero.mpr
-      hr.ne')]
+    rw [normSq_eq_norm_sq, sq, ofReal_mul, ofReal_mul_cpow hr.le,
+      ← cpow_add _ _ (ofReal_ne_zero.mpr hr.ne')]
     congr 1
     ring
   rw [hnorm, reflectionGammaFactor]

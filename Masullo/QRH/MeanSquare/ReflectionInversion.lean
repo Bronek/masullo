@@ -79,14 +79,14 @@ def activeInput {F : Type*} [Field F] [Fintype F] [DecidableEq F]
 scalar depends on the row and is independent of the dual frequency and test. -/
 theorem smoothed_active {θ : ℂ → ℝ → ℂ} {τ : ℂ → ℂ} {σ : ℝ}
     (he : PattersonExpansion θ τ σ) (ht : PattersonCoefficients τ)
-    (hχ : PattersonAutomorphyWith pattersonMultiplier θ) (hB : DLMFBesselMellin) (hΓ :
-      DLMFGammaVertical)
+    (hχ : PattersonAutomorphyWith pattersonMultiplier θ) (hB : DLMFBesselMellin)
+      (hΓ : DLMFGammaVertical)
     (hR : DunnRadziwillReciprocity) (hgood : ∀ i, AwayFromSix (span {S.p i}))
     (hp : ∀ i, Prime (span {S.p i})) (j : ι → ℕ) (hj : ∀ i, j i < 6) :
     ∃ C : ℂ, ‖C‖ = 1 ∧ ∀ {J : TestInterval} {V : ℝ → ℂ} {X : ℝ}, UnitTest J 6 V → 0 < X →
       Function.HasFiniteSupport (fun m : Index => V (normSq (pattersonFrequency m)/X)) →
-      (∑' m : Index, (pattersonCharacter (pattersonFrequency m*(eisEmbedding S.a₀/eisEmbedding
-        S.c₀)) *
+      (∑' m : Index, (pattersonCharacter (pattersonFrequency m*(eisEmbedding
+        S.a₀/eisEmbedding S.c₀)) *
         ∏ i, activeInput (sexticChar (hgood i)) (j i) (phase (S.p i)) (red (S.p i) m)) *
         inputMode τ V X m) =
       C * ∑' m : Index, (Moduli.fixedWeight S.c₀ S.a₀ S.r m *
@@ -146,8 +146,8 @@ theorem smoothed_active {θ : ℂ → ℝ → ℂ} {τ : ℂ → ℂ} {σ : ℝ}
       rw [hpre, sum_mul]
       simp only [mul_assoc]
     _ = ∑ u, coeff u * pattersonSmoothed τ (Z u) V X := by
-      rw [finite_linear coeff _ (fun u => input_finite hfin τ (fun m => pattersonCharacter
-        (pattersonFrequency m*Z u)))]
+      rw [finite_linear coeff _ (fun u => input_finite hfin τ (fun m =>
+        pattersonCharacter (pattersonFrequency m*Z u)))]
       simp only [smoothed_input]
     _ = angularScalar c * ∑' m : Index, S.activeBlock hgood j H d m * dualMode τ V X c m := by
       simp_rw [hone]
@@ -222,15 +222,15 @@ private def restrict (s : Finset ι) : Moduli s where
 Fourier coordinate. The inactive scalar vanishes unless every omitted exponent is zero. -/
 theorem smoothed_tame {θ : ℂ → ℝ → ℂ} {τ : ℂ → ℂ} {σ : ℝ}
     (he : PattersonExpansion θ τ σ) (ht : PattersonCoefficients τ)
-    (hχ : PattersonAutomorphyWith pattersonMultiplier θ) (hB : DLMFBesselMellin) (hΓ :
-      DLMFGammaVertical)
+    (hχ : PattersonAutomorphyWith pattersonMultiplier θ) (hB : DLMFBesselMellin)
+      (hΓ : DLMFGammaVertical)
     (hR : DunnRadziwillReciprocity) (hgood : ∀ i, AwayFromSix (span {S.p i}))
     (hp : ∀ i, Prime (span {S.p i})) (j : ι → ℕ) (hj : ∀ i, j i < 6) :
     ∃ C : Finset ι → ℂ, (∀ s, ‖C s‖ = 1) ∧ ∀ {J : TestInterval} {V : ℝ → ℂ} {X : ℝ},
       UnitTest J 6 V → 0 < X →
       Function.HasFiniteSupport (fun m : Index => V (normSq (pattersonFrequency m)/X)) →
-      (∑' m : Index, (pattersonCharacter (pattersonFrequency m*(eisEmbedding S.a₀/eisEmbedding
-        S.c₀)) *
+      (∑' m : Index, (pattersonCharacter (pattersonFrequency m*(eisEmbedding
+        S.a₀/eisEmbedding S.c₀)) *
         ∏ i, (sexticChar (hgood i) ^ j i) (red (S.p i) m)) * inputMode τ V X m) =
       ∑ s : Finset ι, inactiveWeight S.p j s * C s * ∑' m : Index,
         (Moduli.fixedWeight S.c₀ S.a₀ (∏ i ∈ s, S.p i) m *
@@ -281,8 +281,8 @@ theorem smoothed_tame {θ : ℂ → ℝ → ℂ} {τ : ℂ → ℂ} {σ : ℝ}
       have hF (m : 𝓔) :
           (∏ i : s, ReflectionTame.factor (sexticChar (hgood i)) (j i) (red (S.p i) m)) =
             ∏ i ∈ s, ReflectionTame.factor (sexticChar (hgood i)) (j i) (red (S.p i) m) :=
-        prod_finset_coe (fun i => ReflectionTame.factor (sexticChar (hgood i)) (j i) (red (S.p i)
-          m)) s
+        prod_finset_coe (fun i => ReflectionTame.factor (sexticChar (hgood i)) (j i)
+          (red (S.p i) m)) s
       have hr : (∏ i : s, S.p i) = ∏ i ∈ s, S.p i := prod_finset_coe S.p s
       simp_rw [hA, hF, hr] at h
       exact h
@@ -334,8 +334,8 @@ chosen once for each surviving exceptional Fourier character. Each row has one
 unit scalar, the explicit inactive coefficient, and the product of the tame table entries. -/
 theorem projected_inversion {θ : ℂ → ℝ → ℂ} {τ : ℂ → ℂ} {σ : ℝ}
     (he : PattersonExpansion θ τ σ) (ht : PattersonCoefficients τ)
-    (hχ : PattersonAutomorphyWith pattersonMultiplier θ) (hB : DLMFBesselMellin) (hΓ :
-      DLMFGammaVertical)
+    (hχ : PattersonAutomorphyWith pattersonMultiplier θ) (hB : DLMFBesselMellin)
+      (hΓ : DLMFGammaVertical)
     (hR : DunnRadziwillReciprocity) (hgood : ∀ i, AwayFromSix (span {p i}))
     (hprime : ∀ i, Prime (span {p i})) (hprimary : ∀ i, eisPrimary (p i))
     (hcop : Pairwise (IsCoprime on p)) (j : ι → ℕ) (hj : ∀ i, j i < 6)
@@ -349,20 +349,20 @@ theorem projected_inversion {θ : ℂ → ℝ → ℂ} {τ : ℂ → ℂ} {σ : 
             ∏ i ∈ s, ReflectionTame.factor (sexticChar (hgood i)) (j i) (red (p i) m)) *
             dualMode τ V X ((fixedCusp hφ h).c * ∏ i ∈ s, p i) m := by
   let S (h : RaySupport φ) : Moduli ι :=
-    ⟨(fixedCusp hφ h).a, (fixedCusp hφ h).c, p, (fixedCusp hφ h).c_ne_zero, (fixedCusp hφ
-      h).primary,
+    ⟨(fixedCusp hφ h).a, (fixedCusp hφ h).c, p, (fixedCusp hφ h).c_ne_zero,
+      (fixedCusp hφ h).primary,
       (fixedCusp hφ h).three_dvd, (fixedCusp hφ h).coprime, hprimary,
       fun i => good_coprime_fixed (hgood i) (fixedCusp hφ h).dvd_modulus, hcop⟩
-  choose C hC heq using fun h : RaySupport φ => smoothed_tame (S h) he ht hχ hB hΓ hR hgood hprime
-    j hj
+  choose C hC heq using fun h : RaySupport φ => smoothed_tame (S h) he ht hχ hB hΓ hR
+    hgood hprime j hj
   refine ⟨C, hC, ?_⟩
   intro J V X hV hX
   have hfin := pattersonTest_hasFiniteSupport hV hX
   let T (m : 𝓔) := ∏ i, (sexticChar (hgood i)^j i) (red (p i) m)
   let F (h : RaySupport φ) (m : 𝓔) := pattersonCharacter (pattersonFrequency m*rayShift h.1) * T m
   calc
-    _ = ∑' m : Index, ∑ h : RaySupport φ, rayFourierCoeff 7 φ h.1 * (F h m * inputMode τ V X m)
-      := by
+    _ = ∑' m : Index, ∑ h : RaySupport φ, rayFourierCoeff 7 φ h.1 * (F h m *
+      inputMode τ V X m) := by
       unfold projectedPattersonSum
       apply tsum_congr
       intro m
@@ -400,8 +400,8 @@ def idealInactive {P : Finset (Ideal 𝓔)} (e : Ideal 𝓔 → ℕ) (s : Finset
 /-- The row formula for the tame numerator product used in the completed-sum projection. -/
 theorem projected_tameProduct {θ : ℂ → ℝ → ℂ} {τ : ℂ → ℂ} {σ : ℝ}
     (he : PattersonExpansion θ τ σ) (ht : PattersonCoefficients τ)
-    (hχ : PattersonAutomorphyWith pattersonMultiplier θ) (hB : DLMFBesselMellin) (hΓ :
-      DLMFGammaVertical)
+    (hχ : PattersonAutomorphyWith pattersonMultiplier θ) (hB : DLMFBesselMellin)
+      (hΓ : DLMFGammaVertical)
     (hR : DunnRadziwillReciprocity) (P : Finset (Ideal 𝓔)) (e : Ideal 𝓔 → ℕ)
     (hgood : ∀ q ∈ P, AwayFromSix q) (hprime : ∀ q ∈ P, Prime q)
     {φ : RayResidue 7 → ℂ} (hφ : ∀ g : RayResidue 3 → ℂ, ∑ x, φ x * g (rayReduction x) = 0) :
@@ -416,8 +416,8 @@ theorem projected_tameProduct {θ : ℂ → ℝ → ℂ} {τ : ℂ → ℂ} {σ 
   let p (q : P) := generator q.val
   have hg (q : P) : AwayFromSix (span {p q}) := by simpa only [p, span_generator] using hgood q q.2
   have hp (q : P) : Prime (span {p q}) := by simpa only [p, span_generator] using hprime q q.2
-  let (q : P) : (span {p q}).IsMaximal := ((Ideal.prime_iff_isPrime (hp q).ne_zero).mp (hp
-    q)).isMaximal (hp q).ne_zero
+  let (q : P) : (span {p q}).IsMaximal := ((Ideal.prime_iff_isPrime (hp q).ne_zero).mp
+    (hp q)).isMaximal (hp q).ne_zero
   let (q : P) : Finite (Residue (p q)) := Ring.HasFiniteQuotients.finiteQuotient (hp q).ne_zero
   let (q : P) : Fintype (Residue (p q)) := Fintype.ofFinite _
   have hc : Pairwise (IsCoprime on p) := by
@@ -427,8 +427,8 @@ theorem projected_tameProduct {θ : ℂ → ℝ → ℂ} {τ : ℂ → ℂ} {σ 
     simpa only [p, span_generator, ne_eq, Subtype.val_inj] using hik
   let j (q : P) := e q % 6
   obtain ⟨C,hC,heq⟩ := projected_inversion p he ht hχ hB hΓ hR hg hp
-    (fun i => eisPrimary_generator (hgood i i.2).coprime_three) hc j (fun _ => Nat.mod_lt _ (by
-      decide)) hφ
+    (fun i => eisPrimary_generator (hgood i i.2).coprime_three) hc j (fun _ =>
+      Nat.mod_lt _ (by decide)) hφ
   have hpre (q : P) (m : 𝓔) :
       (sexticChar (hg q)^j q) (red (p q) m) = ReflectionTwist.localFactor q (e q) m := by
     calc
@@ -436,8 +436,8 @@ theorem projected_tameProduct {θ : ℂ → ℝ → ℂ} {τ : ℂ → ℂ} {σ 
         simp only [ReflectionTwist.localFactor, hg q, ↓reduceDIte, ReflectionTwist.tame, j, red]
       _ = _ := by simp only [p, span_generator]
   have hfac (q : P) (m : 𝓔) :
-      ReflectionTame.factor (sexticChar (hg q)) (j q) (red (p q) m) = idealFactor (hgood q q.2) (j
-        q) m := by
+      ReflectionTame.factor (sexticChar (hg q)) (j q) (red (p q) m) = idealFactor
+        (hgood q q.2) (j q) m := by
     rw [factor_eq_idealFactor]
     generalize_proofs h
     simp only [p, span_generator]
@@ -451,8 +451,8 @@ theorem projected_tameProduct {θ : ℂ → ℝ → ℂ} {τ : ℂ → ℂ} {σ 
     rw [hcard]
   refine ⟨C,hC,?_⟩
   intro J V X hV hX
-  have htame (m : 𝓔) : (∏ q : P, ReflectionTwist.localFactor q (e q) m) = numeratorTameProduct P e
-    m :=
+  have htame (m : 𝓔) : (∏ q : P, ReflectionTwist.localFactor q (e q) m) =
+    numeratorTameProduct P e m :=
     prod_finset_coe (fun q => ReflectionTwist.localFactor q (e q) m) P
   simpa only [hpre, htame, hzero, hfac, p, j] using heq hV hX
 

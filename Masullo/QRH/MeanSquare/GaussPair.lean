@@ -152,8 +152,8 @@ private lemma moebius_mul_normalizedGauss (cube : DunnRadziwillGaussCube)
         (gaussCoefficient n * conj (gaussCoefficient n) * hu + hv)
     _ = _ := by
       rw [hprod]
-      linear_combination conj (sextic n 4) * conj (gaussCoefficient n) * normalizedGauss n 3 *
-        moebius_sq hn
+      linear_combination conj (sextic n 4) * conj (gaussCoefficient n) *
+        normalizedGauss n 3 * moebius_sq hn
 
 private lemma pairGauss_direct (recip : DunnRadziwillReciprocity) (cube : DunnRadziwillGaussCube)
     {b c : Ideal 𝓔} (hb : Starred b) (hc : Starred c) (h : IsCoprime b c) :
@@ -181,8 +181,8 @@ private def reduceModFour : Ray →+* 𝓔 ⧸ span {(4 : 𝓔)} :=
 /-- The two cubic symbols at the prime over two and the quadratic Gauss sum of the
 product give the correction on residue classes modulo 72. -/
 def pairedGaussCorrection (x y : Ray) : ℂ :=
-  fourCorrection x * conj (fourCorrection y) * DeloupTuraev.quadraticRayValue (reduceModFour (x
-    * y))
+  fourCorrection x * conj (fourCorrection y) * DeloupTuraev.quadraticRayValue
+    (reduceModFour (x * y))
 
 /-- The direct and reverse conversions use the same correction with swapped arguments. -/
 theorem pairedGaussIdentities (recip : DunnRadziwillReciprocity) (cube : DunnRadziwillGaussCube)
@@ -214,8 +214,8 @@ theorem pairedGaussIdentities (recip : DunnRadziwillReciprocity) (cube : DunnRad
       linear_combination -gaussCoefficient b * conj (gaussCoefficient c) * pairGauss c b * hμ
     _ = _ := by
       rw [hrev]
-      linear_combination (idealMoebius c : ℂ) * idealMoebius b * pairedGaussCorrection (ray c) (ray
-        b) *
+      linear_combination (idealMoebius c : ℂ) * idealMoebius b * pairedGaussCorrection
+        (ray c) (ray b) *
         (gaussCoefficient c * conj (gaussCoefficient c) * hb' + hc')
 
 end Masullo.QRH.MeanSquare

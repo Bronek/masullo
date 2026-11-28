@@ -32,8 +32,8 @@ structure SquarefreeKernelBranch (B K X : ℝ) (t G : Idl) where
   primes : Finset Idl
   primes_subset : primes ⊆ (normalizedFactors t).toFinset ∪ (normalizedFactors G).toFinset
   choice : Idl → TameBranch
-  simple : ∀ p ∈ primes, p ∉ normalizedFactors t → (normalizedFactors G).count p = 1 → choice p ≠
-    .ordinary
+  simple : ∀ p ∈ primes, p ∉ normalizedFactors t → (normalizedFactors G).count p = 1 →
+    choice p ≠ .ordinary
   a : ℝ
   Y : ℝ
   amplitude_nonneg : 0 ≤ a
@@ -93,22 +93,22 @@ private theorem branch_length_prod {t G : Idl} (ht : t ≠ 0) (hg : G ≠ 0)
           exact (inv_le_one_of_one_le₀ hq).trans (hq.trans hpow)
     _ ≤ _ := by rw [Finset.prod_pow]; gcongr
 
-private theorem SquarefreeKernelBranch.budgets {B K X : ℝ} {t G : Idl} (b : SquarefreeKernelBranch B
-    K X t G)
+private theorem SquarefreeKernelBranch.budgets {B K X : ℝ} {t G : Idl}
+    (b : SquarefreeKernelBranch B K X t G)
     (hB : 1 ≤ B) (hX : 0 < X) (ht : t ≠ 0) (hg : G ≠ 0) :
     b.a^2 ≤ B^2 ∧ b.a^2*b.Y ≤ B^3*(K*(absNorm t : ℝ))^2*absNorm G/X ∧
       b.Y ≤ B*(K*(absNorm t : ℝ))^2*(absNorm G : ℝ)^2/X := by
   let Y₀ := B * K^2 / X
   have hY₀ : 0 ≤ Y₀ := by dsimp [Y₀]; positivity
   obtain ⟨hw,hY⟩ := ideal_branch_budget ht hg b.primes b.primes_subset b.choice b.simple hY₀
-  refine ⟨b.amplitude.trans ((mul_le_mul_of_nonneg_left hw (sq_nonneg B)).trans_eq (mul_one _)),
-    ?_, ?_⟩
+  refine ⟨b.amplitude.trans ((mul_le_mul_of_nonneg_left hw (sq_nonneg B)).trans_eq
+    (mul_one _)), ?_, ?_⟩
   · calc
       _ ≤ (B^2 * ∏ p ∈ b.primes, (b.choice p).weightSq (absNorm p)) *
           (Y₀ * ∏ p ∈ b.primes, (b.choice p).length (absNorm p)) :=
         mul_le_mul b.amplitude b.length b.length_pos.le ((sq_nonneg b.a).trans b.amplitude)
-      _ ≤ B^2 * (Y₀ * (absNorm t : ℝ)^2 * absNorm G) :=
-        by rw [mul_assoc]; exact mul_le_mul_of_nonneg_left hY (sq_nonneg B)
+      _ ≤ B^2 * (Y₀ * (absNorm t : ℝ)^2 *
+        absNorm G) := by rw [mul_assoc]; exact mul_le_mul_of_nonneg_left hY (sq_nonneg B)
       _ = _ := by dsimp [Y₀]; ring
   · calc
       _ ≤ _ := b.length
@@ -117,8 +117,8 @@ private theorem SquarefreeKernelBranch.budgets {B K X : ℝ} {t G : Idl} (b : Sq
       _ = _ := by dsimp [Y₀]; ring
 
 
-private theorem SquarefreeKernelBranch.sum_rows {B K X : ℝ} {t G : Idl} (b : SquarefreeKernelBranch
-    B K X t G)
+private theorem SquarefreeKernelBranch.sum_rows {B K X : ℝ} {t G : Idl}
+    (b : SquarefreeKernelBranch B K X t G)
     (W : ℝ → ℂ) (R : Finset Idl) : ∑ k ∈ R, ‖b.rowValue W k‖^2 ≤ ‖b.vector W‖^2 := by
   classical
   calc
@@ -126,8 +126,8 @@ private theorem SquarefreeKernelBranch.sum_rows {B K X : ℝ} {t G : Idl} (b : S
       symm
       apply Finset.sum_subset (inter_subset_left)
       intro k hk hk'
-      simp [SquarefreeKernelBranch.rowValue, show k ∉ b.rows from fun h => hk' (mem_inter.mpr
-        ⟨hk,h⟩)]
+      simp [SquarefreeKernelBranch.rowValue, show k ∉ b.rows from fun h =>
+        hk' (mem_inter.mpr ⟨hk,h⟩)]
     _ ≤ ∑ k ∈ b.rows, ‖b.rowValue W k‖^2 :=
       sum_le_sum_of_subset_of_nonneg inter_subset_right (fun _ _ _ => sq_nonneg _)
     _ = _ := by
@@ -136,8 +136,8 @@ private theorem SquarefreeKernelBranch.sum_rows {B K X : ℝ} {t G : Idl} (b : S
       intro k _
       simp [SquarefreeKernelBranch.rowValue, k.property]
 
-private theorem sum_branches {B K X Z : ℝ} {t G : Idl} {n : ℕ} (b : Fin n → SquarefreeKernelBranch B
-    K X t G)
+private theorem sum_branches {B K X Z : ℝ} {t G : Idl} {n : ℕ}
+    (b : Fin n → SquarefreeKernelBranch B K X t G)
     (W : ℝ → ℂ) (R : Finset Idl) (h : ∀ i, ‖(b i).vector W‖^2 ≤ Z) :
     ∑ k ∈ R, ‖∑ i, (b i).rowValue W k‖^2 ≤ (n:ℝ)^2 * Z := by
   classical
@@ -154,8 +154,8 @@ private theorem sum_branches {B K X Z : ℝ} {t G : Idl} {n : ℕ} (b : Fin n �
 
 private theorem squarefree_cover {H : ℝ} (hH : 1 ≤ H) {M : Idl} (hM : M ≠ 0) {s : Idl}
     (hs : s ∈ squarefreeRows H) :
-    ∃ A ⊆ (normalizedFactors M).toFinset, ∃ k ∈ sieveIdeals M (H/absNorm (∏ p ∈ A,p)), (∏ p ∈
-      A,p)*k = s := by
+    ∃ A ⊆ (normalizedFactors M).toFinset, ∃ k ∈ sieveIdeals M (H/absNorm (∏ p ∈ A,p)),
+      (∏ p ∈ A,p)*k = s := by
   classical
   obtain ⟨hsH, hsf⟩ := mem_filter.mp hs
   have hsn := hsf.ne_zero
@@ -182,8 +182,8 @@ private theorem squarefree_cover {H : ℝ} (hH : 1 ≤ H) {M : Idl} (hM : M ≠ 
     have hprime := prime_of_normalized_factor _ (Multiset.mem_toFinset.mp (mem_sdiff.mp hp).1)
     have hmax := ((Ideal.prime_iff_isPrime hprime.ne_zero).mp hprime).isMaximal hprime.ne_zero
     have hnot : ¬p ∣ M := fun hd => (mem_sdiff.mp hp).2
-      (Multiset.mem_toFinset.mpr ((UniqueFactorizationMonoid.mem_normalizedFactors_iff hM).mpr
-        ⟨hprime, hd⟩))
+      (Multiset.mem_toFinset.mpr ((UniqueFactorizationMonoid.mem_normalizedFactors_iff
+        hM).mpr ⟨hprime, hd⟩))
     apply isCoprime_iff_sup_eq.mpr
     by_contra hsup
     have heq := hmax.eq_of_le hsup (le_sup_left : p ≤ p ⊔ M)
@@ -232,12 +232,12 @@ private theorem SquarefreeKernelBranch.squared_bound {B C D H K X ρ C₀ : ℝ}
     _ = _ := by
       rw [mul_assoc B, ← pow_add, ← Real.rpow_mul_natCast hD₀.le]
       norm_num; ring_nf; simp
-  have hKpow : K^ρ ≤ D^(C₀*ρ) :=
-    by rw [Real.rpow_mul hD₀.le]; exact Real.rpow_le_rpow hK₀.le (hKH.trans hH) hρ.le
+  have hKpow : K^ρ ≤
+    D^(C₀*ρ) := by rw [Real.rpow_mul hD₀.le]; exact Real.rpow_le_rpow hK₀.le (hKH.trans hH) hρ.le
   have hYpow : b.Y^(2*ρ) ≤ B^2 * D^((4*C₀)*(2*ρ)) := calc
     _ ≤ (B*D^(4*C₀))^(2*ρ) := Real.rpow_le_rpow hY.le hY' (by positivity)
-    _ = B^(2*ρ)*D^((4*C₀)*(2*ρ)) :=
-      by rw [Real.mul_rpow hB₀.le (Real.rpow_nonneg hD₀.le _),Real.rpow_mul hD₀.le (4*C₀) (2*ρ)]
+    _ = B^(2*ρ)*D^((4*C₀)*(2*ρ)) := by
+      rw [Real.mul_rpow hB₀.le (Real.rpow_nonneg hD₀.le _),Real.rpow_mul hD₀.le (4*C₀) (2*ρ)]
     _ ≤ _ := by
       apply mul_le_mul_of_nonneg_right _ (by positivity)
       simpa using Real.rpow_le_rpow_of_exponent_le hB (show 2*ρ ≤ (2:ℝ) by linarith)

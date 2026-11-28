@@ -26,8 +26,8 @@ def branchColumn (τ : ℂ → ℂ) (ψ : 𝓔 → ℂ) (F : Finset Idl) (j : Id
 /-- The quadratic twist of the unit, ramified factors and the full cube ideal. -/
 def branchRow (F : Finset Idl) (e : F → TameBranch) (u : 𝓔ˣ) (i : Fin 2)
     (h : ℕ) (b k : Idl) : ℂ :=
-  if hk : AwayFromSix k then quadraticResidue hk (eisLambda^h*u*generator (twoPart i*extractedN
-    F e)*
+  if hk : AwayFromSix k then quadraticResidue hk (eisLambda^h*u*generator
+    (twoPart i*extractedN F e)*
     generator (extractedB F e*b)) else 0
 
 theorem norm_branchRow (F : Finset Idl) (e : F → TameBranch) (u : 𝓔ˣ) (i : Fin 2)
@@ -57,13 +57,13 @@ theorem norm_branchColumn {τ : ℂ → ℂ} (hτ : PattersonCoefficients τ) {�
   rw [branchColumn,extendIndex]
   split
   next hs =>
-    let x : ReflectedIndex := ⟨h,u,twoPart i*(extractedN F e*n),extractedB F
-      e*b,hs.2.1,hs.2.2.1,hs.1⟩
-    have hmul : ‖ψ x.numerator * pieceProduct F j e x * x.amplitude τ‖ ≤ ‖pieceProduct F j e x‖
-      := by
+    let x : ReflectedIndex := ⟨h,u,twoPart i*(extractedN F e*n),extractedB
+      F e*b,hs.2.1,hs.2.2.1,hs.1⟩
+    have hmul : ‖ψ x.numerator * pieceProduct F j e x * x.amplitude τ‖ ≤
+      ‖pieceProduct F j e x‖ := by
       rw [norm_mul,norm_mul]
-      exact (mul_le_of_le_one_right (mul_nonneg (norm_nonneg _) (norm_nonneg _)) (x.norm_amplitude
-        hτ)).trans
+      exact (mul_le_of_le_one_right (mul_nonneg (norm_nonneg _) (norm_nonneg _))
+        (x.norm_amplitude hτ)).trans
         (mul_le_of_le_one_left (norm_nonneg _) (hψ _))
     rw [norm_div, norm_mul (↑(Real.sqrt (absNorm (twoPart i*extractedN F e))) : ℂ)
       (absNorm (extractedB F e) : ℂ),Complex.norm_real,Complex.norm_natCast,Real.norm_of_nonneg
@@ -80,8 +80,8 @@ private theorem quadratic_cube {k : Idl} (hk : AwayFromSix k) (y : 𝓔) :
   rw [map_pow]
   by_cases h : IsCoprime k (span {y})
   · rw [pow_succ,quadraticResidue_sq hk h,one_mul]
-  · have hz : quadraticResidue hk y = 0 := by_contra fun h' => h ((quadraticResidue_ne_zero
-      hk).mp h')
+  · have hz : quadraticResidue hk y = 0 := by_contra fun h' =>
+      h ((quadraticResidue_ne_zero hk).mp h')
     simp [hz]
 
 set_option maxHeartbeats 1000000 in
@@ -116,15 +116,15 @@ theorem extendIndex_indexTerm_eq_rawKernelTerm (τ : ℂ → ℂ) (W : ℝ → �
       dsimp only [A,D,B]
       ac_rfl
     have hNs : (absNorm x.n : ℝ) = (absNorm A:ℝ) * absNorm n := by rw [hx,map_mul,Nat.cast_mul]
-    have hBs : (absNorm x.b : ℝ) = (absNorm B:ℝ) * absNorm b :=
-      by change (absNorm (B*b):ℝ) = _; rw [map_mul,Nat.cast_mul]
+    have hBs : (absNorm x.b : ℝ) = (absNorm B:ℝ) *
+      absNorm b := by change (absNorm (B*b):ℝ) = _; rw [map_mul,Nat.cast_mul]
     have hBz : (absNorm x.b : ℂ) = (absNorm B:ℂ) * absNorm b := by exact_mod_cast hBs
-    have hNsqrt : (Real.sqrt (absNorm x.n) : ℂ) = (Real.sqrt (absNorm A) : ℂ) * Real.sqrt (absNorm
-      n) := by
+    have hNsqrt : (Real.sqrt (absNorm x.n) : ℂ) = (Real.sqrt (absNorm A) : ℂ) *
+      Real.sqrt (absNorm n) := by
       rw [hNs,Real.sqrt_mul (by positivity),Complex.ofReal_mul]
     have harg : normSq (pattersonFrequency x.numerator)*X/(‖eisEmbedding c‖^2)^2 =
-        (3:ℝ)^((h:ℤ)-3) * absNorm n * (absNorm b:ℝ)^3 * absNorm A * (absNorm B:ℝ)^3*X/(Q*absNorm
-          k)^2 := by
+        (3:ℝ)^((h:ℤ)-3) * absNorm n * (absNorm b:ℝ)^3 * absNorm A *
+          (absNorm B:ℝ)^3*X/(Q*absNorm k)^2 := by
       rw [x.normSq_frequency,hc,hNs,hBs]
       change (3:ℝ)^((h:ℤ)-3)*((absNorm A:ℝ)*absNorm n)*((absNorm B:ℝ)*absNorm b)^3*X/_ = _
       ring

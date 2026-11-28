@@ -15,8 +15,8 @@ theorem sum_norm_weighted_sum_sq_le {ι κ : Type*} (s : Finset ι) (rows : Fins
   have hrow (x : κ) (hx : x ∈ rows) :
       ‖∑ i ∈ s, w i x * v i x‖ ^ 2 ≤ (∑ i ∈ s, u i) * ∑ i ∈ s, u i * ‖v i x‖ ^ 2 := by
     refine (pow_le_pow_left₀ (norm_nonneg _) (norm_sum_le ..) 2).trans
-      (Finset.sum_sq_le_sum_mul_sum_of_sq_le_mul s hu (fun i hi => mul_nonneg (hu i hi) (sq_nonneg
-        _)) ?_)
+      (Finset.sum_sq_le_sum_mul_sum_of_sq_le_mul s hu (fun i hi =>
+        mul_nonneg (hu i hi) (sq_nonneg _)) ?_)
     intro i hi
     rw [norm_mul, mul_pow]
     calc
@@ -87,8 +87,8 @@ theorem ideal_harmonic_envelope {C₀ δ : ℝ} (hC₀ : 1 ≤ C₀) (hδ : 0 < 
   have hL : 0 ≤ L := by dsimp [L]; positivity
   refine ⟨A * L * R ^ η, by positivity, ?_⟩
   intro D X hD hX hXD s hs
-  obtain ⟨m, hm, htop⟩ := exists_nat_pow_near (one_le_mul_of_one_le_of_one_le hR hX) (by
-    norm_num : (1 : ℝ) < 2)
+  obtain ⟨m, hm, htop⟩ := exists_nat_pow_near (one_le_mul_of_one_le_of_one_le hR hX)
+    (by norm_num : (1 : ℝ) < 2)
   have hsub : s ⊆ idealsLe ((2 : ℝ) ^ (m + 1)) := fun b hb =>
     (mem_idealsLe (by positivity)).mpr ((hs b hb).trans htop.le)
   have hb : (m : ℝ) ≤ r ^ m / (r - 1) := by

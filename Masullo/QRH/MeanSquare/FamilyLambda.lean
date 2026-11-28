@@ -34,8 +34,8 @@ private def lambdaResidueEquiv : (𝓔 ⧸ lambdaIdeal) ≃+* ZMod 3 := by
   refine (ZMod.ringEquivOfPrime _ (by decide : Nat.Prime 3) ?_).symm
   rw [← Nat.card_eq_fintype_card]
   change Nat.card (𝓔 ⧸ span {rootSpec.toInteger - 1}) = 3
-  rw [rootSpec.card_quotient_toInteger_sub_one, rootSpec.norm_toInteger_sub_one_of_prime_ne_two' (by
-    decide)]
+  rw [rootSpec.card_quotient_toInteger_sub_one,
+    rootSpec.norm_toInteger_sub_one_of_prime_ne_two' (by decide)]
   decide
 
 lemma absNorm_lambdaIdeal : absNorm lambdaIdeal = 3 := by
@@ -59,8 +59,8 @@ theorem lambdaSign_congr {x y : 𝓔} (h : eisOmega - 1 ∣ x - y) : lambdaSign 
     change ((quadraticChar (ZMod 3) z : ℤ) : ℂ) = 0 ↔ _
     rw [Int.cast_eq_zero, quadraticChar_eq_zero_iff]
   change modThreeSign (lambdaResidueEquiv (Ideal.Quotient.mk lambdaIdeal x)) = 0 ↔ _
-  rw [h, EmbeddingLike.map_eq_zero_iff, Ideal.Quotient.eq_zero_iff_mem, lambdaIdeal,
-    mem_span_singleton]
+  rw [h, EmbeddingLike.map_eq_zero_iff, Ideal.Quotient.eq_zero_iff_mem,
+    lambdaIdeal, mem_span_singleton]
 
 theorem lambdaSign_ne_zero_iff {x : 𝓔} : lambdaSign x ≠ 0 ↔ IsCoprime lambdaIdeal (span {x}) := by
   have hP := (Ideal.prime_iff_isPrime lambdaIdeal_prime.ne_zero).mp lambdaIdeal_prime
@@ -132,8 +132,8 @@ theorem sextic_cubed_unit {n : Ideal 𝓔} (hn : AwayFromSix n) (u : 𝓔ˣ) :
     change (sexticChar hn ^ 3) (Ideal.Quotient.mk n x) = _
     rw [MulChar.pow_apply' _ (by decide : 3 ≠ 0), sexticChar_apply_mk]
   have hω : χ eisOmega = 1 := by
-    rw [hχ, ← sexticChar_apply_mk hn, ← map_pow, ← map_pow, omega_primitive.pow_eq_one, map_one,
-      map_one]
+    rw [hχ, ← sexticChar_apply_mk hn, ← map_pow, ← map_pow, omega_primitive.pow_eq_one,
+      map_one, map_one]
   simpa only [hχ] using quadratic_unit_rules χ hω u
 
 end Masullo.QRH.MeanSquare

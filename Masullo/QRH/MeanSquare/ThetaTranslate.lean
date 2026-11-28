@@ -20,8 +20,8 @@ private theorem rayPhase_mul (k : ℕ) (h : 𝓔) (x : RayResidue k) :
 /-- Use the given generator `8λᵏ` for the additive different pairing. -/
 def rayAddChar (k : ℕ) : AddChar (RayResidue k) ℂ where
   toFun := rayPhase k 1
-  map_zero_eq_one' :=
-    by rw [← map_zero (Ideal.Quotient.mk (rayModulus k)), rayPhase_mk]; simp [differentCharacter]
+  map_zero_eq_one' := by
+    rw [← map_zero (Ideal.Quotient.mk (rayModulus k)), rayPhase_mk]; simp [differentCharacter]
   map_add_eq_mul' x y := by
     obtain ⟨a,rfl⟩ := Ideal.Quotient.mk_surjective x
     obtain ⟨b,rfl⟩ := Ideal.Quotient.mk_surjective y
@@ -110,8 +110,8 @@ theorem PattersonExpansion.ray_translates {θ : ℂ → ℝ → ℂ} {τ : ℂ �
       let l := eisEmbedding m.val / eisEmbedding eisLambda ^ 3
       W (Ideal.Quotient.mk (rayModulus 7) m.val) * (τ l * v *
         besselK (1 / 3) (4 * Real.pi * ‖l‖ * v) * pattersonCharacter (l * z)))
-      ((∑ h, rayFourierCoeff 7 W h * θ (z + rayShift h) v) - W 0 * (σ * (v ^ (2 / 3 : ℝ) : ℝ)))
-        := by
+      ((∑ h, rayFourierCoeff 7 W h * θ (z + rayShift h) v) - W 0 * (σ * (v ^ (2 /
+        3 : ℝ) : ℝ))) := by
   have hh := hasSum_sum (s := (univ : Finset (RayResidue 7))) (fun h _ =>
     (hθ (z + rayShift h) v hv).mul_left (rayFourierCoeff 7 W h))
   have h₀ : ∑ h, rayFourierCoeff 7 W h = W 0 := by

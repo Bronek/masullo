@@ -50,7 +50,7 @@ def PairedGaussIdentities : Prop :=
         gaussCoefficient b * conj (gaussCoefficient c) * A (r b) (r c) ∧
       gaussCoefficient b * conj (gaussCoefficient c) * pairGauss c b =
         (idealMoebius b : ℂ) * idealMoebius c * B (r b) (r c) ∧
-      gaussCoefficient (b * c) = gaussCoefficient b * gaussCoefficient c * sextic c (generator
-        b) ^ 4
+      gaussCoefficient (b * c) = gaussCoefficient b * gaussCoefficient c *
+        sextic c (generator b) ^ 4
 
 end Masullo.QRH.MeanSquare

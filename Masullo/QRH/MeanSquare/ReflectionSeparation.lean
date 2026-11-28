@@ -74,16 +74,16 @@ theorem reflectionKernel_separate (hΓ : DLMFGammaVertical) (I : TestInterval) :
     have hr₀ := hz.trans_le hr
     have h₁ := reflectionKernel_shift hΓ hσ.1 (by norm_num) 0
       (I := I) (W := W) (hw.of_le (by
-        have hceil : ⌈4 * max σ 0⌉₊ ≤ 12 := Nat.ceil_le.mpr (by
-          rw [max_eq_left hσ.1]; norm_num; linarith [hσ.2])
+        have hceil : ⌈4 * max σ 0⌉₊ ≤ 12 :=
+          Nat.ceil_le.mpr (by rw [max_eq_left hσ.1]; norm_num; linarith [hσ.2])
         omega)) (mul_pos hx₀ hr₀)
     rw [h₁, reflectionKernel, ← integral_div]
     apply integral_congr_ae (ae_of_all _ fun y => ?_)
     have hprod : (S * (x*r) : ℝ) = (S*r) * x := by ring
     change (reflectionKernelAmplitude W 0 (t y) * ((S*(x*r) : ℝ) : ℂ) ^ (-t y)) /
       (2*Real.pi) = Q r y * P x y
-    rw [hprod, Complex.ofReal_mul, Complex.ofReal_mul_cpow (mul_nonneg (zero_lt_one.trans_le hS).le
-      hr₀.le)]
+    rw [hprod, Complex.ofReal_mul, Complex.ofReal_mul_cpow (mul_nonneg (zero_lt_one.trans_le
+      hS).le hr₀.le)]
     dsimp only [P,Q]
     ring
 
@@ -135,8 +135,8 @@ theorem kernel_dyadic_block (quad : DeloupTuraevTheorem1)
       ‖A b t k‖ ≤ H/(1+z)^3/(1+|t|)^2 := by
     dsimp [A]
     rw [norm_mul]
-    exact (mul_le_mul (hd b hb k hk) ((hQ _ (hu b hb k hk)).2 t) (norm_nonneg _) (by
-      norm_num)).trans_eq (one_mul _)
+    exact (mul_le_mul (hd b hb k hk) ((hQ _ (hu b hb k hk)).2 t) (norm_nonneg _)
+      (by norm_num)).trans_eq (one_mul _)
   let w b k n := d b k * (c b n / (Real.sqrt (absNorm n) : ℂ)) * primaryQuadraticSymbol n k
   let f b k n t := w b k n * (Q (u b k) t * P (x n) t)
   have hi b (hb : b ∈ T) k (hk : k ∈ R) n (hn : n ∈ S) : Integrable (f b k n) := by

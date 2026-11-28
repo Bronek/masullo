@@ -42,16 +42,16 @@ private theorem truncated_rows_bound {I : TestInterval} {j : ℕ} {W : ℝ → �
     (hH : 1 ≤ H) (hV : 0 ≤ V)
     (hm : ∀ s : Finset (Ideal 𝓔), (∀ b ∈ s, (absNorm b : ℝ) ≤ max I.hi 1 * X) →
       ∑ b ∈ s, 1 / (absNorm b : ℝ) ≤ H)
-    (hc : ∀ b ∈ cubeIdeals Y, ∑ p ∈ cubeRows K F, ‖completedSum ξ W (X / cubeNorm b) p.2 p.1‖ ^
-      2 ≤ V)
+    (hc : ∀ b ∈ cubeIdeals Y, ∑ p ∈ cubeRows K F,
+      ‖completedSum ξ W (X / cubeNorm b) p.2 p.1‖ ^ 2 ≤ V)
     (ht : ∀ b : Ideal 𝓔, AwayFromSix b → Y < cubeNorm b →
       ∑ p ∈ cubeRows K F, ‖normalizedColumn ξ W (X / cubeNorm b) p.2 p.1‖ ^ 2 ≤ V) :
     ∑ p ∈ cubeRows K F, ‖normalizedColumn ξ W X p.2 p.1‖ ^ 2 ≤ 4 * H ^ 4 * V := by
   classical
   let rows := cubeRows K F
   let S := cubeIdeals Y
-  let T (b : Ideal 𝓔) := (cubeIdeals (max I.hi 1 * X / cubeNorm b)).filter (fun d => Y <
-    cubeNorm (b * d))
+  let T (b : Ideal 𝓔) := (cubeIdeals (max I.hi 1 * X / cubeNorm b)).filter (fun d =>
+    Y < cubeNorm (b * d))
   let u (b : Ideal 𝓔) := 1 / (absNorm b : ℝ)
   let w (b : Ideal 𝓔) (p : Ideal 𝓔 × 𝓔) := cubeWeight ξ p.2 p.1 b
   let μw (b : Ideal 𝓔) (p : Ideal 𝓔 × 𝓔) := (idealMoebius b : ℂ) * w b p
@@ -87,8 +87,8 @@ private theorem truncated_rows_bound {I : TestInterval} {j : ℕ} {W : ℝ → �
   nlinarith [mul_le_mul_of_nonneg_right hle' hV]
 
 /-- Invert cube completion up to the cutoff `min X (X²/K²)`. -/
-theorem cubeTailEstimate_of_completedEstimate (hg : GaussCoefficientBound) (completed :
-    CompletedEstimate) :
+theorem cubeTailEstimate_of_completedEstimate (hg : GaussCoefficientBound)
+    (completed : CompletedEstimate) :
     CubeTailEstimate := by
   classical
   intro C₀ hC₀ ε hε
@@ -117,25 +117,25 @@ theorem cubeTailEstimate_of_completedEstimate (hg : GaussCoefficientBound) (comp
   have hsm : G * K ≤ V := calc
     _ ≤ G * (X * F) := mul_le_mul_of_nonneg_left hKX hG
     _ ≤ (J * d) * (X * F + B) :=
-      mul_le_mul ((le_mul_of_one_le_right (by dsimp [J]; linarith) hd).trans' (by
-        dsimp [J]; linarith))
+      mul_le_mul ((le_mul_of_one_le_right (by dsimp [J]; linarith) hd).trans'
+        (by dsimp [J]; linarith))
         (by linarith) hXF (by positivity)
-  have hBV : B ≤ V := (show B ≤ X * F + B by linarith).trans (le_mul_of_one_le_left (by
-    positivity) hJu)
+  have hBV : B ≤ V := (show B ≤ X * F + B by linarith).trans (le_mul_of_one_le_left
+    (by positivity) hJu)
   have hCV : C * d * (X * F) ≤ V := mul_le_mul
     (mul_le_mul_of_nonneg_right (by dsimp [J]; linarith : C ≤ J) (by linarith)) (by linarith) hXF
       (by positivity)
   have hchild' (b : Ideal 𝓔) (hb : AwayFromSix b) (hY : Y < cubeNorm b) :
       (∑ p ∈ cubeRows K F, ‖normalizedColumn ξ W (X / cubeNorm b) p.2 p.1‖ ^ 2) ≤ F * V := by
-    have hL : 0 < X / cubeNorm b := div_pos (by linarith) (zero_lt_one.trans_le (cubeNorm_one_le
-      hb))
+    have hL : 0 < X / cubeNorm b := div_pos (by linarith) (zero_lt_one.trans_le
+      (cubeNorm_one_le hb))
     by_cases h₁ : 1 < X / cubeNorm b
     · exact (cube_child_bound hL (by linarith) (hchild b hb hY h₁)).trans
         (mul_le_mul_of_nonneg_left hBV (by linarith))
     · exact (hsmall K _ F ξ W hK hL (le_of_not_gt h₁) hF (hW.of_le (Nat.zero_le _))).trans
         (mul_le_mul_of_nonneg_left hsm (by linarith))
-  have hrows : (∑ p ∈ cubeRows K F, ‖normalizedColumn ξ W X p.2 p.1‖ ^ 2) ≤ 4 * H ^ 4 * (F *
-    V) := by
+  have hrows : (∑ p ∈ cubeRows K F, ‖normalizedColumn ξ W X p.2 p.1‖ ^ 2) ≤ 4 * H ^
+    4 * (F * V) := by
     by_cases hY : 1 ≤ Y
     · have hYX : Y ≤ R * X := (min_le_left ..).trans (le_mul_of_one_le_left (by linarith) hR)
       refine truncated_rows_bound hW ξ (by linarith) hY hYX hH (by positivity) ?_ ?_ hchild'
@@ -145,8 +145,8 @@ theorem cubeTailEstimate_of_completedEstimate (hg : GaussCoefficientBound) (comp
       · intro b hb
         exact (hcomp D K X F _ ξ W hD hK hX hF hKX hsize (cubeNorm_one_le (mem_cubeIdeals.mp hb).1)
           (mem_cubeIdeals.mp hb).2 hW).trans (mul_le_mul_of_nonneg_left hCV (by linarith))
-    · have h := hchild' 1 ⟨one_ne_zero, isCoprime_one_left⟩ (by
-        rw [cubeNorm_one]; exact lt_of_not_ge hY)
+    · have h := hchild' 1 ⟨one_ne_zero,
+        isCoprime_one_left⟩ (by rw [cubeNorm_one]; exact lt_of_not_ge hY)
       rw [cubeNorm_one, div_one] at h
       exact h.trans (le_mul_of_one_le_left (by positivity) (by nlinarith [one_le_pow₀ hH (n := 4)]))
   change (∑ p ∈ cubeRows K F, ‖columnSum ξ W X p.2 p.1 / (Real.sqrt X : ℂ)‖ ^ 2) ≤ _ at hrows

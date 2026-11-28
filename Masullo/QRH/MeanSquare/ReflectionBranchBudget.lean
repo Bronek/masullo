@@ -78,8 +78,8 @@ private theorem fixed_norm_sq_le {h : RayResidue 7} (D : FixedCusp h) :
     rw [hg, elementNorm, ← span_singleton_mul_span_singleton, map_mul]
     rfl
   have hNat : 0 < elementNorm (8*eisLambda^7) := by exact_mod_cast elementNorm_pos h₀
-  have hLe : (elementNorm D.c : ℝ) ≤ elementNorm (8*eisLambda^7) :=
-    by exact_mod_cast Nat.le_of_dvd hNat hd
+  have hLe : (elementNorm D.c : ℝ) ≤ elementNorm (8*eisLambda^7) := by
+    exact_mod_cast Nat.le_of_dvd hNat hd
   exact (pow_le_pow_left₀ (Nat.cast_nonneg _) hLe 2).trans (le_max_right ..)
 
 /-- Budget fields of a squarefree kernel branch, before specifying its column
@@ -88,21 +88,21 @@ structure Bounds {h : RayResidue 7} (D : FixedCusp h) (F : Finset Idl) (e : F �
     (i : Fin 2) (K X : ℝ) (t y : Idl) : Prop where
   primes_subset : F ⊆ (normalizedFactors t).toFinset ∪ (normalizedFactors y).toFinset
   good : ∀ p ∈ F, AwayFromSix p ∧ Prime p
-  simple : ∀ p ∈ F, p ∉ normalizedFactors t → (normalizedFactors y).count p = 1 → choice F e p ≠
-    .ordinary
+  simple : ∀ p ∈ F, p ∉ normalizedFactors t → (normalizedFactors y).count p = 1 →
+    choice F e p ≠ .ordinary
   Q_pos : 0 < Q D F
   N_pos : 0 < N i F e
   L_pos : 0 < L F e
   amplitude_nonneg : 0 ≤ a F e
   amplitude : (a F e)^2 ≤ B^2 * ∏ p ∈ F, (choice F e p).weightSq (absNorm p)
-  length : (Q D F)^2*K^2/(N i F e * (L F e)^3*X) ≤ B*K^2/X * ∏ p ∈ F, (choice F e
-    p).length (absNorm p)
+  length : (Q D F)^2*K^2/(N i F e * (L F e)^3*X) ≤ B*K^2/X * ∏ p ∈ F,
+    (choice F e p).length (absNorm p)
 
 theorem of_active {K X : ℝ} (hK : 1 ≤ K) (hX : 1 ≤ X) {t y T G : Idl}
     (ht : t ≠ 0) (hy : y ≠ 0) (hT : AwayFromSix T) (hG : AwayFromSix G) (hTt : T ∣ t) (hGy : G ∣ y)
     {h : RayResidue 7} (D : FixedCusp h) (F : Finset Idl) (hF : F ⊆ support (T*G))
-    (i : Fin 2) (η : TameAssignment (fun p => exponent T G p % 6) F) : Bounds D F η.val i K X t y
-      := by
+    (i : Fin 2) (η : TameAssignment (fun p => exponent T G p % 6) F)
+      : Bounds D F η.val i K X t y := by
   have hgood := primes_good hT hG hF
   have hη := Fintype.mem_piFinset.mp η.2
   have hactive (p : F) : η.val p ≠ .inactive := by
@@ -125,8 +125,8 @@ theorem of_active {K X : ℝ} (hK : 1 ≤ K) (hX : 1 ≤ X) {t y T G : Idl}
   refine ⟨hF.trans (fixedSupport_subset ht hy hTt hGy),hgood,?_,hQ,
     hN ▸ mul_pos (zero_lt_one.trans_le h₂) hn,hl,mul_nonneg hH.le (Real.sqrt_nonneg _),?_,?_⟩
   · intro p hp hpt hpy
-    have hj := simple_exponent ht hy hTt hGy (hF hp) (fun hh => hpt (Multiset.mem_toFinset.mp
-      hh)) hpy
+    have hj := simple_exponent ht hy hTt hGy (hF hp) (fun hh =>
+      hpt (Multiset.mem_toFinset.mp hh)) hpy
     have hx := hη ⟨p,hp⟩
     simp only [hj, Nat.reduceMod, activeChoices, ↓reduceIte] at hx
     intro h
@@ -154,7 +154,7 @@ theorem of_active {K X : ℝ} (hK : 1 ≤ K) (hX : 1 ≤ X) {t y T G : Idl}
       _ ≤ c^2 * K^2 / X * (w^2/(n*l^3)) := div_le_self (by positivity) h₂
       _ ≤ _ := by
         apply mul_le_mul_of_nonneg_right _ (by positivity)
-        exact div_le_div_of_nonneg_right (mul_le_mul_of_nonneg_right (fixed_norm_sq_le D) (sq_nonneg
-          K)) hx.le
+        exact div_le_div_of_nonneg_right (mul_le_mul_of_nonneg_right (fixed_norm_sq_le D)
+          (sq_nonneg K)) hx.le
 
 end Masullo.QRH.MeanSquare.ReflectionSieve.BranchBudget

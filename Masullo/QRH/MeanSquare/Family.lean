@@ -14,8 +14,8 @@ local notation "𝓔" => 𝓞 (CyclotomicField 3 ℚ)
 
 private lemma away_of_coprime_seventyTwo {n : Ideal 𝓔} (hn : n ≠ 0)
     (hc : IsCoprime n (span {72})) : AwayFromSix n :=
-  ⟨hn, hc.of_isCoprime_of_dvd_right (span_singleton_dvd_span_singleton_iff_dvd.mpr ⟨12,
-    by norm_num⟩)⟩
+  ⟨hn, hc.of_isCoprime_of_dvd_right (span_singleton_dvd_span_singleton_iff_dvd.mpr
+    ⟨12, by norm_num⟩)⟩
 
 private lemma minus_one_sq {a : Ideal 𝓔} (ha : AwayFromSix a) :
     quadraticResidue ha (-1) ^ 2 = 1 := by
@@ -52,8 +52,8 @@ private theorem same_class_product (quad : DeloupTuraevTheorem1) {a b : Ideal �
       exact hdb.of_mul_right_right.symm
     simp only [correctedQuadratic, hε, ite_eq_right hx, MonoidHom.mul_apply,
       show ∀ x : 𝓔, lambdaSign.toMonoidHom x = lambdaSign x from fun _ => rfl]
-    linear_combination -(quadraticResidue ha.1 (generator d) * quadraticResidue hb.1 (generator
-      d)) *
+    linear_combination -(quadraticResidue ha.1 (generator d) *
+      quadraticResidue hb.1 (generator d)) *
       lambdaSign_sq hram
 
 open Classical in
@@ -128,8 +128,8 @@ theorem quadraticSieve_of_goldmakherLouvel (hGL : EisensteinGoldmakherLouvel)
     have har := hr' ha
     have hbc := hc' hb
     simp only [sieveIdeals, Finset.mem_filter] at har hbc
-    exact eisensteinQuadraticCharacter_eq_symbol (away_of_coprime_seventyTwo har.2.1.ne_zero
-      har.2.2)
+    exact eisensteinQuadraticCharacter_eq_symbol (away_of_coprime_seventyTwo
+      har.2.1.ne_zero har.2.2)
       (away_of_coprime_seventyTwo hbc.2.1.ne_zero hbc.2.2)
   have hrow (a) (ha : a ∈ rows) : ∑ b ∈ cols, z b * eisensteinQuadraticCharacter b a =
       ∑ b ∈ cols, z b * primaryQuadraticSymbol a b :=

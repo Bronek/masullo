@@ -132,8 +132,8 @@ theorem PattersonCoefficients.exists_primary_cube {τ : ℂ → ℂ} (hτ : Patt
     ∃ c d : 𝓔, eisPrimary c ∧ eisPrimary d ∧ Squarefree c ∧
       (m = c * d ^ 3 ∨ m = -(c * d ^ 3)) := by
   classical
-  obtain ⟨r, hr⟩ : ∃ r : PattersonRow, eisEmbedding m = r.frequency ∨ eisEmbedding m = -r.frequency
-    := by
+  obtain ⟨r, hr⟩ : ∃ r : PattersonRow, eisEmbedding m = r.frequency ∨ eisEmbedding m =
+    -r.frequency := by
     by_contra! h
     exact ht (hτ.2 _ h)
   have hLambda : eisEmbedding eisLambda ≠ 0 :=

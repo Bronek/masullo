@@ -12,8 +12,8 @@ namespace Masullo.QRH.MeanSquare
 
 theorem UnitTest.derivative {I : TestInterval} {m : ℕ} {W : ℝ → ℂ} (h : UnitTest I (m+1) W) :
     UnitTest I m (deriv W) := by
-  refine ⟨(contDiff_infty_iff_deriv.mp h.1).2, tsupport_deriv_subset.trans h.2.1, fun j hj x hx
-    => ?_⟩
+  refine ⟨(contDiff_infty_iff_deriv.mp h.1).2, tsupport_deriv_subset.trans h.2.1,
+    fun j hj x hx => ?_⟩
   rw [← iteratedDeriv_succ']
   exact h.2.2 _ (Nat.succ_le_succ hj) _ hx
 
@@ -37,8 +37,8 @@ private theorem cpow_continuousOn_test (I : TestInterval) (s : ℂ) :
   have := I.pos
   have := I.ordered
   rw [uIcc_of_le (by linarith)]
-  exact fun x hx => (continuousAt_ofReal_cpow_const _ _ (Or.inr (by
-    linarith [hx.1]))).continuousWithinAt
+  exact fun x hx => (continuousAt_ofReal_cpow_const _ _ (Or.inr
+    (by linarith [hx.1]))).continuousWithinAt
 
 /-- Integration by parts with both endpoints outside the support. -/
 theorem UnitTest.mellin_deriv {I : TestInterval} {m : ℕ} {W : ℝ → ℂ} (h : UnitTest I (m+1) W)
@@ -132,8 +132,8 @@ theorem UnitTest.mellin_entire {I : TestInterval} {m : ℕ} {W : ℝ → ℂ} (h
   · linarith
   · refine IsBigO.of_bound 0 ?_
     filter_upwards [nhdsWithin_le_nhds (Iio_mem_nhds I.pos)] with x hx
-    simp [image_eq_zero_of_notMem_tsupport (f := W) (fun ht => (show x < I.lo from hx).not_ge (h.2.1
-      ht).1)]
+    simp [image_eq_zero_of_notMem_tsupport (f := W) (fun ht =>
+      (show x < I.lo from hx).not_ge (h.2.1 ht).1)]
   · linarith
 
 end Masullo.QRH.MeanSquare

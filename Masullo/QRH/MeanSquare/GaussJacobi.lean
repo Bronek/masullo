@@ -52,8 +52,8 @@ theorem gaussSum_duplication {χ : MulChar F ℂ} {ψ : AddChar F ℂ} (hψ : ψ
   change gaussSum (χ * φ) ψ * jacobiSum χ φ = _ at hχφ
   rw [← jacobiSum_duplication hχ hF] at hχφ
   rw [← sq] at hχχ
-  apply mul_left_cancel₀ (gaussSum_ne_zero_of_nontrivial (by
-    exact_mod_cast Fintype.card_ne_zero) hχ hψ)
+  apply mul_left_cancel₀ (gaussSum_ne_zero_of_nontrivial
+    (by exact_mod_cast Fintype.card_ne_zero) hχ hψ)
   linear_combination χ 4 * gaussSum (χ * φ) ψ * (-hχχ) + gaussSum (χ ^ 2) ψ * hχφ
 
 lemma cubic_power_eq_quadraticChar {χ : MulChar F ℂ} (hχ : orderOf χ = 6)
@@ -143,11 +143,11 @@ theorem orderOf_sexticChar_prime {P : Ideal 𝓔} (hP : AwayFromSix P) (hp : Pri
   apply Nat.dvd_antisymm (orderOf_dvd_of_pow_eq_one hpow)
   obtain ⟨g, hg⟩ := IsCyclic.exists_generator (α := (𝓔 ⧸ P)ˣ)
   obtain ⟨a, ha⟩ := Ideal.Quotient.mk_surjective (g : 𝓔 ⧸ P)
-  have hq := order_dvd_norm_sub_one hp (primitive_mod_prime hp (six_notMem hp hP)
-    neg_omega_primitive)
+  have hq := order_dvd_norm_sub_one hp (primitive_mod_prime hp
+    (six_notMem hp hP) neg_omega_primitive)
   have hgN : orderOf (g : 𝓔 ⧸ P) = absNorm P - 1 := by
-    rw [orderOf_units, orderOf_eq_card_of_forall_mem_zpowers hg, Nat.card_units,
-      Ideal.absNorm_eq_natCard]
+    rw [orderOf_units, orderOf_eq_card_of_forall_mem_zpowers hg,
+      Nat.card_units, Ideal.absNorm_eq_natCard]
   have hg₀ : orderOf (g : 𝓔 ⧸ P) ≠ 0 := by rw [orderOf_units]; exact (orderOf_pos g).ne'
   have hj := orderOf_pow_orderOf_div hg₀ (hgN ▸ hq)
   rw [hgN] at hj
@@ -157,11 +157,11 @@ theorem orderOf_sexticChar_prime {P : Ideal 𝓔} (hP : AwayFromSix P) (hp : Pri
   rw [← ha'] at hj
   apply hj ▸ orderOf_dvd_of_pow_eq_one ?_
   rw [← map_pow]
-  have hpos : orderOf (sexticChar hP) ≠ 0 := (isOfFinOrder_iff_pow_eq_one.mpr ⟨6,
-    by decide, hpow⟩).orderOf_pos.ne'
+  have hpos : orderOf (sexticChar hP) ≠ 0 := (isOfFinOrder_iff_pow_eq_one.mpr
+    ⟨6, by decide, hpow⟩).orderOf_pos.ne'
   have hv := DFunLike.congr_fun (pow_orderOf_eq_one (sexticChar hP)) (g : 𝓔 ⧸ P)
-  rw [MulChar.pow_apply' _ hpos, MulChar.one_apply g.isUnit, ← ha, sexticChar_apply_mk,
-    sextic] at hv
+  rw [MulChar.pow_apply' _ hpos, MulChar.one_apply g.isUnit, ← ha,
+    sexticChar_apply_mk, sextic] at hv
   simp only [powerResidueSymbol, ite_eq_right hP.1, normalizedFactors_irreducible hp.irreducible,
     normalize_eq, Multiset.map_singleton, Multiset.prod_singleton] at hv
   rw [← map_pow] at hv
@@ -181,8 +181,8 @@ theorem gaussSum_three_eq_sum_sq_prime {P : Ideal 𝓔} (hP : AwayFromSix P) (hp
     have h := quadraticChar_card_sqrts (ringChar_quotient_ne_two hp hP) t
     rw [Set.toFinset_ofPred] at h
     exact_mod_cast h
-  rw [cubic_power_eq_quadraticChar (orderOf_sexticChar_prime hP hp) (ringChar_quotient_ne_two hp
-    hP),
+  rw [cubic_power_eq_quadraticChar (orderOf_sexticChar_prime hP hp)
+    (ringChar_quotient_ne_two hp hP),
     ← univ.sum_fiberwise' (fun x : 𝓔 ⧸ P => x ^ 2) ψ]
   have hn : ψ ≠ 1 := fun h => hψ one_ne_zero (by simp [h])
   simp only [sum_const, nsmul_eq_mul, hcount, add_mul, one_mul, sum_add_distrib,
@@ -196,21 +196,21 @@ lemma normalizedGauss_eq_gaussSum {n : Ideal 𝓔} (hn : AwayFromSix n) [Fintype
   simp only [normalizedGauss, finsum_eq_sum_of_fintype, gaussSum, MulChar.pow_apply' _ hj]
   rfl
 
-private theorem normalizedGauss_duplication_prime {P : Ideal 𝓔} (hP : AwayFromSix P) (hp : Prime
-    P) :
+private theorem normalizedGauss_duplication_prime {P : Ideal 𝓔} (hP : AwayFromSix P)
+    (hp : Prime P) :
     sextic P 4 * normalizedGauss P 1 = normalizedGauss P 2 ^ 2 * normalizedGauss P 3 := by
   classical
   let : P.IsMaximal := ((Ideal.prime_iff_isPrime hp.ne_zero).mp hp).isMaximal hp.ne_zero
   let := Ideal.Quotient.field P
   let := Ring.HasFiniteQuotients.finiteQuotient hp.ne_zero
   let := Fintype.ofFinite (𝓔 ⧸ P)
-  have h := normalized_gaussSum_sextic (orderOf_sexticChar_prime hP hp) (ringChar_quotient_ne_two
-    hp hP)
+  have h := normalized_gaussSum_sextic (orderOf_sexticChar_prime hP hp)
+    (ringChar_quotient_ne_two hp hP)
     (quotientDifferentCharacter_isPrimitive hP.1)
-  have he : sexticChar hP 4 = sextic P 4 :=
-    by rw [← map_ofNat (Ideal.Quotient.mk P) 4, sexticChar_apply_mk]
-  simpa only [normalizedGauss_eq_gaussSum hP one_ne_zero, normalizedGauss_eq_gaussSum hP
-    two_ne_zero,
+  have he : sexticChar hP 4 =
+    sextic P 4 := by rw [← map_ofNat (Ideal.Quotient.mk P) 4, sexticChar_apply_mk]
+  simpa only [normalizedGauss_eq_gaussSum hP one_ne_zero,
+    normalizedGauss_eq_gaussSum hP two_ne_zero,
     normalizedGauss_eq_gaussSum hP (by decide : 3 ≠ 0), he, absNorm_eq_natCard,
       Nat.card_eq_fintype_card] using h
 
@@ -256,8 +256,8 @@ theorem normalizedGauss_duplication {n : Ideal 𝓔} (hn : Starred n) :
     have hprime := normalizedGauss_duplication_prime hp' hp
     have hfour : sextic (p * a) 4 = sextic p 4 * sextic a 4 := by
       simp [sextic, powerResidueSymbol_mul_right]
-    rw [hfour, normalizedGauss_mul hp' ha' hc one_ne_zero, normalizedGauss_mul hp' ha' hc
-      two_ne_zero,
+    rw [hfour, normalizedGauss_mul hp' ha' hc one_ne_zero,
+      normalizedGauss_mul hp' ha' hc two_ne_zero,
       normalizedGauss_mul hp' ha' hc (by decide : 3 ≠ 0), pow_one]
     calc
       _ = (sextic p 4 * normalizedGauss p 1) * (sextic a 4 * normalizedGauss a 1) *
@@ -265,8 +265,8 @@ theorem normalizedGauss_duplication {n : Ideal 𝓔} (hn : Starred n) :
       _ = _ := by
         rw [hprime, htail]
         linear_combination -(normalizedGauss p 2 ^ 2 * normalizedGauss a 2 ^ 2 *
-          normalizedGauss p 3 * normalizedGauss a 3 * (sextic p (generator a) * sextic a (generator
-            p))) * hcross
+          normalizedGauss p 3 * normalizedGauss a 3 * (sextic p (generator a) *
+            sextic a (generator p))) * hcross
 
 private theorem norm_normalizedGauss_prime {P : Ideal 𝓔} (hP : AwayFromSix P) (hp : Prime P)
     {j : ℕ} (hj : j ≠ 0) (h₆ : j < 6) : ‖normalizedGauss P j‖ = 1 := by
@@ -279,15 +279,15 @@ private theorem norm_normalizedGauss_prime {P : Ideal 𝓔} (hP : AwayFromSix P)
     pow_ne_one_of_lt_orderOf hj (by rwa [orderOf_sexticChar_prime hP hp])
   have h := gaussSum_mul_gaussSum_eq_card hχ (quotientDifferentCharacter_isPrimitive hP.1)
   rw [← star_gaussSum_eq, Complex.star_def, Complex.mul_conj'] at h
-  have hs : ‖gaussSum (sexticChar hP ^ j) (quotientDifferentCharacter P)‖ ^ 2 = (absNorm P : ℝ)
-    := by
+  have hs : ‖gaussSum (sexticChar hP ^ j) (quotientDifferentCharacter P)‖ ^
+    2 = (absNorm P : ℝ) := by
     rw [Ideal.absNorm_eq_natCard, Nat.card_eq_fintype_card]
     exact_mod_cast h
   have hpos : 0 < (absNorm P : ℝ) := by
-    exact_mod_cast Ideal.absNorm_pos_iff_mem_nonZeroDivisors.mpr (mem_nonZeroDivisors_of_ne_zero
-      hp.ne_zero)
-  rw [normalizedGauss_eq_gaussSum hP hj, norm_div, Complex.norm_real, Real.norm_of_nonneg
-    (Real.sqrt_nonneg _)]
+    exact_mod_cast Ideal.absNorm_pos_iff_mem_nonZeroDivisors.mpr
+      (mem_nonZeroDivisors_of_ne_zero hp.ne_zero)
+  rw [normalizedGauss_eq_gaussSum hP hj, norm_div, Complex.norm_real,
+    Real.norm_of_nonneg (Real.sqrt_nonneg _)]
   apply (div_eq_one_iff_eq (Real.sqrt_pos.mpr hpos).ne').mpr
   rw [← hs, Real.sqrt_sq (norm_nonneg _)]
 
