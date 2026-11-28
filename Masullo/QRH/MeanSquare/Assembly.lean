@@ -4,6 +4,7 @@ import Masullo.QRH.MeanSquare.GaussNorm
 import Masullo.QRH.MeanSquare.GaussPair
 import Masullo.QRH.MeanSquare.PrimeRows
 import Masullo.QRH.MeanSquare.Reciprocity
+import Masullo.QRH.MeanSquare.Reflection
 import Masullo.QRH.MeanSquare.Sieve
 import Masullo.QRH.MeanSquare.Theta
 
@@ -29,17 +30,13 @@ structure PrintedInputs : Prop where
 Each arrow names a proof still needed to obtain (A) from `PrintedInputs` alone. -/
 theorem meanSquareA_of_reductions (h : PrintedInputs)
     (poisson : GaoZhaoLemma23 → PrimitivePoisson)
-    (reflection : PattersonTheorem81 → DunnRadziwillReciprocity → DeloupTuraevTheorem1 →
-      DLMFBesselMellin →
-      DLMFBesselAsymptotic → DLMFBesselDerivAsymptotic → DLMFGammaVertical →
-      QuadraticSieve primaryQuadraticSymbol → CompletedEstimate)
     (transfer : PrimitivePoisson → PairedGaussIdentities → GaussCoefficientBound → TransferEstimate)
     (firstPoisson : PrimitivePoisson → PairedGaussIdentities → GaussCoefficientBound →
       GapEstimate → FullRowEstimate) :
     Masullo.QRH.MeanSquareA := by
   have h7 := quadraticSieve_of_goldmakherLouvel h.largeSieve (eisensteinFamilyRealizes h.quadraticGauss)
-  have h5 := reflection h.theta h.cubicReciprocity h.quadraticGauss h.besselMellin h.besselDecay
-    h.besselDeriv h.gammaVertical h7
+  have h5 := completedEstimate_of_reflection h.theta h.cubicReciprocity h.quadraticGauss
+    h.besselMellin h.gammaVertical h7
   have hp := poisson h.cosetPoisson
   have hg := pairedGaussIdentities h.cubicReciprocity h.cubicGaussCube h.quadraticGauss
   have hn := gaussCoefficientBound

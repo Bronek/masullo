@@ -234,4 +234,3 @@ theorem makeKernelBranch_rowValue {B K X : ℝ} {t G : Idl} (v : KernelBranchDat
   makeKernelBranch_rowValue_of_summable v W (fun _ hk' => summable_rawKernelTerm v hΓ hW hk') hk
 
 end Masullo.QRH.MeanSquare.ReflectionSieve
-
