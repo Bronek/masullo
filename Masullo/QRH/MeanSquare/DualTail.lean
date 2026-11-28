@@ -1,5 +1,6 @@
 import Masullo.QRH.MeanSquare.OffDiagonal
 import Masullo.QRH.MeanSquare.GaussNorm
+import Masullo.QRH.MeanSquare.Divisors
 
 /-!
 # The nonzero dual frequencies
@@ -16,6 +17,8 @@ Steps toward `DualTailEstimate rowMajorant` from `GapEstimate`.
   `dualExclusionMain` up to such a power.
 * `exists_dualMeanSquareCoprime_le`: `GapEstimate` for columns coprime to `b`, with no lower
   bounds on `K` and `X`.
+* `exists_sum_rows_le`: the rows `(e, v, h)` of a block cover each pair `(f, k) = (e v, e° h)`
+  at most `τ(f) ≪ (N f)^s` times.
 * `mainSummand_eq`: after the Möbius substitution `c = v m₁`, `b = v m₂`, the arithmetic factor
   of a main dual term factors into a row weight and twisted columns `m₁`, `m₂`.
 -/
@@ -535,5 +538,57 @@ lemma mainSummand_eq (hres : ResidueMultiplicative)
           conj (η (Ideal.Quotient.mk _ (generator m₂))))) *
       (conj (sextic m₁ (generator e)) * sextic m₂ (generator e) *
         (sextic v h * sextic m₁ h * (conj (sextic v h) * conj (sextic m₂ h))))) * hvu
+
+/-! ### Rows of a block -/
+
+/-- A sum over `T` of a function of `p ρ` is at most `τ` times the sum over `S` when each fibre
+of `p` has at most `τ` elements. -/
+lemma sum_comp_le_mul_sum {ι κ : Type*} [DecidableEq κ] (T : Finset ι) (S : Finset κ)
+    (p : ι → κ) (hp : ∀ ρ ∈ T, p ρ ∈ S) (G : κ → ℝ) (hG : ∀ x, 0 ≤ G x) {τ : ℝ}
+    (hτ : ∀ x ∈ S, ((T.filter fun ρ => p ρ = x).card : ℝ) ≤ τ) :
+    ∑ ρ ∈ T, G (p ρ) ≤ τ * ∑ x ∈ S, G x := by
+  rw [← Finset.sum_fiberwise_of_maps_to hp, Finset.mul_sum]
+  refine Finset.sum_le_sum fun x hx => ?_
+  rw [Finset.sum_congr rfl fun ρ hρ => by rw [(Finset.mem_filter.mp hρ).2], Finset.sum_const,
+    nsmul_eq_mul]
+  exact mul_le_mul_of_nonneg_right (hτ x hx) (hG x)
+
+/-- Rows `(e, v, h)` with `e ≠ ⊥` cover each pair `(f, k) = (e v, e° h)` at most `τ(f)` times,
+and `τ(f) ≪ (N f)^s`. -/
+theorem exists_sum_rows_le {s : ℝ} (hs : 0 < s) :
+    ∃ C ≥ (0 : ℝ), ∀ (T : Finset (Ideal 𝓔 × Ideal 𝓔 × 𝓔)) (S : Finset (Ideal 𝓔 × 𝓔))
+      (G : Ideal 𝓔 × 𝓔 → ℝ) {F : ℝ}, (∀ x, 0 ≤ G x) →
+      (∀ ρ ∈ T, ρ.1 ≠ ⊥ ∧ (ρ.1 * ρ.2.1, generator ρ.1 * ρ.2.2) ∈ S) →
+      (∀ x ∈ S, x.1 ≠ ⊥ ∧ (absNorm x.1 : ℝ) ≤ F) →
+      ∑ ρ ∈ T, G (ρ.1 * ρ.2.1, generator ρ.1 * ρ.2.2) ≤ C * F ^ s * ∑ x ∈ S, G x := by
+  classical
+  obtain ⟨C, hC, hτ⟩ := card_idealDivisors_le hs
+  refine ⟨C, hC, fun T S G F hG hT hS => ?_⟩
+  refine sum_comp_le_mul_sum T S _ (fun ρ hρ => (hT ρ hρ).2) G hG fun x hx => ?_
+  obtain ⟨hx0, hxF⟩ := hS x hx
+  have hinj : Set.InjOn (fun ρ : Ideal 𝓔 × Ideal 𝓔 × 𝓔 => ρ.1)
+      (T.filter fun ρ => (ρ.1 * ρ.2.1, generator ρ.1 * ρ.2.2) = x) := by
+    intro ρ hρ σ hσ (he : ρ.1 = σ.1)
+    obtain ⟨hρT, hρx⟩ := Finset.mem_filter.mp hρ
+    obtain ⟨-, hσx⟩ := Finset.mem_filter.mp hσ
+    have he0 : ρ.1 ≠ ⊥ := (hT ρ hρT).1
+    have hg0 : generator ρ.1 ≠ 0 := fun h0 => he0 (by
+      rw [← span_generator ρ.1, h0, span_singleton_eq_bot])
+    rw [← hσx, he] at hρx
+    obtain ⟨h1, h2⟩ := Prod.mk.inj hρx
+    rw [← he] at h1 h2
+    have hv : ρ.2.1 = σ.2.1 := mul_left_cancel₀ he0 h1
+    have hh : ρ.2.2 = σ.2.2 := mul_left_cancel₀ hg0 h2
+    exact Prod.ext he (Prod.ext hv hh)
+  have hmaps : ∀ ρ ∈ T.filter fun ρ => (ρ.1 * ρ.2.1, generator ρ.1 * ρ.2.2) = x,
+      ρ.1 ∈ idealDivisors x.1 := by
+    intro ρ hρ
+    obtain ⟨-, hρx⟩ := Finset.mem_filter.mp hρ
+    rw [mem_idealDivisors hx0, ← hρx]
+    exact dvd_mul_right _ _
+  calc (((T.filter fun ρ => (ρ.1 * ρ.2.1, generator ρ.1 * ρ.2.2) = x).card : ℕ) : ℝ)
+      ≤ (idealDivisors x.1).card := by exact_mod_cast Finset.card_le_card_of_injOn _ hmaps hinj
+    _ ≤ C * (absNorm x.1 : ℝ) ^ s := hτ _ hx0
+    _ ≤ C * F ^ s := by gcongr
 
 end Masullo.QRH.MeanSquare
