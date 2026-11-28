@@ -110,15 +110,13 @@ private lemma card_filter_norm_le (s : Finset 𝓔) {R : ℝ} (hR : 0 ≤ R) :
     · exact Or.inr ((mem_elementRows hR).mpr ⟨h0, (Finset.mem_filter.mp hy).2⟩)
   exact_mod_cast (Finset.card_le_card hsub).trans (Finset.card_insert_le _ _)
 
-/-- The lattice mass of a Schwartz weight at scale `Y ≥ 1` is `O(Y)`. -/
-theorem exists_tsum_norm_schwartz_le (P : SchwartzMap ℝ ℂ) :
-    ∃ C ≥ (0 : ℝ), ∀ Y : ℝ, 1 ≤ Y → ∑' y : 𝓔, ‖P (elementNorm y / Y)‖ ≤ C * Y := by
+/-- The lattice mass of a weight `φ ≤ C₀` with `r² φ(r) ≤ C₂` at scale `Y > 0` is
+`O((C₀ + C₂)(Y + 1))`, uniformly in `φ`. -/
+theorem exists_sum_decay_le :
+    ∃ C ≥ (0 : ℝ), ∀ (φ : ℝ → ℝ) {C₀ C₂ : ℝ}, (∀ r, φ r ≤ C₀) → 0 ≤ C₀ →
+      (∀ r, r ^ 2 * φ r ≤ C₂) → 0 ≤ C₂ → ∀ Y : ℝ, 0 < Y → ∀ s : Finset 𝓔,
+        ∑ y ∈ s, φ (elementNorm y / Y) ≤ C * (C₀ + C₂) * (Y + 1) := by
   classical
-  obtain ⟨C₀, hC₀', hC₀⟩ := P.decay 0 0
-  obtain ⟨C₂, hC₂', hC₂⟩ := P.decay 2 0
-  simp only [pow_zero, one_mul, norm_iteratedFDeriv_zero, Real.norm_eq_abs, sq_abs] at hC₀ hC₂
-  replace hC₀' := hC₀'.le
-  replace hC₂' := hC₂'.le
   obtain ⟨A, hA⟩ := exists_card_idealsLe_le
   have hA₀ : 0 ≤ A := by
     have := hA 1 le_rfl
@@ -131,17 +129,17 @@ theorem exists_tsum_norm_schwartz_le (P : SchwartzMap ℝ ℂ) :
           rw [hU]; exact_mod_cast card_elementRows_le R
       _ ≤ A * R * U := mul_le_mul_of_nonneg_right (hA R hR) hU₀
       _ = A * U * R := by ring
-  refine ⟨8 * (C₀ + C₂) * (A * U + 1), by positivity, fun Y hY => ?_⟩
-  have hY₀ : 0 < Y := by linarith
-  refine (summable_norm_schwartz P hY₀).tsum_le_of_sum_le fun s => ?_
-  set J := ∑ y ∈ s, elementNorm y
+  refine ⟨8 * (A * U + 1), by positivity, fun φ C₀ C₂ hC₀ hC₀' hC₂ hC₂' Y hY s => ?_⟩
+  set J := ⌈(∑ y ∈ s, (elementNorm y : ℝ)) / Y⌉₊
   have hJ : ∀ y ∈ s, (elementNorm y : ℝ) / Y ≤ 2 ^ J := fun y hy => by
-    calc (elementNorm y : ℝ) / Y ≤ elementNorm y := div_le_self (Nat.cast_nonneg _) hY
-      _ ≤ J := by exact_mod_cast Finset.single_le_sum (fun _ _ => Nat.zero_le _) hy
+    calc (elementNorm y : ℝ) / Y ≤ (∑ y ∈ s, (elementNorm y : ℝ)) / Y :=
+          div_le_div_of_nonneg_right
+            (Finset.single_le_sum (fun _ _ => Nat.cast_nonneg _) hy) hY.le
+      _ ≤ J := Nat.le_ceil _
       _ ≤ 2 ^ J := by exact_mod_cast (Nat.lt_two_pow_self).le
   set w : ℕ → ℝ := fun j => 4 / 4 ^ j
-  have hpt := le_dyadic (φ := fun r => ‖P r‖) hC₀ hC₀' hC₂ hC₂' J
-  calc ∑ y ∈ s, ‖P (elementNorm y / Y)‖
+  have hpt := le_dyadic hC₀ hC₀' hC₂ hC₂' J
+  calc ∑ y ∈ s, φ (elementNorm y / Y)
       ≤ ∑ y ∈ s, (C₀ + C₂) * ∑ j ∈ Finset.range (J + 1),
           w j * (if (elementNorm y : ℝ) / Y ≤ 2 ^ j then 1 else 0) :=
         Finset.sum_le_sum fun y hy => hpt _ (by positivity) (hJ y hy)
@@ -153,28 +151,52 @@ theorem exists_tsum_norm_schwartz_le (P : SchwartzMap ℝ ℂ) :
         rw [← Finset.mul_sum, Finset.card_filter, Nat.cast_sum]
         congr 1
         refine Finset.sum_congr rfl fun y _ => ?_
-        simp only [div_le_iff₀ hY₀]
+        simp only [div_le_iff₀ hY]
         split_ifs <;> simp
-    _ ≤ (C₀ + C₂) * ∑ j ∈ Finset.range (J + 1), w j * ((A * U + 1) * (2 ^ j * Y)) := by
+    _ ≤ (C₀ + C₂) * ∑ j ∈ Finset.range (J + 1), w j * ((A * U + 1) * (2 ^ j * Y + 1)) := by
         refine mul_le_mul_of_nonneg_left (Finset.sum_le_sum fun j _ =>
           mul_le_mul_of_nonneg_left ?_ (by positivity)) (by positivity)
-        · have h1 : 1 ≤ 2 ^ j * Y := one_le_mul_of_one_le_of_one_le (one_le_pow₀ (by norm_num)) hY
-          calc _ ≤ ((elementRows (2 ^ j * Y)).card : ℝ) + 1 := card_filter_norm_le s (by linarith)
-            _ ≤ A * U * (2 ^ j * Y) + 2 ^ j * Y := by linarith [hrows _ h1]
-            _ = _ := by ring
-    _ = (C₀ + C₂) * (A * U + 1) * Y * ∑ j ∈ Finset.range (J + 1), 4 * (1 / 2) ^ j := by
-        rw [Finset.mul_sum, Finset.mul_sum]
+        set R := 2 ^ j * Y
+        have hR : 0 ≤ R := by positivity
+        calc ((s.filter fun y => (elementNorm y : ℝ) ≤ R).card : ℝ)
+            ≤ (s.filter fun y => (elementNorm y : ℝ) ≤ max R 1).card := by
+              exact_mod_cast Finset.card_le_card fun y hy => by
+                rw [Finset.mem_filter] at hy ⊢
+                exact ⟨hy.1, hy.2.trans (le_max_left _ _)⟩
+          _ ≤ ((elementRows (max R 1)).card : ℝ) + 1 :=
+              card_filter_norm_le s (hR.trans (le_max_left _ _))
+          _ ≤ A * U * max R 1 + 1 := by linarith [hrows _ (le_max_right R 1)]
+          _ ≤ A * U * (R + 1) + 1 := by
+              gcongr; exact max_le (by linarith) (by linarith)
+          _ ≤ _ := by nlinarith [mul_nonneg hA₀ hU₀]
+    _ = (C₀ + C₂) * (A * U + 1) * (Y * ∑ j ∈ Finset.range (J + 1), 4 * (1 / 2) ^ j +
+          ∑ j ∈ Finset.range (J + 1), 4 * (1 / 4) ^ j) := by
+        rw [Finset.mul_sum, Finset.mul_sum, ← Finset.sum_add_distrib, Finset.mul_sum]
         refine Finset.sum_congr rfl fun j _ => ?_
         simp only [w, one_div, inv_pow]
         rw [show (4 : ℝ) ^ j = 2 ^ j * 2 ^ j by rw [← mul_pow]; norm_num]
         field_simp
-    _ ≤ (C₀ + C₂) * (A * U + 1) * Y * 8 := by
+    _ ≤ (C₀ + C₂) * (A * U + 1) * (Y * 8 + 8) := by
         refine mul_le_mul_of_nonneg_left ?_ (by positivity)
-        rw [← Finset.mul_sum]
-        have := sum_geometric_two_le (J + 1)
-        simp only [one_div] at this ⊢
-        linarith
-    _ = 8 * (C₀ + C₂) * (A * U + 1) * Y := by ring
+        have h2 := sum_geometric_two_le (J + 1)
+        have h4 : ∑ j ∈ Finset.range (J + 1), (1 / 4 : ℝ) ^ j ≤ 2 :=
+          (Finset.sum_le_sum fun j _ => pow_le_pow_left₀ (by norm_num)
+            (by norm_num : (1 / 4 : ℝ) ≤ 1 / 2) j).trans h2
+        rw [← Finset.mul_sum, ← Finset.mul_sum]
+        nlinarith
+    _ = 8 * (A * U + 1) * (C₀ + C₂) * (Y + 1) := by ring
+
+/-- The lattice mass of a Schwartz weight at scale `Y ≥ 1` is `O(Y)`. -/
+theorem exists_tsum_norm_schwartz_le (P : SchwartzMap ℝ ℂ) :
+    ∃ C ≥ (0 : ℝ), ∀ Y : ℝ, 1 ≤ Y → ∑' y : 𝓔, ‖P (elementNorm y / Y)‖ ≤ C * Y := by
+  obtain ⟨C₀, hC₀', hC₀⟩ := P.decay 0 0
+  obtain ⟨C₂, hC₂', hC₂⟩ := P.decay 2 0
+  simp only [pow_zero, one_mul, norm_iteratedFDeriv_zero, Real.norm_eq_abs, sq_abs] at hC₀ hC₂
+  obtain ⟨C, hC, h⟩ := exists_sum_decay_le
+  refine ⟨2 * C * (C₀ + C₂), by positivity, fun Y hY => ?_⟩
+  refine (summable_norm_schwartz P (by linarith)).tsum_le_of_sum_le fun s => ?_
+  refine (h (fun r => ‖P r‖) hC₀ hC₀'.le hC₂ hC₂'.le Y (by linarith) s).trans ?_
+  nlinarith [mul_nonneg hC (add_nonneg hC₀'.le hC₂'.le)]
 
 /-! ### The majorant and the expansion of the square -/
 
