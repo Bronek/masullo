@@ -4,20 +4,22 @@ import Masullo.Window
 # Smoothed sums and zeros of zeta
 
 Let `b` have an absolutely convergent Dirichlet series on `Re s > 1` with
-`L(b, s) ζ(s) G(s) = 1` there, for some `G` holomorphic on `Re s > β`. If for every smooth `W`
-with compact support in `(0, ∞)` the smoothed sum `∑ b n W (n / D)` is `O(D ^ β)` for `D ≥ 1`,
-then zeta has no zeros in `Re s > β`. This is `riemannZeta_ne_zero_of_smoothedBound`, a smoothed
-form of Landau's criterion; the converse is not asserted.
+`L(b, s) ζ(s) G(s) = 1` there, for some `G` holomorphic on `Re s > β`, where `β ≥ 0`. If for
+every smooth `W` with compact support in `(0, ∞)` the smoothed sum `∑ b n W (n / D)` is
+`O(D ^ β)` for `D ≥ 1`, then zeta has no zeros in `Re s > β`. This is
+`riemannZeta_ne_zero_of_smoothedBound`, a smoothed form of Landau's criterion; the converse is not
+asserted.
 
 The proof takes a test function `W` with `mellin W ρ ≠ 0`. The Mellin transform of
 `g t = ∑ b n W (n t)` is `L(b, s) mellin W s` on `Re s > 1` (classical), and the bound makes it
 holomorphic on `Re s > β`. On the quarter plane `Re s > β, Im s > 0`, which avoids the pole of
 zeta, `mellin g · ζ · G` agrees with `mellin W` by the identity theorem, so a zero `ρ` there would
-make `mellin W ρ` vanish. Real zeros and zeros below the real axis reduce to this case.
+make `mellin W ρ` vanish. Zeros below the real axis reduce to this case by conjugation; real zeros
+in `(0, 1)` are excluded separately (`Window.riemannZeta_ofReal_ne_zero`).
 
 For `b = μ ∗ χ₃μ` (`eisensteinMoebius`), `G` is the Dirichlet L-function of `χ₃`, which is entire,
-and the criterion gives the trace identity of `Masullo.Trace` at every width `a > β - 1/2`
-(`hasTrace_of_smoothedBound`).
+and the criterion gives the trace identity of `Masullo.Trace` at every width `a > 0` with
+`a > β - 1/2` (`hasTrace_of_smoothedBound`).
 -/
 
 open MeasureTheory Complex Set Filter Topology Asymptotics
@@ -251,7 +253,7 @@ theorem riemannZeta_ne_zero_of_smoothedBound_eisenstein {β : ℝ} (hβ : 0 ≤ 
     linear_combination (LSeries ↗chi3 s * LSeries (↗chi3 * ↗μ) s) *
       LSeries_one_mul_Lseries_moebius hs + DirichletCharacter.LSeries.mul_mu_eq_one chi3 hs
 
-/-- The trace identity at every width `a > β - 1/2`. -/
+/-- The trace identity at every width `a > 0` with `a > β - 1/2`. -/
 theorem hasTrace_of_smoothedBound {β a : ℝ} (hβ : 0 ≤ β) (ha : 0 < a) (hab : β - 1 / 2 < a)
     (h : SmoothedBound eisensteinMoebius β) (φ : TestFunction) :
     Trace.HasTrace (Trace.induced ha φ) φ.efFunctional :=
